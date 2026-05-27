@@ -1,5 +1,6 @@
-import { ArrowRight, Bot, CheckCircle2, FolderOpen, Images, PlayCircle, Sparkles } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, Clipboard, FolderOpen, Images, PlayCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { ProjectOpen } from "../../features/project/ProjectOpen";
 import { useProjectStore } from "../../state/project-store";
@@ -108,6 +109,16 @@ export function Onboarding() {
 }
 
 function CreateWithCodex() {
+  const prompt = "Use Goodboy to create a Codex pet from these source images.";
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success("Prompt copied");
+    } catch {
+      toast.error("Could not copy prompt");
+    }
+  };
+
   return (
     <div className="onboarding-steps">
       <div className="onboarding-step">
@@ -124,7 +135,16 @@ function CreateWithCodex() {
       </div>
       <div className="onboarding-command">
         <Bot size={16} />
-        <span>Use Goodboy to create a Codex pet from these source images.</span>
+        <span>{prompt}</span>
+      </div>
+      <div className="toolbar-group onboarding-cta-row">
+        <Button variant="primary" onClick={copyPrompt}>
+          <Clipboard size={14} />
+          Copy Codex prompt
+        </Button>
+        <Button variant="default" onClick={() => toast.info("Attach source images in Codex, then paste the copied prompt.")}>
+          What next?
+        </Button>
       </div>
     </div>
   );

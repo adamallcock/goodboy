@@ -1,4 +1,4 @@
-import { Box, CheckCircle2, ClipboardCheck, GitBranch, Image, Palette, Sparkles, Wand2 } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, GitBranch, Home, Image, Palette, Sparkles, Wand2 } from "lucide-react";
 
 import type { ProjectState, ReviewStage } from "../../lib/types";
 
@@ -15,15 +15,16 @@ const stages: Array<{ id: ReviewStage; label: string; icon: typeof Image }> = [
 interface StageRailProps {
   selectedStage: ReviewStage;
   state: ProjectState;
+  onOpenOnboarding: () => void;
   onStageChange: (stage: ReviewStage) => void;
 }
 
-export function StageRail({ selectedStage, state, onStageChange }: StageRailProps) {
+export function StageRail({ selectedStage, state, onOpenOnboarding, onStageChange }: StageRailProps) {
   return (
     <nav className="stage-rail" aria-label="Review stages">
-      <div className="brand-mark" aria-hidden="true">
-        <Box size={18} />
-      </div>
+      <button type="button" className="stage-button home" aria-label="Back to start" title="Back to start" onClick={onOpenOnboarding}>
+        <Home size={18} />
+      </button>
       {stages.map((stage) => {
         const Icon = stage.icon;
         const hasArtifact = state.artifacts.some((artifact) => artifact.stage === stage.id);

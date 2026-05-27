@@ -141,9 +141,11 @@ Current capabilities:
 
 - Demo Review Room shell with stage rail, gate banner, artifact canvas, contextual inspector, activity drawer, and command palette.
 - Onboarding paths for agent-led creation, opening an existing Goodboy folder, and exploring a safe demo.
-- Top workflow timeline that shows completed stages, the current stage, and the next user decision.
+- Readable current-step header that shows the previous step, current step, next step, and next user decision without duplicating the side navigation.
+- Persistent Home buttons in the header and side rail for returning to the onboarding screen.
 - Decision panel that explains whether to approve, request changes, or continue reviewing.
 - Zoom, fit, playback-speed, and draggable compare controls.
+- Demo fixture materials for source, baseline, row-strip, QA, and export review stages.
 - Source, baseline, style, generation, QA, approval/export, and demo panels.
 - Local project-open form that connects to the FastAPI backend when it is running.
 - Visual approval demo flow that updates the gate and activity drawer.

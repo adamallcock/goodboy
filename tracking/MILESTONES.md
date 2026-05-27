@@ -202,7 +202,9 @@ Status: `[~]`
 - `[x]` Add FastAPI backend foundation with project state, artifact indexing, path-safe artifact serving, and workflow action routes.
 - `[x]` Add Review Room frontend shell with stage rail, gate banner, artifact canvas, contextual inspector, command palette, and activity drawer.
 - `[x]` Add onboarding paths for Create with Codex, Open project, and Explore demo.
-- `[x]` Replace the ambiguous gate label with a clear workflow timeline and current/next decision summary.
+- `[x]` Replace the ambiguous gate label with a readable current-step header and current/next decision summary.
+- `[x]` Add persistent Home navigation back to onboarding from the Review Room.
+- `[x]` Add demo fixture row-strip materials so the Generation walkthrough is not blank.
 - `[x]` Reframe the inspector around user decisions and approval/change requests.
 - `[x]` Add visual inspector interactions: zoom, fit, filmstrip selection, playback-speed control, draggable compare mode, inspector collapse, keyboard shortcuts, and safe demo refresh.
 - `[x]` Add demo fixture suitable for visual walkthroughs.

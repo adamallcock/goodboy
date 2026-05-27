@@ -1,5 +1,5 @@
 import { Columns2, Maximize2, Minus, Play, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import { ReactCompareSlider } from "react-compare-slider";
 
 import { artifactIsImage, artifactsForStage } from "../../lib/artifacts";
@@ -149,14 +149,16 @@ function ArtifactMedia({ artifact }: { artifact: ArtifactRef }) {
     return <img className="artifact-image" src={artifact.url} alt={artifact.label} onError={() => setFailed(true)} />;
   }
 
-  return <SyntheticArtifactGrid ariaLabel={artifact.url.startsWith("/demo/") ? "Demo artifact preview" : "Synthetic artifact fallback"} />;
+  return <SyntheticArtifactGrid artifact={artifact} ariaLabel={artifact.url.startsWith("/demo/") ? "Demo artifact preview" : "Synthetic artifact fallback"} />;
 }
 
-function SyntheticArtifactGrid({ ariaLabel, tone = "current" }: { ariaLabel: string; tone?: "current" | "qa" | "reference" }) {
+function SyntheticArtifactGrid({ artifact, ariaLabel, tone = "current" }: { artifact?: ArtifactRef | null; ariaLabel: string; tone?: "current" | "qa" | "reference" }) {
+  const cellCount = artifact?.kind === "row-strip" ? 8 : 24;
+  const stateClass = artifact?.state ? ` state-${artifact.state}` : "";
   return (
-    <div className={`contact-grid ${tone}`} aria-label={ariaLabel}>
-      {Array.from({ length: 24 }).map((_, index) => (
-        <div key={index} className={`contact-cell ${index % 7 === 0 ? "warn" : "pass"}`} />
+    <div className={`contact-grid ${tone}${artifact?.kind === "row-strip" ? " row-strip-preview" : ""}${stateClass}`} aria-label={ariaLabel}>
+      {Array.from({ length: cellCount }).map((_, index) => (
+        <div key={index} className={`contact-cell ${index % 7 === 0 ? "warn" : "pass"}`} style={{ "--pose": index } as CSSProperties} />
       ))}
     </div>
   );
@@ -179,7 +181,7 @@ function SyntheticArtifactPanel({
         <strong>{title}</strong>
         <span>{subtitle ?? artifact?.label ?? "No artifact selected"}</span>
       </div>
-      <SyntheticArtifactGrid ariaLabel={`${title} visual preview`} tone={tone} />
+      <SyntheticArtifactGrid artifact={artifact} ariaLabel={`${title} visual preview`} tone={tone} />
     </div>
   );
 }

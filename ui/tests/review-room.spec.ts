@@ -13,6 +13,8 @@ test("onboarding explains the paths into review room", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Create with Codex/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Open a project/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Explore demo/ })).toBeVisible();
+  await page.getByRole("button", { name: /Create with Codex/ }).click();
+  await expect(page.getByRole("button", { name: "Copy Codex prompt" })).toBeVisible();
 
   await page.getByRole("button", { name: /Open a project/ }).click();
   await expect(page.getByLabel("Project directory")).toBeVisible();
@@ -26,7 +28,8 @@ test("review room exposes interactive visual inspector controls", async ({ page 
   await expect(page.getByRole("main").getByRole("heading", { name: "Qa" })).toBeVisible();
   await expect(page.getByLabel("Visual artifact canvas")).toBeVisible();
   await expect(page.getByRole("banner").getByText("Decision needed: visual QA")).toBeVisible();
-  await expect(page.getByLabel("Project workflow")).toContainText("QA Review");
+  await expect(page.getByLabel("Project progress")).toContainText("Current step");
+  await expect(page.getByLabel("Project progress")).toContainText("QA Review");
 
   await page.getByRole("button", { name: "Toggle compare mode" }).click();
   await expect(page.getByText("Reference overlay")).toBeVisible();
@@ -43,6 +46,11 @@ test("review room exposes interactive visual inspector controls", async ({ page 
   await expect(page.getByLabel("Inspector panel")).not.toBeVisible();
   await page.getByRole("button", { name: "Toggle inspector" }).click();
   await expect(page.getByLabel("Inspector panel")).toBeVisible();
+
+  await page.getByRole("button", { name: "Back to start" }).first().click();
+  await expect(page.getByRole("heading", { name: "Goodboy Review Room" })).toBeVisible();
+  await page.getByRole("button", { name: /Explore demo/ }).click();
+  await page.getByRole("button", { name: "QA", exact: true }).click();
 
   await page.keyboard.press("Meta+K");
   await expect(page.getByPlaceholder("Search Goodboy actions...")).toBeVisible();

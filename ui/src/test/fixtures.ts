@@ -1,6 +1,6 @@
 import type { ProjectState } from "../lib/types";
 
-function artifact(id: string, stage: string, kind: string, label: string, relativePath: string, severity = "info") {
+function artifact(id: string, stage: string, kind: string, label: string, relativePath: string, severity = "info", state: string | null = null) {
   return {
     id,
     kind,
@@ -13,7 +13,7 @@ function artifact(id: string, stage: string, kind: string, label: string, relati
     bytes: 240000,
     modified_at: "1779900000",
     stage,
-    state: null,
+    state,
     severity: severity as "info" | "success" | "warning" | "danger"
   };
 }
@@ -40,8 +40,10 @@ export const demoProjectState: ProjectState = {
     artifact("sources-originals-source-002-png", "sources", "source", "source-002.png", "sources/originals/source-002.png"),
     artifact("candidates-contact-sheet-png", "baselines", "candidate", "contact-sheet.png", "candidates/contact-sheet.png"),
     artifact("character-selected-baseline-png", "baselines", "character", "selected-baseline.png", "character/selected-baseline.png", "success"),
-    artifact("runs-demo-row-strips-idle-png", "generation", "row-strip", "idle.png", "runs/demo/row-strips/idle.png"),
-    artifact("runs-demo-row-strips-review-png", "generation", "row-strip", "review.png", "runs/demo/row-strips/review.png"),
+    artifact("runs-demo-row-strips-idle-png", "generation", "row-strip", "idle.png", "runs/demo/row-strips/idle.png", "success", "idle"),
+    artifact("runs-demo-row-strips-running-png", "generation", "row-strip", "running.png", "runs/demo/row-strips/running.png", "success", "running"),
+    artifact("runs-demo-row-strips-review-png", "generation", "row-strip", "review.png", "runs/demo/row-strips/review.png", "success", "review"),
+    artifact("runs-demo-row-strips-waiting-png", "generation", "row-strip", "waiting.png", "runs/demo/row-strips/waiting.png", "success", "waiting"),
     artifact("runs-demo-qa-contact-sheet-png", "qa", "qa", "contact-sheet.png", "runs/demo/qa/contact-sheet.png", "warning"),
     artifact("runs-demo-qa-centering-overlay-png", "qa", "qa", "centering-overlay.png", "runs/demo/qa/centering-overlay.png", "success"),
     artifact("runs-demo-qa-edge-preview-white-png", "qa", "qa", "edge-preview-white.png", "runs/demo/qa/edge-preview-white.png", "success"),

@@ -6,7 +6,7 @@ test("primary inspector controls are keyboard reachable and named", async ({ pag
   await page.getByRole("button", { name: /Explore demo/ }).click();
 
   await page.keyboard.press("Tab");
-  await expect(page.getByLabel("Project workflow").getByRole("button", { name: /Sources/ })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Back to start" }).first()).toBeFocused();
 
   await page.getByRole("button", { name: "Open command palette" }).focus();
   await expect(page.getByRole("button", { name: "Open command palette" })).toBeFocused();

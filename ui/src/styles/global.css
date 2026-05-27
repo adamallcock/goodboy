@@ -121,81 +121,65 @@ button:disabled {
   display: grid;
   flex: 1;
   min-width: 0;
-  gap: 9px;
+  max-width: 720px;
+  gap: 8px;
 }
 
-.workflow-timeline {
+.workflow-summary {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 6px;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.workflow-step {
-  min-width: 0;
-}
-
-.workflow-step button {
-  display: flex;
-  width: 100%;
-  min-width: 0;
-  height: 34px;
+  grid-template-columns: minmax(120px, 0.8fr) minmax(190px, 1.2fr) minmax(120px, 0.8fr);
+  gap: 8px;
   align-items: center;
-  gap: 6px;
-  padding: 0 8px;
+}
+
+.workflow-summary button,
+.workflow-focus {
+  display: flex;
+  min-width: 0;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 11px;
   border: 1px solid var(--gb-border);
   border-radius: 999px;
   background: #fff;
   color: var(--gb-muted);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 
-.workflow-step button:disabled {
+.workflow-summary button:disabled {
   cursor: default;
-  opacity: 1;
+  opacity: 0.45;
 }
 
-.workflow-step button span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.workflow-dot {
+.workflow-focus {
   display: grid;
-  flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--gb-surface-soft);
-  color: var(--gb-muted);
-  font-size: 10px;
-}
-
-.workflow-step.complete button {
-  border-color: #d8e7ff;
-  color: var(--gb-accent);
-}
-
-.workflow-step.complete .workflow-dot {
-  background: var(--gb-accent-soft);
-  color: var(--gb-accent);
-}
-
-.workflow-step.current button {
+  min-height: 48px;
   border-color: var(--gb-accent);
   background: var(--gb-accent);
   color: #fff;
 }
 
-.workflow-step.current .workflow-dot {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
+.workflow-focus span,
+.workflow-focus strong {
+  display: block;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workflow-focus span {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.workflow-focus strong {
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .workflow-current {
@@ -373,6 +357,42 @@ button:disabled {
   grid-template-rows: repeat(4, 1fr);
   gap: 8px;
   min-height: 0;
+}
+
+.contact-grid.row-strip-preview {
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: 1fr;
+  align-items: stretch;
+}
+
+.row-strip-preview .contact-cell {
+  min-height: 260px;
+  background:
+    radial-gradient(circle at calc(46% + (var(--pose) - 3) * 0.8%) 34%, #f3ebe0 0 15%, transparent 16%),
+    radial-gradient(circle at calc(40% + (var(--pose) - 3) * 0.8%) 35%, #2f3540 0 2.7%, transparent 3.5%),
+    radial-gradient(circle at calc(52% + (var(--pose) - 3) * 0.8%) 35%, #2f3540 0 2.7%, transparent 3.5%),
+    radial-gradient(ellipse at calc(50% + (var(--pose) - 3) * 0.6%) 58%, rgba(199, 168, 132, 0.74) 0 20%, transparent 21%),
+    radial-gradient(ellipse at calc(34% + (var(--pose) - 3) * 1%) 76%, rgba(180, 150, 122, 0.55) 0 7%, transparent 8%),
+    radial-gradient(ellipse at calc(66% - (var(--pose) - 3) * 1%) 76%, rgba(180, 150, 122, 0.55) 0 7%, transparent 8%),
+    linear-gradient(180deg, #fff, #f7f7f8);
+}
+
+.row-strip-preview.state-running .contact-cell {
+  background:
+    radial-gradient(circle at calc(48% + (var(--pose) - 3) * 1.1%) 32%, #f3ebe0 0 14%, transparent 15%),
+    radial-gradient(ellipse at calc(50% + (var(--pose) - 3) * 1.1%) 56%, rgba(199, 168, 132, 0.76) 0 18%, transparent 19%),
+    radial-gradient(ellipse at calc(28% + (var(--pose) % 2) * 18%) 78%, rgba(180, 150, 122, 0.62) 0 6%, transparent 7%),
+    radial-gradient(ellipse at calc(68% - (var(--pose) % 2) * 18%) 78%, rgba(180, 150, 122, 0.62) 0 6%, transparent 7%),
+    linear-gradient(180deg, #fff, #f7f7f8);
+}
+
+.row-strip-preview.state-review .contact-cell {
+  background:
+    radial-gradient(circle at 50% 38%, #f3ebe0 0 15%, transparent 16%),
+    radial-gradient(circle at 44% 39%, #2f3540 0 2.7%, transparent 3.5%),
+    radial-gradient(circle at 56% 39%, #2f3540 0 2.7%, transparent 3.5%),
+    radial-gradient(ellipse at 50% 63%, rgba(199, 168, 132, 0.74) 0 20%, transparent 21%),
+    linear-gradient(180deg, #fff, #f7f7f8);
 }
 
 .contact-grid.qa .contact-cell {
@@ -858,13 +878,14 @@ button:disabled {
     min-width: 160px;
   }
 
-  .workflow-timeline {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .workflow-summary {
+    grid-template-columns: 1fr;
   }
 
-  .workflow-step button {
-    height: 28px;
-    padding: 0 6px;
+  .workflow-summary button,
+  .workflow-focus {
+    min-height: 30px;
+    padding: 5px 8px;
   }
 
   .inspector {
@@ -1095,6 +1116,10 @@ button:disabled {
   background: var(--gb-accent-soft);
   color: var(--gb-text);
   font-weight: 600;
+}
+
+.onboarding-cta-row {
+  margin-top: 4px;
 }
 
 .demo-preview {

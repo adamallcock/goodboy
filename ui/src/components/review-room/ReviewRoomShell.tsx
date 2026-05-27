@@ -44,13 +44,14 @@ export function ReviewRoomShell() {
         state={store.state}
         selectedStage={store.selectedStage}
         inspectorOpen={store.inspectorOpen}
+        onOpenOnboarding={store.openOnboarding}
         onStageChange={store.setStage}
         onToggleInspector={store.toggleInspector}
         onToggleActivity={store.toggleActivity}
         onToggleCommand={store.toggleCommand}
         onRefresh={store.refresh}
       />
-      <StageRail selectedStage={store.selectedStage} state={store.state} onStageChange={store.setStage} />
+      <StageRail selectedStage={store.selectedStage} state={store.state} onOpenOnboarding={store.openOnboarding} onStageChange={store.setStage} />
       <ArtifactCanvas
         state={store.state}
         selectedStage={store.selectedStage}

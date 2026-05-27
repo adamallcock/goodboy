@@ -656,9 +656,10 @@ Implemented:
 
 - Review Room shell with stage rail, gate banner, large artifact canvas, inspector, activity drawer, and command palette.
 - Onboarding screen with Create with Codex, Open project, and Explore demo paths.
-- Workflow timeline that makes completed, current, and upcoming stages explicit.
+- Readable current-step header that makes previous, current, next, and the next user decision explicit without duplicating the side rail.
+- Persistent Home navigation back to onboarding.
 - Decision-focused inspector copy and actions for approval/change requests.
-- Demo fixture project for hiring-manager walkthroughs without requiring provider credentials.
+- Demo fixture project with visible row-strip and QA materials for hiring-manager walkthroughs without requiring provider credentials.
 - Zoom, fit, playback-speed, artifact filmstrip, and draggable compare interactions.
 - Source, baseline, style, generation, QA, approval/export, and demo-stage panels.
 - Project-open form for connecting the UI to a running Goodboy backend.

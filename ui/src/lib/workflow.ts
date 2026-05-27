@@ -9,7 +9,7 @@ export interface WorkflowStep {
 export const workflowSteps: WorkflowStep[] = [
   { id: "start", label: "Start", stage: null },
   { id: "sources", label: "Sources", stage: "sources" },
-  { id: "baselines", label: "Baseline", stage: "baselines" },
+  { id: "baselines", label: "Baselines", stage: "baselines" },
   { id: "style", label: "Style", stage: "style" },
   { id: "generation", label: "Generate", stage: "generation" },
   { id: "qa", label: "QA Review", stage: "qa" },
@@ -93,4 +93,19 @@ export function currentDecisionFor(state: ProjectState, selectedStage: ReviewSta
     severity: "info",
     next: "Open Sources"
   };
+}
+
+export function previousWorkflowStep(state: ProjectState, selectedStage: ReviewStage): WorkflowStep | null {
+  const currentIndex = workflowIndexFor(state, selectedStage);
+  return workflowSteps[currentIndex - 1] ?? null;
+}
+
+export function currentWorkflowStep(state: ProjectState, selectedStage: ReviewStage): WorkflowStep {
+  const currentIndex = workflowIndexFor(state, selectedStage);
+  return workflowSteps[currentIndex] ?? workflowSteps[1];
+}
+
+export function nextWorkflowStep(state: ProjectState, selectedStage: ReviewStage): WorkflowStep | null {
+  const currentIndex = workflowIndexFor(state, selectedStage);
+  return workflowSteps[currentIndex + 1] ?? null;
 }

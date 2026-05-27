@@ -15,6 +15,8 @@ Use this guide for day-to-day operation. Use `docs/000-goodboy-master-plan.md` f
 
 - Goodboy repository: `/Users/adamallcock/Documents/Coding/goodboy`
 - Installed Goodboy Codex skill: `/Users/adamallcock/.codex/skills/goodboy`
+- Goodboy Codex plugin package: `/Users/adamallcock/Documents/Coding/goodboy/plugins/goodboy`
+- Goodboy repo marketplace: `/Users/adamallcock/Documents/Coding/goodboy/.agents/plugins/marketplace.json`
 - Legacy reference scripts: `references/legacy-pipeline/`
 - Portable test fixture: `tests/fixtures/synthetic-row-strips/`
 
@@ -68,6 +70,26 @@ PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mo
 `advance` runs every safe deterministic step it can, then stops only at a real gate: provider generation, baseline choice, visual approval, or QA/user override. It reports `gate`, `actions`, `next_human_action`, `artifacts_to_show_user`, and optional API accelerators. Use `doctor --agent-mode` for diagnostics when the state looks surprising.
 
 OpenAI and Gemini API keys are optional accelerators. Without keys, Goodboy uses Codex built-in handoff. With `OPENAI_API_KEY` or `GEMINI_API_KEY`, direct provider execution can be faster.
+
+## Codex Plugin
+
+Goodboy includes a repo-scoped Codex plugin package. The plugin bundles the Goodboy skill and exposes it through the repo marketplace, so Codex can install the workflow as a plugin rather than only as a loose local skill.
+
+Plugin files:
+
+```text
+plugins/goodboy/.codex-plugin/plugin.json
+plugins/goodboy/skills/goodboy/SKILL.md
+.agents/plugins/marketplace.json
+```
+
+To add this marketplace from the local checkout:
+
+```bash
+codex plugin marketplace add /Users/adamallcock/Documents/Coding/goodboy
+```
+
+The current plugin does not replace visual QA artifacts. Continue reviewing `qa/contact-sheet.png`, `qa/previews/*.gif`, `qa/edge-preview-white.png`, and `qa/centering-overlay.png` before approval.
 
 Typical loop:
 

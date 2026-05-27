@@ -88,7 +88,7 @@ The default style sheet should produce happy, entertaining Codex pets. Advanced 
 - Archive and rollback.
 - Petdex-ready export.
 - Codex skill wrapper.
-- Codex plugin feasibility and possible plugin.
+- Codex plugin feasibility and repo-scoped plugin package.
 - Optional local web UI.
 
 ### Out Of Scope For MVP
@@ -728,7 +728,7 @@ Responsibilities:
 
 ### 16.2 Codex Plugin
 
-Goodboy should consider a Codex plugin after the CLI and skill are stable.
+Goodboy now ships a first Codex plugin slice after the CLI and skill became stable. The plugin is intentionally narrow: it packages the Goodboy skill and install-surface metadata, then exposes it through a repo marketplace. Rich visual review remains in Goodboy artifacts for now.
 
 Potential plugin value:
 
@@ -744,6 +744,12 @@ Plugin feasibility questions:
 - Can it manage local files safely?
 - Can it install into `~/.codex/pets` with user approval?
 - Can it maintain resumable job state?
+
+Decision summary:
+
+- Feasible now: a repo-scoped plugin that bundles the Goodboy skill and steers agents through the CLI rails.
+- Implemented now: `plugins/goodboy/.codex-plugin/plugin.json`, `plugins/goodboy/skills/goodboy/SKILL.md`, and `.agents/plugins/marketplace.json`.
+- Deferred: MCP tools, hooks, app/connectors, and richer visual review.
 
 If the plugin surface is not visually rich enough, Goodboy should use a local web UI for candidate selection and keep the Codex plugin focused on orchestration.
 
@@ -844,5 +850,5 @@ A Goodboy pet is not finished until:
 2. Harden provider execution error parsing and retry policy.
 3. Add visual-critic source/baseline/row comparison reports.
 4. Add EXIF/provenance reporting for source ingest.
-5. Run a Codex plugin feasibility spike.
+5. Add bundled Goodboy MCP tools if plugin usage proves the extra structure is worthwhile.
 6. Add Petdex-ready export validation.

@@ -542,27 +542,31 @@ Acceptance criteria:
 
 ## Module 19: Codex Plugin
 
-Purpose: explore a deeper Codex integration.
+Purpose: provide a deeper Codex integration.
 
 Responsibilities:
 
-- expose Goodboy commands
-- support resumable workflow
-- manage provider config
-- possibly provide richer selection/review UI
+- package Goodboy for Codex plugin distribution
+- expose command workflows through the bundled Goodboy skill
+- support resumable workflow through Goodboy manifests
+- optionally add app or MCP surfaces
 
 Inputs:
 
 - Codex plugin surface capabilities
+- existing Goodboy skill
 
 Outputs:
 
-- plugin feasibility report
-- plugin package if viable
+- `docs/2026-05-27-goodboy-codex-plugin-feasibility.md`
+- `plugins/goodboy/.codex-plugin/plugin.json`
+- `plugins/goodboy/skills/goodboy/SKILL.md`
+- `.agents/plugins/marketplace.json`
 
 Acceptance criteria:
 
-- plugin improves workflow beyond the skill
+- bundled plugin installs and validates
+- repo marketplace exposes the plugin
 - plugin does not weaken provenance or QA
 
 ## Module 20: Local Web UI

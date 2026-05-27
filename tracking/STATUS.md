@@ -4,7 +4,7 @@ Last updated: 2026-05-26
 
 ## Current Phase
 
-Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint, manifest dataclasses, strict manifest validation, source ingest, source-card scaffolding, baseline candidate planning and selection, candidate contact-sheet rendering, explicit feedback events and branch manifests, emotion style-sheet generation, row-job planning, provider handoff manifests, dry-run-safe OpenAI Images and Gemini/Nano Banana execution paths, deterministic raster pipeline, state-aware centering, centering reports/overlays, atlas validation, QA reports, install policy, installer/package generation, Agent Rail commands for safer Codex operation, an installed Codex skill wrapper, a portable synthetic fixture, and regression tests against existing Napoleon row strips.
+Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint, manifest dataclasses, strict manifest validation, source ingest, source-card scaffolding, baseline candidate planning and selection, candidate contact-sheet rendering, explicit feedback events and branch manifests, emotion style-sheet generation, row-job planning, provider handoff manifests, dry-run-safe OpenAI Images and Gemini/Nano Banana execution paths, deterministic raster pipeline, state-aware centering, centering reports/overlays, atlas validation, QA reports, install policy, installer/package generation, Agent Rail commands for safer Codex operation, an installed Codex skill wrapper, a repo-scoped Codex plugin package, a portable synthetic fixture, and regression tests against existing Napoleon row strips.
 
 ## Completed This Session
 
@@ -38,13 +38,14 @@ Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint,
 - Added Agent Rail v3: `goodboy start`, `goodboy advance --agent-mode`, default baseline candidate-sheet rendering, short-form `goodboy approve --notes`, and optional API accelerator reporting for OpenAI/Gemini keys.
 - Added portable synthetic row-strip fixture.
 - Added Codex skill wrapper under `codex-skill/goodboy`, installed it to `/Users/adamallcock/.codex/skills/goodboy`, and validated both copies with the official skill validator using a temporary Python environment with PyYAML.
+- Added Codex plugin feasibility decision and a repo-scoped plugin package under `plugins/goodboy`, exposed through `.agents/plugins/marketplace.json`.
 - Added `goodboy init`, `goodboy inspect`, `goodboy start`, `goodboy advance`, `goodboy make`, `goodboy doctor`, `goodboy next`, `goodboy ingest`, `goodboy source-card`, `goodboy plan-candidates`, `goodboy select-candidate`, `goodboy candidate-sheet`, `goodboy feedback`, `goodboy style-default`, `goodboy plan-rows`, `goodboy adapters`, `goodboy generate-handoff`, `goodboy import-generated`, `goodboy build-review`, `goodboy finish`, `goodboy handoff`, `goodboy execute-openai`, `goodboy execute-gemini`, `goodboy build-from-rows`, `goodboy approve`, `goodboy review-status`, `goodboy install`, and `goodboy validate`.
 - Added tests for project init, ingest/source-card/candidate/feedback/style/handoff/validation flow, Agent Rail command flow, simplified handoff/import/build/finish flow, planning idempotence, approval/install command flow, suspicious renderer blocking, negative manifest validation across named manifest types, OpenAI and Gemini dry-run execution, QA policy, centering stabilization, portable synthetic fixture build, WebP transparency invariants, and existing Napoleon row-strip regression.
 
 ## Not Yet Started
 
-- Codex plugin feasibility spike.
 - Local web UI.
+- Bundled Goodboy MCP tools.
 
 ## In Progress
 
@@ -58,7 +59,7 @@ Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint,
 2. Harden provider execution error parsing and retry policy.
 3. Add source-analysis and visual-critic adapters.
 4. Add EXIF/provenance reporting for source ingest.
-5. Run a Codex plugin feasibility spike.
+5. Explore bundled Goodboy MCP tools for the Codex plugin.
 6. Add Petdex-ready export.
 7. Review whether the installed Goodboy skill should be expanded with helper scripts or kept CLI-only.
 

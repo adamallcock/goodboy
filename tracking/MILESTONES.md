@@ -180,8 +180,12 @@ Status: `[~]`
 - `[x]` Report OpenAI/Gemini API keys as optional accelerators.
 - `[x]` Add executable `next --agent-mode` fields and planning idempotence.
 - `[x]` Persist `workflow-state.json` so agents can follow the next safe action instead of guessing.
-- `[ ]` Add Codex plugin feasibility spike.
-- `[ ]` If viable, define plugin commands/UI flow.
+- `[x]` Add Codex plugin feasibility spike.
+- `[x]` If viable, define plugin commands/UI flow.
+- `[x]` Add repo-scoped Codex plugin package under `plugins/goodboy`.
+- `[x]` Add repo marketplace at `.agents/plugins/marketplace.json`.
+- `[ ]` Consider bundled Goodboy MCP tools after the plugin package proves useful.
+- `[ ]` Consider a richer visual review UI through a local web UI or future app surface.
 
 Exit criteria:
 

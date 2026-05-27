@@ -1,0 +1,4 @@
+interface:
+  display_name: "Goodboy"
+  short_description: "Create and validate Codex pets from source images using Goodboy."
+  default_prompt: "Create or continue a Goodboy pet project from source images, preserving manifests, feedback branches, QA reports, and installable Codex pet outputs."

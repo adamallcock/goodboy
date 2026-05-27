@@ -43,15 +43,15 @@ Exit criteria:
 
 ## M2: Ingest And Source Analysis
 
-Status: `[~]`
+Status: `[x]`
 
 - `[x]` Copy source images into project artifact store.
 - `[x]` Hash and fingerprint source images.
 - `[x]` Generate thumbnails.
-- `[ ]` Capture EXIF where available.
+- `[x]` Capture EXIF where available.
 - `[x]` Produce a source-card draft.
-- `[~]` Support manual source-card edits through JSON artifact edits and source-card refresh.
-- `[ ]` Add provenance report.
+- `[x]` Support manual source-card edits through JSON artifact edits and source-card refresh.
+- `[x]` Add provenance report.
 
 Exit criteria:
 
@@ -59,10 +59,10 @@ Exit criteria:
 
 ## M3: Baseline Candidate Generation
 
-Status: `[~]`
+Status: `[x]`
 
-- `[~]` Plan multiple style candidates; actual image submission remains adapter-dependent.
-- `[ ]` Store each candidate image.
+- `[x]` Plan multiple style candidates; actual image submission remains adapter-dependent.
+- `[x]` Store each candidate image.
 - `[x]` Store exact prompt and provider metadata.
 - `[x]` Store candidate character-card deltas.
 - `[x]` Produce candidate contact sheet with generated images or placeholders.
@@ -75,7 +75,7 @@ Exit criteria:
 
 ## M4: Generation Adapters
 
-Status: `[~]`
+Status: `[x]`
 
 - `[x]` Define provider adapter interface.
 - `[x]` Implement `codex_builtin` handoff adapter.
@@ -84,7 +84,7 @@ Status: `[~]`
 - `[x]` Implement `gemini_nano_banana_pro` adapter.
 - `[x]` Normalize output capture for OpenAI text-to-image and image-input edit jobs.
 - `[x]` Add adapter capability registry.
-- `[~]` Add provider-level retry and failure reporting through planned job metadata.
+- `[x]` Add provider-level retry and failure reporting through planned job metadata.
 
 Exit criteria:
 
@@ -92,13 +92,13 @@ Exit criteria:
 
 ## M5: Emotion Style Sheet And Row Planning
 
-Status: `[~]`
+Status: `[x]`
 
 - `[x]` Define default Codex pet state sheet.
 - `[x]` Define frame counts and row prompts per state.
 - `[x]` Define state-level avoid rules.
-- `[ ]` Support user style overrides.
-- `[ ]` Support AI critique overrides.
+- `[x]` Support user style overrides.
+- `[x]` Support AI critique overrides.
 - `[x]` Support human feedback forks.
 - `[x]` Generate row job manifests.
 
@@ -108,7 +108,7 @@ Exit criteria:
 
 ## M6: Deterministic Raster Pipeline
 
-Status: `[~]`
+Status: `[x]`
 
 - `[x]` Generalize chroma-key cleanup from legacy scripts.
 - `[x]` Generalize component extraction.
@@ -126,7 +126,7 @@ Exit criteria:
 
 ## M7: QA Engine
 
-Status: `[~]`
+Status: `[x]`
 
 - `[x]` Transparent RGB residue check.
 - `[x]` Green-edge metric.
@@ -136,9 +136,9 @@ Status: `[~]`
 - `[x]` Centering overlay and copied QA centering report.
 - `[x]` Duplicate and near-duplicate audit.
 - `[x]` Component count sanity check.
-- `[~]` State-specific motion sanity checks.
+- `[x]` State-specific motion sanity checks.
 - `[x]` QA severity and fail/pass policy.
-- `[ ]` Human visual review checklist.
+- `[x]` Human visual review checklist.
 - `[x]` Record human visual approval as a run artifact.
 - `[x]` Block install when suspicious local renderer scripts are present.
 
@@ -149,14 +149,14 @@ Exit criteria:
 
 ## M8: Installer And Exporters
 
-Status: `[~]`
+Status: `[x]`
 
 - `[x]` Generate `pet.json`.
 - `[x]` Install to `~/.codex/pets/<id>`.
 - `[x]` Create archive snapshots before overwrites.
 - `[x]` Split final installation into review, approval, and install commands.
-- `[ ]` Export project package.
-- `[ ]` Export Petdex-ready folder or zip.
+- `[x]` Export project package.
+- `[x]` Export Petdex-ready folder or zip.
 - `[x]` Validate installed package through atlas/package generation tests and an installed-target smoke check.
 
 Exit criteria:
@@ -165,7 +165,7 @@ Exit criteria:
 
 ## M9: Codex Integration
 
-Status: `[~]`
+Status: `[x]`
 
 - `[x]` Create Goodboy Codex skill wrapper draft under `codex-skill/goodboy`.
 - `[x]` Install Goodboy Codex skill wrapper to `/Users/adamallcock/.codex/skills/goodboy`.
@@ -184,8 +184,8 @@ Status: `[~]`
 - `[x]` If viable, define plugin commands/UI flow.
 - `[x]` Add repo-scoped Codex plugin package under `plugins/goodboy`.
 - `[x]` Add repo marketplace at `.agents/plugins/marketplace.json`.
-- `[ ]` Consider bundled Goodboy MCP tools after the plugin package proves useful.
-- `[ ]` Consider a richer visual review UI through a local web UI or future app surface.
+- `[x]` Consider bundled Goodboy MCP tools after the plugin package proves useful; deferred until plugin usage proves the added surface is worthwhile.
+- `[x]` Consider a richer visual review UI through a local web UI or future app surface; deferred to M10.
 
 Exit criteria:
 
@@ -209,14 +209,14 @@ Exit criteria:
 
 ## M11: Documentation And Examples
 
-Status: `[~]`
+Status: `[x]`
 
-- `[~]` Create quickstart.
+- `[x]` Create quickstart.
 - `[x]` Create architecture docs.
-- `[~]` Create adapter docs.
-- `[~]` Create QA docs.
+- `[x]` Create adapter docs.
+- `[x]` Create QA docs.
 - `[x]` Create portable synthetic fixture and keep Millie/Napoleon references.
-- `[ ]` Create troubleshooting guide.
+- `[x]` Create troubleshooting guide.
 
 Exit criteria:
 

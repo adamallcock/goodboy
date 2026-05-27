@@ -71,6 +71,38 @@ PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mo
 
 OpenAI and Gemini API keys are optional accelerators. Without keys, Goodboy uses Codex built-in handoff. With `OPENAI_API_KEY` or `GEMINI_API_KEY`, direct provider execution can be faster.
 
+## Style And Subject Customization
+
+Goodboy style sheets preserve style as a durable artifact rather than only a prompt phrase. Use `style-default` with options to create realistic, anime, storybook, pixel, sticker, or soft-lifelike directions, including mascot-style inanimate objects.
+
+```bash
+PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli style-default /tmp/goodboy-demo \
+  --preset anime \
+  --subject-kind inanimate_object \
+  --user-style "make the lamp look cozy and magical"
+```
+
+Supported preset IDs include `soft-lifelike`, `realistic`, `anime`, `storybook`, `pixel`, and `sticker`.
+
+Useful subject kinds include `pet`, `animal`, `person`, `object`, `inanimate_object`, and `fantasy_creature`.
+
+For AI or human critique, write a structured critique report. If the recommendation should affect later row prompts, pass `--apply-to-style`.
+
+```bash
+PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli critique /tmp/goodboy-demo \
+  --critique-id vision-001 \
+  --target style \
+  --finding "object reads too flat" \
+  --recommendation "add subtle bounce and tilt while preserving object identity" \
+  --apply-to-style
+```
+
+For source provenance and EXIF:
+
+```bash
+PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli provenance /tmp/goodboy-demo
+```
+
 ## Codex Plugin
 
 Goodboy includes a repo-scoped Codex plugin package. The plugin bundles the Goodboy skill and exposes it through the repo marketplace, so Codex can install the workflow as a plugin rather than only as a loose local skill.
@@ -333,6 +365,24 @@ Approved row provenance values are:
 - `test_fixture` for deliberate fixtures used in tests or demos
 
 Renderer/mock provenance values such as `mock_renderer`, `local_renderer`, `programmatic_renderer`, and `ad_hoc_renderer` are not installable.
+
+## Exports
+
+Export a full Goodboy project bundle:
+
+```bash
+PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli export project /tmp/goodboy-demo \
+  --run-id planned-row-generation
+```
+
+Export a Petdex-ready folder and zip:
+
+```bash
+PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli export petdex /tmp/goodboy-demo \
+  --run-id planned-row-generation
+```
+
+Goodboy writes exports under `exports/<run-id>/` by default.
 
 Normal command after visual review:
 

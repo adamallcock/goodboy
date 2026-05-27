@@ -6,7 +6,7 @@ The project grew out of the Millie and Napoleon pet runs. Those runs proved that
 
 ## Current Status
 
-This repository can initialize a project, ingest source images, draft source and character cards, plan baseline candidates, record feedback branches, plan row-generation jobs, prepare or execute provider jobs, import generated row outputs, build review artifacts, stabilize frame centering, render candidate/review sheets, validate manifests, finish an approved install, and enforce QA install policy.
+This repository can initialize a project, ingest source images, capture EXIF/provenance, draft source and character cards, plan baseline candidates, store generated candidate images, record feedback and critique branches, customize style presets for animals or inanimate/object mascots, plan row-generation jobs, prepare or execute provider jobs, import generated row outputs, build review artifacts, stabilize frame centering, render candidate/review sheets, validate manifests, export packages, finish an approved install, and enforce QA install policy.
 
 Seeded reference material lives under:
 
@@ -26,6 +26,7 @@ These are copied references, not the live source of truth for Millie or Napoleon
 - `docs/2026-05-26-goodboy-user-guide.md` - start here for day-to-day usage, command examples, and troubleshooting.
 - `docs/000-goodboy-master-plan.md` - full project charter, requirements, architecture, modules, data model, QA gates, milestones, and delivery plan.
 - `docs/2026-05-27-goodboy-codex-plugin-feasibility.md` - Codex plugin feasibility decision and first implemented plugin slice.
+- `docs/2026-05-27-goodboy-milestone-completion-audit.md` - milestone-by-milestone completion decisions before M10.
 - `tracking/MILESTONES.md` - implementation milestones and progress tracking.
 - `tracking/DECISIONS.md` - architecture decisions and open decisions.
 - `tracking/RISK_REGISTER.md` - known risks, mitigations, and owners.
@@ -98,6 +99,27 @@ PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goo
 
 OpenAI and Gemini API keys are optional accelerators, not requirements. Without keys, Goodboy uses Codex built-in handoff. With `OPENAI_API_KEY` or `GEMINI_API_KEY`, direct provider execution can be faster; Goodboy never writes raw API keys to disk.
 
+Useful customization commands:
+
+```bash
+PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli provenance /tmp/goodboy-demo
+
+PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli style-default /tmp/goodboy-demo \
+  --preset anime \
+  --subject-kind inanimate_object \
+  --user-style "make the object feel cozy and magical"
+
+PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli critique /tmp/goodboy-demo \
+  --critique-id vision-001 \
+  --target style \
+  --finding "silhouette is weak" \
+  --recommendation "increase contrast around the ears or object edges" \
+  --apply-to-style
+
+PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli export petdex /tmp/goodboy-demo \
+  --run-id planned-row-generation
+```
+
 Run tests:
 
 ```bash
@@ -120,6 +142,7 @@ For each pet, Goodboy should ultimately produce:
 - style sheet
 - generation manifest
 - feedback events and branch manifests
+- critique reports
 - QA reports
 - run summary
 - optional Petdex-ready package

@@ -264,16 +264,20 @@ Inputs:
 - character-card
 - user mood preferences
 - optional style preset
+- subject kind such as pet, object, inanimate_object, or fantasy_creature
+- optional human and AI critique overrides
 
 Outputs:
 
 - `style/emotion-style-sheet.json`
+- style preset, subject-kind, user override, and AI critique override fields
 
 Acceptance criteria:
 
 - every required Codex state is covered
 - frame counts match output contract
 - user overrides are preserved
+- pets, object mascots, and alternate styles can be expressed without changing code
 
 ## Module 10: Row Job Planner
 
@@ -303,6 +307,7 @@ Acceptance criteria:
 - all required states are planned
 - every row job has identity lock and avoid rules
 - jobs can be resumed after partial completion
+- row prompts include style preset, subject-kind guidance, user overrides, and critique overrides
 
 ## Module 11: Alpha Cleanup
 

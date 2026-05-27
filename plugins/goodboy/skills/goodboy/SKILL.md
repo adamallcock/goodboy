@@ -25,7 +25,8 @@ For detailed user-facing instructions, read `docs/2026-05-26-goodboy-user-guide.
 4. When `advance` asks for row generation, generate provider outputs and rerun it with `--generated-map <generated-output-map.json>`.
 5. When `advance` asks for approval, inspect contact sheet, GIF previews, edge preview, and centering overlay; then rerun it with `--approval-notes`.
 6. Record every user or AI adjustment with `feedback`; branch names should reflect the reason, such as happier, center-napoleon, or trim-green.
-7. Run tests and `goodboy validate` before claiming completion.
+7. Use style presets, subject kinds, and critique reports when the user asks for realistic/anime/object/inanimate customization.
+8. Run tests and `goodboy validate` before claiming completion.
 
 ## Hard Guardrails
 
@@ -53,10 +54,13 @@ goodboy make <project-dir> --pet-id <id> --display-name <name> --species dog --s
 goodboy init <project-dir> --pet-id <id> --display-name <name> --species dog
 goodboy ingest <project-dir> <image>... --role primary_reference --notes "<notes>"
 goodboy source-card <project-dir> --notes "<source notes>"
+goodboy provenance <project-dir>
 goodboy plan-candidates <project-dir> --provider codex_builtin --model-alias codex-imagegen --count 6 [--refresh] [--no-sheet]
+goodboy candidate-image <project-dir> --candidate-id baseline-001 --image-path <generated.png>
 goodboy select-candidate <project-dir> --candidate-id baseline-001 --image-path <generated.png> --notes "<why>"
 goodboy feedback <project-dir> --target baseline-001 --text "make him happier"
-goodboy style-default <project-dir> [--refresh]
+goodboy style-default <project-dir> [--preset anime] [--subject-kind inanimate_object] [--user-style "<style>"] [--ai-critique "<critique>"] [--refresh]
+goodboy critique <project-dir> --critique-id vision-001 --target style --finding "<finding>" --recommendation "<recommendation>" [--apply-to-style]
 goodboy plan-rows <project-dir> --run-id <run-id> --provider codex_builtin --model-alias codex-imagegen --character-reference character/selected-baseline.png [--refresh]
 goodboy generate-handoff <project-dir> --run-id <run-id> --all
 goodboy import-generated <project-dir> --run-id <run-id> --map <generated-output-map.json>
@@ -70,8 +74,17 @@ goodboy review-status <project-dir> --run-id <run-id> --agent-mode
 goodboy approve <project-dir> --notes "<human approval note>"
 goodboy approve <project-dir> --run-id <run-id> --artifact contact-sheet --decision approved --notes "<human approval note>"
 goodboy install <project-dir> --run-id <run-id> --row-provenance provider_generated
+goodboy export project <project-dir> --run-id <run-id>
+goodboy export petdex <project-dir> --run-id <run-id>
 goodboy validate <project-dir>
 ```
+
+## Style And Critique
+
+- Use `--preset realistic`, `--preset anime`, `--preset storybook`, `--preset pixel`, `--preset sticker`, or `--preset soft-lifelike` for durable style direction.
+- Use `--subject-kind inanimate_object` or `--subject-kind object` when the user wants a pet-like mascot made from a non-animal object.
+- Use `critique --apply-to-style` for AI or human recommendations that should affect later row prompts.
+- Do not silently rewrite selected baselines or generated rows from critique; create critique/feedback artifacts and branch records.
 
 ## Provider Guidance
 

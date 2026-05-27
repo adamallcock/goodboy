@@ -768,7 +768,9 @@ goodboy plan-candidates <project-dir> --provider codex_builtin --model-alias cod
 goodboy select-candidate <project-dir> --candidate-id baseline-003 --image-path path/to/generated.png
 goodboy candidate-sheet <project-dir>
 goodboy feedback <project-dir> --target baseline-003 --text "make him happier"
-goodboy style-default <project-dir> [--refresh]
+goodboy provenance <project-dir>
+goodboy style-default <project-dir> [--preset anime] [--subject-kind inanimate_object] [--user-style "..."] [--ai-critique "..."] [--refresh]
+goodboy critique <project-dir> --critique-id vision-001 --target style --finding "..." --recommendation "..." [--apply-to-style]
 goodboy plan-rows <project-dir> --run-id <run-id> --provider codex_builtin --model-alias codex-imagegen [--refresh]
 goodboy adapters --json
 goodboy doctor <project-dir> --agent-mode
@@ -782,13 +784,13 @@ goodboy handoff <project-dir> --run-id <run-id> --job-id row-idle
 goodboy execute-openai <project-dir> --run-id <run-id> --job-id row-idle --dry-run
 goodboy execute-gemini <project-dir> --run-id <run-id> --job-id row-idle --dry-run
 goodboy build-from-rows <project-dir> --run-id <run-id> --rows-dir path/to/rows
+goodboy export project <project-dir> --run-id <run-id>
+goodboy export petdex <project-dir> --run-id <run-id>
 goodboy validate <project-dir>
 
 # Planned commands after the current executable slice:
 goodboy analyze <project-dir>
-goodboy critique <project-dir> --target selected-baseline
 goodboy qa <project-dir>
-goodboy export petdex <project-dir>
 ```
 
 ## 18. MVP Definition

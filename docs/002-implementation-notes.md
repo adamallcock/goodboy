@@ -9,10 +9,12 @@ Implemented modules:
 - `contracts.py` - Codex pet dimensions, state order, and frame counts.
 - `schemas.py` - initial manifest dataclasses.
 - `project.py` - project initialization and manifest loading.
-- `ingest.py` - source-image import, hashing, dedupe, thumbnails, and source-card scaffolding.
+- `ingest.py` - source-image import, hashing, dedupe, thumbnails, EXIF capture, provenance reporting, and source-card scaffolding.
 - `candidates.py` - baseline candidate planning, candidate prompts, selection, selected-baseline normalization, character-card creation, and candidate contact-sheet rendering.
 - `feedback.py` - feedback events and branch manifests for human or AI critique.
-- `style.py` - default emotion style sheet and row-generation job planning.
+- `style.py` - default/custom emotion style sheets, style presets, subject-kind guidance, critique-aware row prompts, and row-generation job planning.
+- `critique.py` - structured human/AI critique reports and optional style override application.
+- `exports.py` - Goodboy project and Petdex-ready export bundles.
 - `adapters.py` - provider capability registry, provider handoff manifest preparation, dry-run-safe OpenAI text-to-image plus image-input edit execution, and dry-run-safe Gemini/Nano Banana execution.
 - `validation.py` - strict manifest validation for project, source, candidate, character, style, feedback, branch, job, invocation, and run-summary manifests.
 - `raster.py` - chroma-key cleanup, despill, component extraction, state-aware centering, idle stabilization, frame generation, and frame centering reports.
@@ -101,6 +103,12 @@ State-aware centering now stabilizes idle/waiting/review/task-style rows without
 The OpenAI Images API adapter now has direct text-to-image and image-input edit execution paths with dry-run support. It reads `OPENAI_API_KEY` from the environment when actually executing and does not write raw keys to disk. OpenAI and Gemini keys are optional accelerators; missing keys are not blockers for Codex built-in handoff.
 
 The Gemini/Nano Banana adapters now use Google AI's REST `generateContent` shape with text and optional inline base64 image inputs. They read `GEMINI_API_KEY` from the environment when actually executing and do not write raw keys to disk.
+
+Provider failures now update the relevant generation job's retry metadata with attempt count, last error, and retry availability, so agents do not need custom bookkeeping after a failed API call.
+
+Style sheets now support style presets, subject kinds, user overrides, and AI critique overrides. This lets Goodboy handle realistic pets, anime/sticker/pixel/storybook variants, and mascot-like inanimate objects while keeping the chosen direction in `style/emotion-style-sheet.json`.
+
+Review builds write `qa/human-review-checklist.json`. Export commands can produce a full Goodboy project bundle or a Petdex-ready folder/zip from an approved package run.
 
 The skill wrapper was initialized with the system skill creator. After adding a temporary Python environment with PyYAML, the official skill validator passed for both `codex-skill/goodboy` and the installed copy at `/Users/adamallcock/.codex/skills/goodboy`.
 

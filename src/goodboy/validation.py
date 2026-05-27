@@ -13,6 +13,7 @@ from .jsonio import read_json, write_json
 from .schemas import (
     BranchManifest,
     CharacterCard,
+    CritiqueReport,
     EmotionStyleSheet,
     FeedbackEvent,
     GenerationJob,
@@ -38,6 +39,7 @@ def validate_project(project_dir: Path, *, write_report: bool = True) -> Manifes
     validate_character(project_dir, issues, checked_files)
     validate_style_sheet(project_dir, issues, checked_files)
     validate_feedback(project_dir, issues, checked_files)
+    validate_critiques(project_dir, issues, checked_files)
     validate_branches(project_dir, issues, checked_files)
     validate_runs(project_dir, issues, checked_files)
     report = ManifestValidationReport(
@@ -295,6 +297,29 @@ def validate_branches(project_dir: Path, issues: list[ManifestValidationIssue], 
             continue
         if branch.id != branch_file.parent.name:
             add_error(issues, rel, f"branch id `{branch.id}` must match folder `{branch_file.parent.name}`")
+
+
+def validate_critiques(project_dir: Path, issues: list[ManifestValidationIssue], checked_files: list[str]) -> None:
+    for critique_file in sorted((project_dir / "critiques").glob("*.json")):
+        rel = critique_file.relative_to(project_dir)
+        checked_files.append(str(rel))
+        raw = read_json(critique_file)
+        if not isinstance(raw, dict):
+            add_error(issues, rel, "critique report must be an object")
+            continue
+        check_unknown_and_required(raw, CritiqueReport, rel, issues)
+        try:
+            report = CritiqueReport.from_dict(raw)
+        except Exception as exc:
+            add_error(issues, rel, f"cannot load CritiqueReport: {exc}")
+            continue
+        if report.id != critique_file.stem:
+            add_error(issues, rel, f"critique id `{report.id}` must match file `{critique_file.stem}`")
+        if report.author not in {"human", "vision_critic", "system"}:
+            add_error(issues, rel, f"unknown critique author `{report.author}`")
+        for label, score in {"identity_score": report.identity_score, "style_score": report.style_score}.items():
+            if score is not None and not 0 <= score <= 1:
+                add_error(issues, rel, f"{label} must be between 0 and 1")
 
 
 def validate_runs(project_dir: Path, issues: list[ManifestValidationIssue], checked_files: list[str]) -> None:

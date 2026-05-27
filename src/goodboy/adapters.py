@@ -214,6 +214,7 @@ def execute_openai_image_job(
         invocation.status = "failed"
         invocation.finished_at = utc_now()
         invocation.error = "OPENAI_API_KEY is not set"
+        mark_job_failed(job_items, index, jobs_path, invocation.error)
         write_json(out_path, invocation.to_dict())
         return invocation
 
@@ -279,6 +280,7 @@ def execute_openai_image_job(
         invocation.status = "failed"
         invocation.finished_at = utc_now()
         invocation.error = str(exc)
+        mark_job_failed(job_items, index, jobs_path, invocation.error)
     write_json(out_path, invocation.to_dict())
     return invocation
 
@@ -334,6 +336,7 @@ def execute_gemini_image_job(
         invocation.status = "failed"
         invocation.finished_at = utc_now()
         invocation.error = "GEMINI_API_KEY is not set"
+        mark_job_failed(job_items, index, jobs_path, invocation.error)
         write_json(out_path, invocation.to_dict())
         return invocation
     try:
@@ -372,8 +375,23 @@ def execute_gemini_image_job(
         invocation.status = "failed"
         invocation.finished_at = utc_now()
         invocation.error = str(exc)
+        mark_job_failed(job_items, index, jobs_path, invocation.error)
     write_json(out_path, invocation.to_dict())
     return invocation
+
+
+def mark_job_failed(job_items: list[dict[str, object]], index: int, jobs_path: Path, error: str | None) -> None:
+    raw_job = dict(job_items[index])
+    retry_policy = dict(raw_job.get("retry_policy", {}))
+    attempts = int(retry_policy.get("attempts", 0)) + 1
+    retry_policy["attempts"] = attempts
+    retry_policy["last_error"] = error or "unknown provider failure"
+    retry_policy["retry_available"] = attempts < int(retry_policy.get("max_attempts", 1))
+    raw_job["retry_policy"] = retry_policy
+    raw_job["status"] = "failed"
+    raw_job["qa_notes"] = retry_policy["last_error"]
+    job_items[index] = raw_job
+    write_json(jobs_path, {"jobs": job_items})
 
 
 def gemini_generate_content_payload(project_dir: Path, prompt: str, image_paths: list[str]) -> dict[str, object]:

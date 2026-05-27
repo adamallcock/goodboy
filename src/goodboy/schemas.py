@@ -55,6 +55,7 @@ class SourceImage:
     role: str = "primary_reference"
     notes: str = ""
     thumbnail_path: str | None = None
+    exif: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -171,6 +172,10 @@ class EmotionStyleSheet:
     background_policy: str
     centering_policy: str
     qa_thresholds: dict[str, Any]
+    style_preset: str = "soft-lifelike"
+    subject_kind: str = "pet"
+    user_style_overrides: list[str] = field(default_factory=list)
+    ai_critique_overrides: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -280,6 +285,27 @@ class BranchManifest:
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "BranchManifest":
+        return cls(**raw)
+
+
+@dataclass
+class CritiqueReport:
+    id: str
+    target: str
+    author: str
+    findings: list[str]
+    recommendations: list[str]
+    identity_score: float | None = None
+    style_score: float | None = None
+    apply_to_style: bool = False
+    created_at: str = field(default_factory=utc_now)
+    status: str = "open"
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "CritiqueReport":
         return cls(**raw)
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import tempfile
 import unittest
@@ -12,11 +13,12 @@ from PIL import Image, ImageDraw
 
 from goodboy.adapters import execute_gemini_image_job, execute_openai_image_job, get_capabilities, prepare_handoff
 from goodboy.atlas import compose_atlas, validate_atlas
-from goodboy.candidates import build_candidate_contact_sheet, plan_baseline_candidates, select_baseline_candidate
+from goodboy.candidates import build_candidate_contact_sheet, plan_baseline_candidates, select_baseline_candidate, store_candidate_image
 from goodboy.cli import main as cli_main
 from goodboy.contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, STATE_ORDER
+from goodboy.exports import export_petdex_package, export_project_bundle
 from goodboy.feedback import create_feedback_event
-from goodboy.ingest import draft_source_card, ingest_images, load_source_images
+from goodboy.ingest import draft_source_card, ingest_images, load_source_images, write_provenance_report
 from goodboy.jsonio import read_json, write_json
 from goodboy.pipeline import build_from_row_strips
 from goodboy.project import init_project, load_project
@@ -147,6 +149,107 @@ class GoodboyCoreTests(unittest.TestCase):
             validation = validate_project(root)
             self.assertTrue(validation.ok, [issue.to_dict() for issue in validation.issues])
             self.assertTrue((root / "validation" / "manifest-validation.json").is_file())
+
+    def test_ingest_captures_exif_and_provenance_report(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "pet"
+            init_project(root, pet_id="camera-pet", display_name="Camera Pet", species="object")
+            source = Path(tmp) / "source.jpg"
+            image = Image.new("RGB", (64, 48), (240, 236, 220))
+            exif = Image.Exif()
+            exif[274] = 1
+            image.save(source, exif=exif)
+
+            added = ingest_images(root, [source], role="style_reference", notes="with exif")
+            self.assertEqual(added[0].exif.get("Orientation"), 1)
+            report = write_provenance_report(root)
+            self.assertEqual(report["source_count"], 1)
+            self.assertTrue(report["images"][0]["exif_present"])
+            self.assertEqual(report["images"][0]["sha256"], added[0].sha256)
+
+    def test_candidate_image_is_stored_separately_from_selected_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "pet"
+            source = Path(tmp) / "source.png"
+            Image.new("RGB", (64, 48), (240, 236, 220)).save(source)
+            init_project(root, pet_id="pet", display_name="Pet", species="dog")
+            ingest_images(root, [source])
+            draft_source_card(root)
+            plan_baseline_candidates(project_dir=root, provider="codex_builtin", model_alias="codex-imagegen", count=1)
+            generated = Path(tmp) / "generated.png"
+            Image.new("RGBA", (80, 80), (255, 255, 255, 255)).save(generated)
+
+            stored = store_candidate_image(project_dir=root, candidate_id="baseline-001", image_path=generated)
+            self.assertEqual(stored, "candidates/baseline-001/generated/candidate.png")
+            selected = select_baseline_candidate(project_dir=root, candidate_id="baseline-001", image_path=generated)
+            self.assertEqual(selected.selected_baseline_image, "character/selected-baseline.png")
+            candidate = read_json(root / "candidates" / "baseline-001" / "candidate.json")
+            self.assertEqual(candidate["image_path"], "candidates/baseline-001/generated/candidate.png")
+
+    def test_style_customization_supports_subjects_and_ai_critique(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "object-pet"
+            init_project(root, pet_id="lamp", display_name="Lamp", species="object")
+            sheet = save_default_style_sheet(
+                root,
+                style_id="anime-lamp",
+                style_preset="anime",
+                subject_kind="inanimate_object",
+                user_style_overrides=["make the lamp look cozy and magical"],
+                ai_critique_overrides=["increase silhouette readability around the shade"],
+            )
+            self.assertEqual(sheet.style_preset, "anime")
+            self.assertEqual(sheet.subject_kind, "inanimate_object")
+            jobs = plan_row_generation_jobs(project_dir=root, run_id="rows", provider="codex_builtin", model_alias="codex-imagegen")
+            prompt = (root / jobs[0].prompt_path).read_text(encoding="utf-8")
+            self.assertIn("anime-inspired", prompt)
+            self.assertIn("inanimate object", prompt)
+            self.assertIn("make the lamp look cozy", prompt)
+            self.assertIn("increase silhouette readability", prompt)
+
+            code, stdout, stderr = self.run_cli(
+                [
+                    "critique",
+                    str(root),
+                    "--critique-id",
+                    "vision-001",
+                    "--target",
+                    "style",
+                    "--finding",
+                    "object reads too flat",
+                    "--recommendation",
+                    "add subtle bounce and tilt while preserving lamp identity",
+                    "--style-score",
+                    "0.82",
+                    "--apply-to-style",
+                ]
+            )
+            self.assertEqual(code, 0, stderr)
+            report = json.loads(stdout)
+            self.assertTrue(report["apply_to_style"])
+            updated = read_json(root / "style" / "emotion-style-sheet.json")
+            self.assertIn("add subtle bounce", " ".join(updated["ai_critique_overrides"]))
+            validation = validate_project(root)
+            self.assertTrue(validation.ok, [issue.to_dict() for issue in validation.issues])
+
+    def test_provider_failure_updates_retry_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "pet"
+            init_project(root, pet_id="pet", display_name="Pet", species="dog")
+            save_default_style_sheet(root)
+            jobs = plan_row_generation_jobs(project_dir=root, run_id="rows", provider="openai_images", model_alias="gpt-image-2")
+            old_key = os.environ.pop("OPENAI_API_KEY", None)
+            try:
+                invocation = execute_openai_image_job(root, run_id="rows", job_id=jobs[0].id)
+            finally:
+                if old_key is not None:
+                    os.environ["OPENAI_API_KEY"] = old_key
+            self.assertEqual(invocation.status, "failed")
+            raw = read_json(root / "runs" / "rows" / "generation-jobs.json")
+            job = raw["jobs"][0]
+            self.assertEqual(job["status"], "failed")
+            self.assertEqual(job["retry_policy"]["attempts"], 1)
+            self.assertIn("OPENAI_API_KEY", job["retry_policy"]["last_error"])
 
             capabilities = get_capabilities("gemini_nano_banana_pro")
             self.assertTrue(capabilities.image_to_image)
@@ -720,6 +823,30 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertTrue(policy["ok_to_install"], policy)
             self.assertEqual(policy["row_provenance"], "test_fixture")
             self.assertEqual(policy["visual_approval"], "fixture approved for install gate coverage")
+            self.assertTrue((root / "runs" / "synthetic-fixture" / "qa" / "human-review-checklist.json").is_file())
+
+    def test_exports_project_and_petdex_packages(self) -> None:
+        rows = Path("tests/fixtures/synthetic-row-strips").resolve()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "synthetic"
+            build_from_row_strips(
+                project_dir=root,
+                rows_dir=rows,
+                run_id="synthetic-fixture",
+                pet_id="synthetic",
+                display_name="Synthetic",
+                row_provenance="test_fixture",
+            )
+            project_export = export_project_bundle(root, run_id="synthetic-fixture", zip_output=True)
+            self.assertTrue(Path(project_export["export_dir"]).is_dir())
+            self.assertTrue(Path(project_export["zip"]).is_file())
+            self.assertTrue((Path(project_export["export_dir"]) / "runs" / "synthetic-fixture" / "run-summary.json").is_file())
+
+            petdex_export = export_petdex_package(root, run_id="synthetic-fixture", zip_output=True)
+            self.assertTrue(Path(petdex_export["export_dir"]).is_dir())
+            self.assertTrue(Path(petdex_export["zip"]).is_file())
+            self.assertTrue((Path(petdex_export["export_dir"]) / "pet.json").is_file())
+            self.assertTrue((Path(petdex_export["export_dir"]) / "spritesheet.webp").is_file())
 
     def test_approve_review_status_and_install_command(self) -> None:
         rows = Path("tests/fixtures/synthetic-row-strips").resolve()

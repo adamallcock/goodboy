@@ -142,11 +142,16 @@ def select_baseline_candidate(
         source = image_path.expanduser().resolve()
         if not source.is_file():
             raise FileNotFoundError(f"selected baseline image does not exist: {source}")
+        candidate_image = store_candidate_image(
+            project_dir=project_dir,
+            candidate_id=candidate_id,
+            image_path=source,
+        )
         target = project_dir / SELECTED_BASELINE
         target.parent.mkdir(parents=True, exist_ok=True)
         normalize_baseline_image(source, target)
         selected_baseline = str(target.relative_to(project_dir))
-        raw["image_path"] = selected_baseline
+        raw["image_path"] = candidate_image
     write_json(candidate_path, raw)
     update_candidate_index(project_dir, candidate_id, raw)
     build_candidate_contact_sheet(project_dir=project_dir)
@@ -178,6 +183,26 @@ def select_baseline_candidate(
     write_json(project_dir / SELECTED_CANDIDATE, raw)
     write_json(project_dir / CHARACTER_CARD, character.to_dict())
     return character
+
+
+def store_candidate_image(*, project_dir: Path, candidate_id: str, image_path: Path) -> str:
+    candidate_path = project_dir / "candidates" / candidate_id / "candidate.json"
+    if not candidate_path.is_file():
+        raise FileNotFoundError(f"missing candidate manifest: {candidate_path}")
+    source = image_path.expanduser().resolve()
+    if not source.is_file():
+        raise FileNotFoundError(f"candidate image does not exist: {source}")
+    target = project_dir / "candidates" / candidate_id / "generated" / "candidate.png"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    normalize_baseline_image(source, target)
+    raw = read_json(candidate_path)
+    raw["image_path"] = str(target.relative_to(project_dir))
+    if "image stored for candidate review" not in raw.get("strengths", []):
+        raw["strengths"] = list(raw.get("strengths", [])) + ["image stored for candidate review"]
+    write_json(candidate_path, raw)
+    update_candidate_index(project_dir, candidate_id, raw)
+    build_candidate_contact_sheet(project_dir=project_dir)
+    return str(target.relative_to(project_dir))
 
 
 def normalize_baseline_image(source: Path, target: Path) -> None:

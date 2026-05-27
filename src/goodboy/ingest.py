@@ -7,7 +7,7 @@ import mimetypes
 import shutil
 from pathlib import Path
 
-from PIL import Image
+from PIL import ExifTags, Image
 
 from .jsonio import read_json, write_json
 from .project import load_project
@@ -92,12 +92,66 @@ def ingest_images(
             role=role,
             notes=notes,
             thumbnail_path=str(thumbnail_path.relative_to(project_dir)) if thumbnail_path else None,
+            exif=extract_exif_summary(dest),
         )
         existing.append(source_image)
         by_hash[digest] = source_image
         added.append(source_image)
     save_source_images(project_dir, existing)
     return added
+
+
+def extract_exif_summary(path: Path) -> dict[str, object]:
+    try:
+        with Image.open(path) as image:
+            exif = image.getexif()
+            if not exif:
+                return {}
+            summary: dict[str, object] = {}
+            for key, value in exif.items():
+                name = ExifTags.TAGS.get(key, str(key))
+                if name in {"MakerNote", "UserComment"}:
+                    continue
+                if isinstance(value, bytes):
+                    value = f"<{len(value)} bytes>"
+                elif isinstance(value, tuple):
+                    value = [str(item) for item in value]
+                elif not isinstance(value, (str, int, float, bool)):
+                    value = str(value)
+                summary[str(name)] = value
+            return summary
+    except Exception:
+        return {}
+
+
+def write_provenance_report(project_dir: Path) -> dict[str, object]:
+    project = load_project(project_dir)
+    images = load_source_images(project_dir)
+    report: dict[str, object] = {
+        "project_id": project.id,
+        "display_name": project.display_name,
+        "generated_at": utc_now(),
+        "source_count": len(images),
+        "images": [
+            {
+                "id": image.id,
+                "path": image.path,
+                "sha256": image.sha256,
+                "original_filename": image.original_filename,
+                "mime_type": image.mime_type,
+                "width": image.width,
+                "height": image.height,
+                "role": image.role,
+                "notes": image.notes,
+                "thumbnail_path": image.thumbnail_path,
+                "exif_present": bool(image.exif),
+                "exif": image.exif,
+            }
+            for image in images
+        ],
+    }
+    write_json(project_dir / "sources" / "provenance-report.json", report)
+    return report
 
 
 def image_dimensions(path: Path) -> tuple[int, int]:
@@ -155,4 +209,3 @@ def update_source_card_notes(project_dir: Path, user_notes: str) -> SourceCard:
     card.updated_at = utc_now()
     write_json(path, card.to_dict())
     return card
-

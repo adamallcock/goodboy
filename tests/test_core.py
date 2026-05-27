@@ -898,6 +898,25 @@ class GoodboyCoreTests(unittest.TestCase):
             override = evaluate_qa_policy(validation, report, override_reason="manual visual approval")
             self.assertTrue(override.ok_to_install)
 
+    def test_codex_plugin_package_and_marketplace_are_wired(self) -> None:
+        plugin_root = Path("plugins/goodboy")
+        manifest = read_json(plugin_root / ".codex-plugin" / "plugin.json")
+        self.assertEqual(manifest["name"], "goodboy")
+        self.assertEqual(manifest["skills"], "./skills/")
+        self.assertEqual(manifest["interface"]["displayName"], "Goodboy")
+        self.assertIn("start a Codex pet", " ".join(manifest["interface"]["defaultPrompt"]))
+        self.assertTrue((plugin_root / "skills" / "goodboy" / "SKILL.md").is_file())
+
+        marketplace = read_json(Path(".agents/plugins/marketplace.json"))
+        self.assertEqual(marketplace["name"], "goodboy-local")
+        entries = {entry["name"]: entry for entry in marketplace["plugins"]}
+        self.assertIn("goodboy", entries)
+        entry = entries["goodboy"]
+        self.assertEqual(entry["source"]["source"], "local")
+        self.assertEqual(entry["source"]["path"], "./plugins/goodboy")
+        self.assertEqual(entry["policy"]["installation"], "AVAILABLE")
+        self.assertEqual(entry["policy"]["authentication"], "ON_INSTALL")
+
     def test_existing_napoleon_rows_regression_if_available(self) -> None:
         rows = Path("/Users/adamallcock/Documents/Coding/pet-napoleon/generated/v7-happier-row-strips")
         if not rows.is_dir():

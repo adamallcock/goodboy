@@ -1,0 +1,20 @@
+{
+  "name": "goodboy-local",
+  "interface": {
+    "displayName": "Goodboy Local"
+  },
+  "plugins": [
+    {
+      "name": "goodboy",
+      "source": {
+        "source": "local",
+        "path": "./plugins/goodboy"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

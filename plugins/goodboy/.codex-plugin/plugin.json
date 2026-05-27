@@ -1,0 +1,37 @@
+{
+  "name": "goodboy",
+  "version": "0.1.0",
+  "description": "Guided Codex pet generation workflows for Goodboy projects.",
+  "author": {
+    "name": "Adam Allcock",
+    "url": "https://github.com/adamallcock"
+  },
+  "homepage": "https://github.com/adamallcock/goodboy",
+  "repository": "https://github.com/adamallcock/goodboy",
+  "keywords": [
+    "codex-pets",
+    "image-generation",
+    "spritesheets",
+    "qa"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Goodboy",
+    "shortDescription": "Create Codex pets from source images.",
+    "longDescription": "Goodboy packages the guided Codex workflow for creating, validating, reviewing, and installing animated Codex pets from source images. It steers agents toward the start/advance rails, provenance capture, visual QA, and install safety gates.",
+    "developerName": "Adam Allcock",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Image"
+    ],
+    "websiteURL": "https://github.com/adamallcock/goodboy",
+    "defaultPrompt": [
+      "Use Goodboy to start a Codex pet project.",
+      "Use Goodboy to continue this pet through QA.",
+      "Use Goodboy to review install readiness."
+    ],
+    "brandColor": "#2D7A5F"
+  }
+}

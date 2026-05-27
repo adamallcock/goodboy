@@ -260,6 +260,12 @@ def main(argv: list[str] | None = None) -> int:
     export_cmd.add_argument("--output-dir")
     export_cmd.add_argument("--no-zip", action="store_true")
 
+    ui_cmd = sub.add_parser("ui", help="Launch the local Goodboy Review Room web UI.")
+    ui_cmd.add_argument("project_dir", nargs="?")
+    ui_cmd.add_argument("--host", default="127.0.0.1")
+    ui_cmd.add_argument("--port", type=int, default=8787)
+    ui_cmd.add_argument("--no-open", action="store_true")
+
     validate_cmd = sub.add_parser("validate", help="Validate Goodboy manifests and artifact references.")
     validate_cmd.add_argument("project_dir")
     validate_cmd.add_argument("--no-write", action="store_true")
@@ -677,6 +683,17 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 1
         print(json.dumps(summary, indent=2))
+        return 0
+    if args.command == "ui":
+        from .web import launch_dev_server
+
+        payload = launch_dev_server(
+            project_dir=Path(args.project_dir).expanduser().resolve() if args.project_dir else None,
+            host=args.host,
+            port=args.port,
+            open_browser=not args.no_open,
+        )
+        print(json.dumps(payload, indent=2, sort_keys=True))
         return 0
     if args.command == "validate":
         report = validate_project(

@@ -196,6 +196,7 @@ Exit criteria:
 Status: `[~]`
 
 - `[x]` Create comprehensive UI functional and technical requirements.
+- `[x]` Scan off-the-shelf component options and define initial design directions.
 - `[ ]` Candidate browser.
 - `[ ]` Source-image comparison view.
 - `[ ]` Baseline selection view.

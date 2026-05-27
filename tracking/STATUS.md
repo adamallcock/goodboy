@@ -43,6 +43,7 @@ Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint,
 - Added `goodboy init`, `goodboy inspect`, `goodboy start`, `goodboy advance`, `goodboy make`, `goodboy doctor`, `goodboy next`, `goodboy ingest`, `goodboy source-card`, `goodboy plan-candidates`, `goodboy select-candidate`, `goodboy candidate-sheet`, `goodboy feedback`, `goodboy style-default`, `goodboy plan-rows`, `goodboy adapters`, `goodboy generate-handoff`, `goodboy import-generated`, `goodboy build-review`, `goodboy finish`, `goodboy handoff`, `goodboy execute-openai`, `goodboy execute-gemini`, `goodboy build-from-rows`, `goodboy approve`, `goodboy review-status`, `goodboy install`, and `goodboy validate`.
 - Added tests for project init, ingest/source-card/candidate/feedback/style/handoff/validation flow, Agent Rail command flow, simplified handoff/import/build/finish flow, planning idempotence, approval/install command flow, suspicious renderer blocking, negative manifest validation across named manifest types, OpenAI and Gemini dry-run execution, QA policy, centering stabilization, portable synthetic fixture build, WebP transparency invariants, and existing Napoleon row-strip regression.
 - Added M10 local web UI requirements covering product ethos, information architecture, functional requirements, technical architecture, visual quality, QA surfaces, demo mode, and implementation milestones.
+- Added M10 off-the-shelf component scan and initial design direction options.
 
 ## Not Yet Started
 

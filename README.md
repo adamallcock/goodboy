@@ -25,6 +25,7 @@ These are copied references, not the live source of truth for Millie or Napoleon
 
 - `docs/2026-05-26-goodboy-user-guide.md` - start here for day-to-day usage, command examples, and troubleshooting.
 - `docs/000-goodboy-master-plan.md` - full project charter, requirements, architecture, modules, data model, QA gates, milestones, and delivery plan.
+- `docs/2026-05-27-goodboy-local-web-ui-requirements.md` - M10 local web UI functional, technical, and design requirements.
 - `docs/2026-05-27-goodboy-codex-plugin-feasibility.md` - Codex plugin feasibility decision and first implemented plugin slice.
 - `docs/2026-05-27-goodboy-milestone-completion-audit.md` - milestone-by-milestone completion decisions before M10.
 - `tracking/MILESTONES.md` - implementation milestones and progress tracking.

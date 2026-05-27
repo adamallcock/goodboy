@@ -53,17 +53,17 @@ Goodboy may package a failing run for inspection, but install is blocked unless 
 
 Reason: installation is the user-visible state change; failures should not silently replace a working pet.
 
-## Proposed
-
 ### D009: CLI First, Then Codex Skill, Then Plugin
 
-Build the Python library and CLI first. Wrap it as a Codex skill next. Consider a Codex plugin package once the plugin surface is appropriate for a richer workflow.
+Goodboy should keep the Python library and CLI as the deterministic core, wrap that core with a Codex skill, and expose a repo-scoped Codex plugin without making plugin UI the only product surface.
 
 Reason: the deterministic pipeline should be usable outside Codex, while Codex remains a premium orchestration environment.
 
 ### D010: Local Web UI For Candidate Selection
 
-If Codex plugin UI is insufficient for image selection, Goodboy should provide a local web UI for browsing candidate baselines, comparing QA media, and accepting/rejecting rows.
+Goodboy should provide a local web UI for browsing candidate baselines, comparing QA media, accepting/rejecting rows, recording style/critique decisions, and preparing a polished demo experience.
+
+Reason: the repo-scoped Codex plugin is useful for agent steering, but the current plugin surface should not be treated as the image-heavy review UI. M10 needs a dedicated local visual surface over the existing manifests.
 
 ## Open
 

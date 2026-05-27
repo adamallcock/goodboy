@@ -193,8 +193,9 @@ Exit criteria:
 
 ## M10: Local Web UI
 
-Status: `[ ]`
+Status: `[~]`
 
+- `[x]` Create comprehensive UI functional and technical requirements.
 - `[ ]` Candidate browser.
 - `[ ]` Source-image comparison view.
 - `[ ]` Baseline selection view.
@@ -206,6 +207,7 @@ Status: `[ ]`
 Exit criteria:
 
 - The visually heavy parts of the workflow are easier than inspecting files manually.
+- UI implementation and verification evidence are linked from this tracker.
 
 ## M11: Documentation And Examples
 

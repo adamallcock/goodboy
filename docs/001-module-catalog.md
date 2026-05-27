@@ -578,6 +578,8 @@ Acceptance criteria:
 
 Purpose: handle visual-heavy review steps.
 
+Planning spec: `docs/2026-05-27-goodboy-local-web-ui-requirements.md`
+
 Responsibilities:
 
 - candidate gallery

@@ -8,9 +8,11 @@ import sys
 from pathlib import Path
 
 from .adapters import execute_gemini_image_job, execute_openai_image_job, list_capabilities, prepare_handoff
-from .candidates import CANDIDATE_INDEX, build_candidate_contact_sheet, plan_baseline_candidates, select_baseline_candidate
+from .candidates import CANDIDATE_INDEX, build_candidate_contact_sheet, plan_baseline_candidates, select_baseline_candidate, store_candidate_image
+from .critique import record_critique
+from .exports import export_petdex_package, export_project_bundle
 from .feedback import create_feedback_event
-from .ingest import draft_source_card, ingest_images, load_source_images
+from .ingest import draft_source_card, ingest_images, load_source_images, write_provenance_report
 from .jsonio import read_json
 from .pipeline import build_from_row_strips
 from .project import init_project, load_project
@@ -104,6 +106,10 @@ def main(argv: list[str] | None = None) -> int:
     style_cmd = sub.add_parser("style-default", help="Write the default happy Codex emotion style sheet.")
     style_cmd.add_argument("project_dir")
     style_cmd.add_argument("--style-id", default="happy-codex-default")
+    style_cmd.add_argument("--preset", default="soft-lifelike")
+    style_cmd.add_argument("--subject-kind", default="pet")
+    style_cmd.add_argument("--user-style", action="append", default=[])
+    style_cmd.add_argument("--ai-critique", action="append", default=[])
     style_cmd.add_argument("--refresh", action="store_true")
 
     plan_rows_cmd = sub.add_parser("plan-rows", help="Plan Codex state row generation jobs.")
@@ -128,6 +134,11 @@ def main(argv: list[str] | None = None) -> int:
     select_candidate_cmd.add_argument("--image-path")
     select_candidate_cmd.add_argument("--notes", default="")
 
+    candidate_image_cmd = sub.add_parser("candidate-image", help="Store a provider-generated image for a baseline candidate.")
+    candidate_image_cmd.add_argument("project_dir")
+    candidate_image_cmd.add_argument("--candidate-id", required=True)
+    candidate_image_cmd.add_argument("--image-path", required=True)
+
     candidate_sheet_cmd = sub.add_parser("candidate-sheet", help="Render a baseline candidate review contact sheet.")
     candidate_sheet_cmd.add_argument("project_dir")
     candidate_sheet_cmd.add_argument("--output")
@@ -141,6 +152,20 @@ def main(argv: list[str] | None = None) -> int:
     feedback_cmd.add_argument("--branch-id")
     feedback_cmd.add_argument("--parent", default="main")
     feedback_cmd.add_argument("--no-branch", action="store_true")
+
+    critique_cmd = sub.add_parser("critique", help="Record structured human or AI critique and optionally apply it to the style sheet.")
+    critique_cmd.add_argument("project_dir")
+    critique_cmd.add_argument("--critique-id", required=True)
+    critique_cmd.add_argument("--target", required=True)
+    critique_cmd.add_argument("--author", default="vision_critic")
+    critique_cmd.add_argument("--finding", action="append", default=[])
+    critique_cmd.add_argument("--recommendation", action="append", default=[])
+    critique_cmd.add_argument("--identity-score", type=float)
+    critique_cmd.add_argument("--style-score", type=float)
+    critique_cmd.add_argument("--apply-to-style", action="store_true")
+
+    provenance_cmd = sub.add_parser("provenance", help="Write a source image provenance and EXIF report.")
+    provenance_cmd.add_argument("project_dir")
 
     adapters_cmd = sub.add_parser("adapters", help="List generation adapter capabilities.")
     adapters_cmd.add_argument("--json", action="store_true")
@@ -227,6 +252,13 @@ def main(argv: list[str] | None = None) -> int:
     finish_cmd.add_argument("--row-provenance", choices=["provider_generated", "user_supplied", "test_fixture"], default="provider_generated")
     finish_cmd.add_argument("--install-root")
     finish_cmd.add_argument("--install-override-reason")
+
+    export_cmd = sub.add_parser("export", help="Export a Goodboy project bundle or Petdex-ready package.")
+    export_cmd.add_argument("kind", choices=["project", "petdex"])
+    export_cmd.add_argument("project_dir")
+    export_cmd.add_argument("--run-id", required=True)
+    export_cmd.add_argument("--output-dir")
+    export_cmd.add_argument("--no-zip", action="store_true")
 
     validate_cmd = sub.add_parser("validate", help="Validate Goodboy manifests and artifact references.")
     validate_cmd.add_argument("project_dir")
@@ -349,7 +381,14 @@ def main(argv: list[str] | None = None) -> int:
             sheet = read_json(project_dir / STYLE_PATH)
             print(json.dumps({"already_exists": True, "style_sheet": sheet}, indent=2))
             return 0
-        sheet = save_default_style_sheet(project_dir, style_id=args.style_id)
+        sheet = save_default_style_sheet(
+            project_dir,
+            style_id=args.style_id,
+            style_preset=args.preset,
+            subject_kind=args.subject_kind,
+            user_style_overrides=args.user_style,
+            ai_critique_overrides=args.ai_critique,
+        )
         print(json.dumps(sheet.to_dict(), indent=2))
         return 0
     if args.command == "plan-rows":
@@ -395,6 +434,18 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(character.to_dict(), indent=2))
         return 0
+    if args.command == "candidate-image":
+        try:
+            image = store_candidate_image(
+                project_dir=Path(args.project_dir).expanduser().resolve(),
+                candidate_id=args.candidate_id,
+                image_path=Path(args.image_path).expanduser().resolve(),
+            )
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps({"candidate_id": args.candidate_id, "image_path": image}, indent=2))
+        return 0
     if args.command == "candidate-sheet":
         output = build_candidate_contact_sheet(
             project_dir=Path(args.project_dir).expanduser().resolve(),
@@ -414,6 +465,32 @@ def main(argv: list[str] | None = None) -> int:
             parent=args.parent,
         )
         print(json.dumps(event.to_dict(), indent=2))
+        return 0
+    if args.command == "critique":
+        try:
+            report = record_critique(
+                project_dir=Path(args.project_dir).expanduser().resolve(),
+                critique_id=args.critique_id,
+                target=args.target,
+                author=args.author,
+                findings=args.finding,
+                recommendations=args.recommendation,
+                identity_score=args.identity_score,
+                style_score=args.style_score,
+                apply_to_style=args.apply_to_style,
+            )
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(report.to_dict(), indent=2))
+        return 0
+    if args.command == "provenance":
+        try:
+            report = write_provenance_report(Path(args.project_dir).expanduser().resolve())
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(report, indent=2))
         return 0
     if args.command == "adapters":
         capabilities = list_capabilities()
@@ -575,6 +652,27 @@ def main(argv: list[str] | None = None) -> int:
                 install_root=Path(args.install_root).expanduser().resolve() if args.install_root else None,
                 override_reason=args.install_override_reason,
             )
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(summary, indent=2))
+        return 0
+    if args.command == "export":
+        try:
+            if args.kind == "project":
+                summary = export_project_bundle(
+                    Path(args.project_dir).expanduser().resolve(),
+                    run_id=args.run_id,
+                    output_dir=Path(args.output_dir).expanduser().resolve() if args.output_dir else None,
+                    zip_output=not args.no_zip,
+                )
+            else:
+                summary = export_petdex_package(
+                    Path(args.project_dir).expanduser().resolve(),
+                    run_id=args.run_id,
+                    output_dir=Path(args.output_dir).expanduser().resolve() if args.output_dir else None,
+                    zip_output=not args.no_zip,
+                )
         except (ValueError, FileNotFoundError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1

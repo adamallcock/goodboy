@@ -2,7 +2,7 @@
 title: Goodboy Review Room UI Implementation Plan
 date: 2026-05-27
 type: plan
-status: draft
+status: active
 ---
 
 # Goodboy Review Room UI Implementation Plan
@@ -14,6 +14,16 @@ status: draft
 **Architecture:** Add a local Python web server that exposes typed, path-safe Goodboy project APIs over the existing manifest-first pipeline. Add a React + Vite + TypeScript frontend whose default surface is an immersive Review Room: large central artifact canvas, slim stage rail, contextual inspector, gated next action, and optional advanced drawers for commands, logs, manifests, and job tables.
 
 **Tech Stack:** Python 3.10+, existing Goodboy modules, FastAPI, Uvicorn, python-multipart, React, Vite, TypeScript, Tailwind, shadcn/Radix-style component primitives, Lucide React, TanStack Table, react-dropzone, PhotoSwipe or a small custom zoom viewer, react-compare-slider, cmdk, Sonner, Zustand, Playwright, unittest.
+
+## 0. Implementation Progress
+
+Updated 2026-05-27:
+
+- Backend foundation is implemented under `src/goodboy/web/` with typed view models, artifact indexing, path-safe artifact serving, project registry, action wrappers, FastAPI routes, and `goodboy ui --help`.
+- Frontend first slice is implemented under `ui/` with the Review Room shell, stage rail, artifact canvas, zoom controls, draggable compare mode, contextual inspector, command palette, activity drawer, source/baseline/style/generation/QA/approval/demo panels, and fixture-driven demo mode.
+- Tests exist for backend models/artifacts/actions/API and frontend inspector interactions/accessibility gates.
+- Current smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`.
+- M10 is still in progress because live frontend actions, one-command launch, real artifact rendering coverage across all stages, and full documentation/troubleshooting are not complete.
 
 ---
 

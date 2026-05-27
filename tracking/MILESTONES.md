@@ -199,18 +199,34 @@ Status: `[~]`
 - `[x]` Scan off-the-shelf component options and define initial design directions.
 - `[x]` Choose Review Room as the primary M10 design direction.
 - `[x]` Create complete Review Room implementation plan.
-- `[ ]` Candidate browser.
-- `[ ]` Source-image comparison view.
-- `[ ]` Baseline selection view.
-- `[ ]` Row and contact-sheet review view.
-- `[ ]` Animation preview view.
-- `[ ]` QA report view.
-- `[ ]` Feedback/fork controls.
+- `[x]` Add FastAPI backend foundation with project state, artifact indexing, path-safe artifact serving, and workflow action routes.
+- `[x]` Add Review Room frontend shell with stage rail, gate banner, artifact canvas, contextual inspector, command palette, and activity drawer.
+- `[x]` Add visual inspector interactions: zoom, fit, filmstrip selection, playback-speed control, draggable compare mode, inspector collapse, keyboard shortcuts, and safe demo refresh.
+- `[x]` Add demo fixture suitable for visual walkthroughs.
+- `[x]` Add frontend typecheck/build and Playwright coverage for inspector controls, accessibility basics, approval gating, and refresh behavior.
+- `[~]` Candidate browser.
+- `[~]` Source-image comparison view.
+- `[~]` Baseline selection view.
+- `[x]` Row and contact-sheet review view.
+- `[~]` Animation preview view.
+- `[~]` QA report view.
+- `[~]` Feedback/fork controls.
+- `[ ]` One-command local launch that serves backend and built frontend together.
+- `[ ]` Live frontend wiring for every backend mutating action.
+- `[ ]` Visual snapshots for every primary screen.
+- `[ ]` Final UI install/launch/troubleshooting docs.
 
 Exit criteria:
 
 - The visually heavy parts of the workflow are easier than inspecting files manually.
 - UI implementation and verification evidence are linked from this tracker.
+
+Evidence:
+
+- Implementation plan: `docs/superpowers/plans/2026-05-27-goodboy-review-room-ui-implementation-plan.md`
+- Smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`
+- Frontend tests: `ui/tests/`
+- Backend tests: `tests/test_web_*.py`
 
 ## M11: Documentation And Examples
 

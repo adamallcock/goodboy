@@ -133,6 +133,51 @@ PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mo
 PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mode --run-id planned-row-generation --row-provenance provider_generated --approval-notes "User approved contact sheet and previews"
 ```
 
+## Local Review Room UI
+
+Goodboy also has a first M10 local UI slice called Review Room. Use it when you want a visual, artifact-first review surface instead of opening image files manually.
+
+Current capabilities:
+
+- Demo Review Room shell with stage rail, gate banner, artifact canvas, contextual inspector, activity drawer, and command palette.
+- Zoom, fit, playback-speed, and draggable compare controls.
+- Source, baseline, style, generation, QA, approval/export, and demo panels.
+- Local project-open form that connects to the FastAPI backend when it is running.
+- Visual approval demo flow that updates the gate and activity drawer.
+- Playwright coverage for inspector controls, keyboard reachability, safe demo refresh, and approval gating.
+
+Install and run the frontend demo:
+
+```bash
+cd /Users/adamallcock/Documents/Coding/goodboy/ui
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:5173/
+```
+
+Run UI validation:
+
+```bash
+cd /Users/adamallcock/Documents/Coding/goodboy/ui
+npm run typecheck
+npm run build
+npm run test:e2e
+```
+
+Run the backend/Python validation from the repo root:
+
+```bash
+cd /Users/adamallcock/Documents/Coding/goodboy
+PYTHONPATH=src "$GOODBOY_PY" -m unittest discover -s tests -v
+```
+
+The backend foundation lives in `src/goodboy/web/`, and `goodboy ui --help` is available. Full one-command backend-plus-frontend launch and full live mutating UI actions are still M10 follow-up work.
+
 ### 1. Create A Project
 
 ```bash

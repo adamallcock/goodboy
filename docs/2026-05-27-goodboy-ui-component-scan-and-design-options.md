@@ -192,6 +192,16 @@ This gives us a cleaner showcase surface without sacrificing the serious workflo
 
 Implementation plan: `docs/superpowers/plans/2026-05-27-goodboy-review-room-ui-implementation-plan.md`
 
+First implementation slice:
+
+- Backend foundation: `src/goodboy/web/`
+- Frontend shell: `ui/src/components/review-room/`
+- Feature panels: `ui/src/features/`
+- Playwright tests: `ui/tests/`
+- Smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`
+
+The first slice uses the recommended off-the-shelf pieces directly: React, Vite, TypeScript, Lucide icons, Zustand state, TanStack Table, react-dropzone, react-compare-slider, cmdk, Sonner, and Playwright. Full shadcn/Radix component extraction can remain a later polish step if the component surface grows.
+
 ## 8. Visual Concept Brief
 
 Generate a design option board with three high-fidelity desktop mockups:

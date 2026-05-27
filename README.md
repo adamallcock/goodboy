@@ -6,7 +6,7 @@ The project grew out of the Millie and Napoleon pet runs. Those runs proved that
 
 ## Current Status
 
-This repository can initialize a project, ingest source images, capture EXIF/provenance, draft source and character cards, plan baseline candidates, store generated candidate images, record feedback and critique branches, customize style presets for animals or inanimate/object mascots, plan row-generation jobs, prepare or execute provider jobs, import generated row outputs, build review artifacts, stabilize frame centering, render candidate/review sheets, validate manifests, export packages, finish an approved install, and enforce QA install policy.
+This repository can initialize a project, ingest source images, capture EXIF/provenance, draft source and character cards, plan baseline candidates, store generated candidate images, record feedback and critique branches, customize style presets for animals or inanimate/object mascots, plan row-generation jobs, prepare or execute provider jobs, import generated row outputs, build review artifacts, stabilize frame centering, render candidate/review sheets, validate manifests, export packages, finish an approved install, enforce QA install policy, and run the first Review Room local UI slice for artifact-first visual inspection.
 
 Seeded reference material lives under:
 
@@ -28,6 +28,7 @@ These are copied references, not the live source of truth for Millie or Napoleon
 - `docs/2026-05-27-goodboy-local-web-ui-requirements.md` - M10 local web UI functional, technical, and design requirements.
 - `docs/2026-05-27-goodboy-ui-component-scan-and-design-options.md` - M10 component scan and first design direction options.
 - `docs/superpowers/plans/2026-05-27-goodboy-review-room-ui-implementation-plan.md` - M10 Review Room implementation plan.
+- `docs/assets/review-room-ui-smoke-2026-05-27.png` - current smoke screenshot for the Review Room visual inspector.
 - `docs/2026-05-27-goodboy-codex-plugin-feasibility.md` - Codex plugin feasibility decision and first implemented plugin slice.
 - `docs/2026-05-27-goodboy-milestone-completion-audit.md` - milestone-by-milestone completion decisions before M10.
 - `tracking/MILESTONES.md` - implementation milestones and progress tracking.
@@ -102,6 +103,31 @@ PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goo
 
 OpenAI and Gemini API keys are optional accelerators, not requirements. Without keys, Goodboy uses Codex built-in handoff. With `OPENAI_API_KEY` or `GEMINI_API_KEY`, direct provider execution can be faster; Goodboy never writes raw API keys to disk.
 
+## Review Room UI
+
+The M10 local UI now has a first implementation slice under `ui/` plus a FastAPI backend foundation under `src/goodboy/web/`. The UI is a visual review shell with a stage rail, large artifact canvas, zoom controls, draggable compare mode, contextual inspector, command palette, activity drawer, approval gate, demo fixture, and Playwright coverage.
+
+Run the frontend demo:
+
+```bash
+cd /Users/adamallcock/Documents/Coding/goodboy/ui
+npm install
+npm run dev
+```
+
+Then open `http://127.0.0.1:5173/`.
+
+Run UI checks:
+
+```bash
+cd /Users/adamallcock/Documents/Coding/goodboy/ui
+npm run typecheck
+npm run build
+npm run test:e2e
+```
+
+Backend API checks are included in the Python suite. The `goodboy ui` command is registered and the backend routes are in place; full one-command launch and all live mutating frontend actions remain M10 follow-up work.
+
 Useful customization commands:
 
 ```bash
@@ -167,7 +193,7 @@ Product surfaces:
 - Codex skill wrapper
 - Codex plugin package under `plugins/goodboy`
 - repo marketplace under `.agents/plugins/marketplace.json`
-- optional future local web UI for candidate selection and visual QA
+- local Review Room UI under `ui/` for candidate, QA, approval, and visual-inspection workflows
 
 To add the repo marketplace from this checkout:
 

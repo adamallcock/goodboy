@@ -648,15 +648,26 @@ M10 should not be marked complete until:
 3. How much of the first build should be read-only review before enabling mutating actions?
 4. Should demo mode use only synthetic fixture artifacts, or also include a bundled anonymized real pet project?
 
-## 26. Immediate Next Step
+## 26. Current Implementation Slice
 
-Before implementation, create two to three visual design options for the primary project screen and review board. Each option should include:
+The first Review Room implementation slice exists under `ui/`, backed by the FastAPI project API foundation in `src/goodboy/web/`.
 
-- Project shell.
-- Candidate browser.
-- Style Studio glimpse.
-- Review/QA board.
-- Approval/export panel treatment.
-- Demo-mode consideration.
+Implemented:
 
-After choosing a direction, write a concrete implementation plan with component boundaries, backend routes, data contracts, test plan, and staged commits.
+- Review Room shell with stage rail, gate banner, large artifact canvas, inspector, activity drawer, and command palette.
+- Demo fixture project for hiring-manager walkthroughs without requiring provider credentials.
+- Zoom, fit, playback-speed, artifact filmstrip, and draggable compare interactions.
+- Source, baseline, style, generation, QA, approval/export, and demo-stage panels.
+- Project-open form for connecting the UI to a running Goodboy backend.
+- Approval interaction that records a visual decision and updates the install-readiness gate in the demo state.
+- Frontend typecheck/build and Playwright coverage for visual inspector controls, keyboard reachability, safe refresh, and approval gating.
+- Smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`.
+
+Still required before M10 can be marked complete:
+
+- One-command launch that starts the backend and serves the built frontend.
+- Default live project loading when `goodboy ui <project-dir>` is used.
+- Live backend wiring for all mutating frontend actions.
+- Real image rendering and comparison for source/candidate/GIF artifacts in every stage, beyond the current demo fallback.
+- Visual snapshots for each primary screen, not only the main smoke state.
+- User-facing troubleshooting for backend/frontend port conflicts and missing optional dependencies.

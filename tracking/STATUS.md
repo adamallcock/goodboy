@@ -4,7 +4,7 @@ Last updated: 2026-05-27
 
 ## Current Phase
 
-Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint, manifest dataclasses, strict manifest validation, source ingest with EXIF/provenance reporting, source-card scaffolding, baseline candidate planning/selection/image storage, explicit feedback and critique branches, customizable emotion style sheets for pets or inanimate/object mascots, row-job planning, provider handoff manifests, dry-run-safe OpenAI Images and Gemini/Nano Banana execution paths, provider failure/retry reporting, deterministic raster pipeline, state-aware centering, centering reports/overlays, atlas validation, QA reports and human review checklist, install policy, installer/package/export generation, Agent Rail commands for safer Codex operation, an installed Codex skill wrapper, a repo-scoped Codex plugin package, a portable synthetic fixture, regression tests against existing Napoleon row strips, and M10 local web UI requirements.
+M10 Review Room implementation. Goodboy now has a Python package skeleton, CLI entrypoint, manifest dataclasses, strict manifest validation, source ingest with EXIF/provenance reporting, source-card scaffolding, baseline candidate planning/selection/image storage, explicit feedback and critique branches, customizable emotion style sheets for pets or inanimate/object mascots, row-job planning, provider handoff manifests, dry-run-safe OpenAI Images and Gemini/Nano Banana execution paths, provider failure/retry reporting, deterministic raster pipeline, state-aware centering, centering reports/overlays, atlas validation, QA reports and human review checklist, install policy, installer/package/export generation, Agent Rail commands for safer Codex operation, an installed Codex skill wrapper, a repo-scoped Codex plugin package, a portable synthetic fixture, regression tests against existing Napoleon row strips, M10 local web UI requirements, a FastAPI backend foundation, and a first interactive Review Room frontend slice.
 
 ## Completed This Session
 
@@ -46,20 +46,25 @@ Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint,
 - Added M10 off-the-shelf component scan and initial design direction options.
 - Chose Review Room as the primary M10 design direction, with Studio Console features reserved for advanced/debug panels.
 - Added the Review Room implementation plan under `docs/superpowers/plans/`.
+- Added the Review Room backend foundation under `src/goodboy/web/`, including project state, artifact indexing, path-safe artifact routes, workflow action routes, and `goodboy ui --help`.
+- Added the Review Room frontend under `ui/`, including stage rail, gate banner, artifact canvas, zoom/fit/playback controls, draggable compare mode, contextual inspector, command palette, activity drawer, project-open form, source/baseline/style/generation/QA/approval/demo panels, and demo fixture state.
+- Added UI validation through TypeScript typecheck, production build, Playwright tests, and smoke screenshot evidence at `docs/assets/review-room-ui-smoke-2026-05-27.png`.
 
 ## Not Yet Started
 
-- Local web UI implementation.
+- One-command backend-plus-frontend Review Room launch.
+- Full live frontend wiring for all mutating backend actions.
+- Visual snapshots for every primary Review Room screen.
 
 ## In Progress
 
-- M10 local web UI design planning.
+- M10 local web UI implementation.
 - Live OpenAI/Gemini execution smoke testing with real API keys.
 - Live provider smoke testing with real API keys.
 
 ## Next Recommended Work
 
-1. Execute the Review Room implementation plan for the local web UI.
+1. Complete one-command Review Room launch and live project auto-open.
 2. Run live OpenAI and Gemini image execution smoke testing when keys are available.
 3. Add deeper source-analysis and visual-critic adapters.
 4. Revisit bundled Goodboy MCP tools after observing plugin usage.

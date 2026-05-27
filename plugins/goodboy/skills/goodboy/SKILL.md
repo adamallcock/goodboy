@@ -23,7 +23,7 @@ For detailed user-facing instructions, read `docs/2026-05-26-goodboy-user-guide.
 2. Use `goodboy advance <project-dir> --agent-mode` as the main loop. It runs safe deterministic steps, then stops only for provider generation, baseline choice, visual approval, or QA/user override.
 3. When `advance` asks for baseline selection, rerun it with `--candidate-id`, `--baseline-image`, optional `--run-id`, and `--selection-notes`.
 4. When `advance` asks for row generation, generate provider outputs and rerun it with `--generated-map <generated-output-map.json>`.
-5. When `advance` asks for approval, inspect contact sheet, GIF previews, edge preview, and centering overlay; then rerun it with `--approval-notes`.
+5. When `advance` asks for approval, inspect contact sheet, GIF previews, edge preview, and centering overlay, or use the Review Room UI for visual inspection; then rerun it with `--approval-notes`.
 6. Record every user or AI adjustment with `feedback`; branch names should reflect the reason, such as happier, center-napoleon, or trim-green.
 7. Use style presets, subject kinds, and critique reports when the user asks for realistic/anime/object/inanimate customization.
 8. Run tests and `goodboy validate` before claiming completion.
@@ -49,6 +49,7 @@ goodboy advance <project-dir> --agent-mode --candidate-id baseline-001 --baselin
 goodboy advance <project-dir> --agent-mode --run-id <run-id> --generated-map <generated-output-map.json> --row-provenance provider_generated
 goodboy advance <project-dir> --agent-mode --run-id <run-id> --approval-notes "<human approval note>" --row-provenance provider_generated
 goodboy doctor <project-dir> --agent-mode
+goodboy ui [project-dir] --host 127.0.0.1 --port 8787 [--no-open]
 goodboy next <project-dir> --agent-mode
 goodboy make <project-dir> --pet-id <id> --display-name <name> --species dog --source <image>...  # legacy alias for start
 goodboy init <project-dir> --pet-id <id> --display-name <name> --species dog
@@ -111,3 +112,18 @@ Do not call a pet done until these artifacts exist and are current:
 - `runs/<run-id>/package/spritesheet.webp`
 
 If QA fails, fix the source row/artifact or record an explicit user-approved override. Do not silently install a failing pet. Validation means technically packageable; final installation also requires provenance, a recorded approval, and a clean renderer-script scan.
+
+## Review Room UI
+
+Use the local Review Room UI when the user wants visual inspection, a hiring-manager demo, or a clearer way to review source/candidate/QA artifacts. The frontend lives under `ui/`, and the backend foundation lives under `src/goodboy/web/`.
+
+Current UI validation commands:
+
+```bash
+cd /Users/adamallcock/Documents/Coding/goodboy/ui
+npm run typecheck
+npm run build
+npm run test:e2e
+```
+
+The first UI slice includes a demo fixture, stage rail, artifact canvas, zoom controls, draggable compare mode, inspector, command palette, activity drawer, and approval demo flow. Full one-command launch and all live mutating frontend actions are still M10 follow-up work, so do not imply the UI replaces the `advance` rail yet.

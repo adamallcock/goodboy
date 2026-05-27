@@ -655,12 +655,16 @@ The first Review Room implementation slice exists under `ui/`, backed by the Fas
 Implemented:
 
 - Review Room shell with stage rail, gate banner, large artifact canvas, inspector, activity drawer, and command palette.
+- Onboarding screen with Create with Codex, Open project, and Explore demo paths.
+- Workflow timeline that makes completed, current, and upcoming stages explicit.
+- Decision-focused inspector copy and actions for approval/change requests.
 - Demo fixture project for hiring-manager walkthroughs without requiring provider credentials.
 - Zoom, fit, playback-speed, artifact filmstrip, and draggable compare interactions.
 - Source, baseline, style, generation, QA, approval/export, and demo-stage panels.
 - Project-open form for connecting the UI to a running Goodboy backend.
 - Approval interaction that records a visual decision and updates the install-readiness gate in the demo state.
 - Frontend typecheck/build and Playwright coverage for visual inspector controls, keyboard reachability, safe refresh, and approval gating.
+- Onboarding screenshot: `docs/assets/review-room-onboarding-2026-05-27.png`.
 - Smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`.
 
 Still required before M10 can be marked complete:

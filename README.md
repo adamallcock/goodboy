@@ -105,7 +105,7 @@ OpenAI and Gemini API keys are optional accelerators, not requirements. Without 
 
 ## Review Room UI
 
-The M10 local UI now has a first implementation slice under `ui/` plus a FastAPI backend foundation under `src/goodboy/web/`. The UI is a visual review shell with a stage rail, large artifact canvas, zoom controls, draggable compare mode, contextual inspector, command palette, activity drawer, approval gate, demo fixture, and Playwright coverage.
+The M10 local UI now has a first implementation slice under `ui/` plus a FastAPI backend foundation under `src/goodboy/web/`. The UI opens with onboarding paths for agent-led creation, existing projects, and a safe demo walkthrough. The Review Room shell includes a workflow timeline, stage rail, large artifact canvas, zoom controls, draggable compare mode, decision panel, command palette, activity drawer, approval gate, demo fixture, and Playwright coverage.
 
 Run the frontend demo:
 

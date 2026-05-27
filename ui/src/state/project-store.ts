@@ -9,6 +9,7 @@ const DEMO_PROJECT_ID = "demo-review-room";
 
 interface ProjectStore {
   state: ProjectState;
+  onboardingOpen: boolean;
   selectedStage: ReviewStage;
   selectedArtifactId: string | null;
   inspectorOpen: boolean;
@@ -28,6 +29,9 @@ interface ProjectStore {
   toggleCompare: () => void;
   setZoom: (zoom: number) => void;
   setPlaybackSpeed: (speed: number) => void;
+  openOnboarding: () => void;
+  closeOnboarding: () => void;
+  startDemo: () => void;
   loadDemo: () => void;
   loadProject: (projectDir: string) => Promise<void>;
   refresh: () => Promise<void>;
@@ -44,6 +48,7 @@ function initialActivities(): ActivityItem[] {
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   state: demoProjectState,
+  onboardingOpen: true,
   selectedStage: "qa",
   selectedArtifactId: "runs-demo-qa-contact-sheet-png",
   inspectorOpen: true,
@@ -66,8 +71,24 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   toggleCompare: () => set((current) => ({ compareMode: !current.compareMode })),
   setZoom: (zoom) => set({ zoom }),
   setPlaybackSpeed: (playbackSpeed) => set({ playbackSpeed }),
+  openOnboarding: () => set({ onboardingOpen: true }),
+  closeOnboarding: () => set({ onboardingOpen: false }),
+  startDemo: () =>
+    set({
+      onboardingOpen: false,
+      state: demoProjectState,
+      selectedStage: "sources",
+      selectedArtifactId: "sources-originals-source-001-png",
+      compareMode: false,
+      error: null,
+      activities: [
+        { id: `demo-${Date.now()}`, kind: "system", label: "Demo walkthrough started", detail: "Explore sources, baseline, style, generation, QA, and export without changing files.", time: "now" },
+        ...initialActivities()
+      ]
+    }),
   loadDemo: () =>
     set({
+      onboardingOpen: false,
       state: demoProjectState,
       selectedStage: "qa",
       selectedArtifactId: "runs-demo-qa-contact-sheet-png",
@@ -80,6 +101,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const opened = await openProject(projectDir);
       const state = await getProjectState(opened.project_id);
       set({
+        onboardingOpen: false,
         state,
         selectedStage: "sources",
         selectedArtifactId: state.artifacts.find((item) => item.stage === "sources")?.id ?? null,

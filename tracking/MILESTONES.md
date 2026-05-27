@@ -201,6 +201,9 @@ Status: `[~]`
 - `[x]` Create complete Review Room implementation plan.
 - `[x]` Add FastAPI backend foundation with project state, artifact indexing, path-safe artifact serving, and workflow action routes.
 - `[x]` Add Review Room frontend shell with stage rail, gate banner, artifact canvas, contextual inspector, command palette, and activity drawer.
+- `[x]` Add onboarding paths for Create with Codex, Open project, and Explore demo.
+- `[x]` Replace the ambiguous gate label with a clear workflow timeline and current/next decision summary.
+- `[x]` Reframe the inspector around user decisions and approval/change requests.
 - `[x]` Add visual inspector interactions: zoom, fit, filmstrip selection, playback-speed control, draggable compare mode, inspector collapse, keyboard shortcuts, and safe demo refresh.
 - `[x]` Add demo fixture suitable for visual walkthroughs.
 - `[x]` Add frontend typecheck/build and Playwright coverage for inspector controls, accessibility basics, approval gating, and refresh behavior.
@@ -224,6 +227,7 @@ Exit criteria:
 Evidence:
 
 - Implementation plan: `docs/superpowers/plans/2026-05-27-goodboy-review-room-ui-implementation-plan.md`
+- Onboarding screenshot: `docs/assets/review-room-onboarding-2026-05-27.png`
 - Smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`
 - Frontend tests: `ui/tests/`
 - Backend tests: `tests/test_web_*.py`

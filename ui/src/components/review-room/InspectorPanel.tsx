@@ -1,13 +1,13 @@
-import { CheckCircle2, ClipboardCheck, Download, GitBranch, ShieldAlert } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Download, GitBranch, MessageSquareText, ShieldAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { formatBytes, shortPath, titleCase } from "../../lib/format";
+import { formatBytes, shortPath } from "../../lib/format";
 import type { ArtifactRef, ProjectState, ReviewStage } from "../../lib/types";
+import { currentDecisionFor } from "../../lib/workflow";
 import { ApprovalExport } from "../../features/approval/ApprovalExport";
 import { BaselineReview } from "../../features/baselines/BaselineReview";
 import { DemoMode } from "../../features/demo/DemoMode";
 import { GenerationReview } from "../../features/generation/GenerationReview";
-import { ProjectOpen } from "../../features/project/ProjectOpen";
 import { QaReview } from "../../features/qa/QaReview";
 import { SourceReview } from "../../features/sources/SourceReview";
 import { StyleStudio } from "../../features/style/StyleStudio";
@@ -19,34 +19,35 @@ interface InspectorPanelProps {
   state: ProjectState;
   selectedStage: ReviewStage;
   selectedArtifact: ArtifactRef | null;
+  onStageChange: (stage: ReviewStage) => void;
+  onOpenOnboarding: () => void;
   onApproveDemo: (notes: string) => void;
 }
 
-export function InspectorPanel({ open, state, selectedStage, selectedArtifact, onApproveDemo }: InspectorPanelProps) {
+export function InspectorPanel({ open, state, selectedStage, selectedArtifact, onStageChange, onOpenOnboarding, onApproveDemo }: InspectorPanelProps) {
   const [notes, setNotes] = useState("Reviewed contact sheet, previews, edge preview, and centering overlay.");
   const policy = useMemo(() => state.qa?.install_policy as Record<string, unknown> | undefined, [state.qa]);
+  const decision = currentDecisionFor(state, selectedStage);
   return (
     <aside className={`inspector ${open ? "" : "closed"}`} aria-label="Inspector panel">
       <div className="inspector-scroll">
-        <section className="inspector-section">
-          <h3>Current Gate</h3>
-          <StatusBadge severity={state.gate.install_ready ? "success" : "warning"}>{titleCase(state.gate.next_action)}</StatusBadge>
-          <dl>
-            <div className="key-value">
-              <dt>Stage</dt>
-              <dd>{titleCase(state.gate.stage)}</dd>
-            </div>
-            <div className="key-value">
-              <dt>Run</dt>
-              <dd>{state.active_run_id ?? "Not planned"}</dd>
-            </div>
-            <div className="key-value">
-              <dt>Blocked</dt>
-              <dd>{state.gate.blocked_actions.join(", ") || "None"}</dd>
-            </div>
-          </dl>
+        <section className="inspector-section decision-section">
+          <h3>Decision Needed</h3>
+          <StatusBadge severity={decision.severity}>{decision.title}</StatusBadge>
+          <p>{decision.detail}</p>
+          <div className="decision-actions">
+            {(selectedStage === "qa" || selectedStage === "approval") && !state.gate.install_ready ? (
+              <Button variant="primary" onClick={() => onApproveDemo(notes)}>
+                <CheckCircle2 size={14} />
+                Approve review
+              </Button>
+            ) : null}
+            <Button variant="default" onClick={() => onStageChange(selectedStage === "qa" ? "style" : "qa")}>
+              <MessageSquareText size={14} />
+              Request changes
+            </Button>
+          </div>
         </section>
-        <ProjectOpen />
         <section className="inspector-section">
           <h3>Selected Artifact</h3>
           {selectedArtifact ? (
@@ -95,6 +96,7 @@ export function InspectorPanel({ open, state, selectedStage, selectedArtifact, o
         <section className="inspector-section">
           <h3>Quick Actions</h3>
           <div className="toolbar-group">
+            <Button variant="default" onClick={onOpenOnboarding}>Start</Button>
             <Button variant="default">
               <GitBranch size={14} />
               Branch

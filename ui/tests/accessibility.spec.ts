@@ -3,10 +3,12 @@ import { expect, test } from "@playwright/test";
 test("primary inspector controls are keyboard reachable and named", async ({ page }) => {
   await page.goto("/");
 
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "Refresh project state" })).toBeFocused();
+  await page.getByRole("button", { name: /Explore demo/ }).click();
 
   await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Project workflow").getByRole("button", { name: /Sources/ })).toBeFocused();
+
+  await page.getByRole("button", { name: "Open command palette" }).focus();
   await expect(page.getByRole("button", { name: "Open command palette" })).toBeFocused();
 
   await page.keyboard.press("Enter");

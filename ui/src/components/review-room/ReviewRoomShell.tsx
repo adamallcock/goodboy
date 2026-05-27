@@ -6,6 +6,7 @@ import { ArtifactCanvas } from "./ArtifactCanvas";
 import { CommandPalette } from "./CommandPalette";
 import { GateBar } from "./GateBar";
 import { InspectorPanel } from "./InspectorPanel";
+import { Onboarding } from "./Onboarding";
 import { StageRail } from "./StageRail";
 
 export function ReviewRoomShell() {
@@ -33,11 +34,17 @@ export function ReviewRoomShell() {
     return () => window.removeEventListener("keydown", handler);
   }, [store]);
 
+  if (store.onboardingOpen) {
+    return <Onboarding />;
+  }
+
   return (
     <div className={`review-room ${store.inspectorOpen ? "" : "inspector-closed"}`}>
       <GateBar
         state={store.state}
+        selectedStage={store.selectedStage}
         inspectorOpen={store.inspectorOpen}
+        onStageChange={store.setStage}
         onToggleInspector={store.toggleInspector}
         onToggleActivity={store.toggleActivity}
         onToggleCommand={store.toggleCommand}
@@ -62,6 +69,8 @@ export function ReviewRoomShell() {
         state={store.state}
         selectedStage={store.selectedStage}
         selectedArtifact={currentArtifact}
+        onStageChange={store.setStage}
+        onOpenOnboarding={store.openOnboarding}
         onApproveDemo={store.approveDemo}
       />
       <ActivityDrawer open={store.activityOpen} activities={store.activities} />

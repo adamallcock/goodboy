@@ -1,22 +1,25 @@
-import { Activity, Command, Eye, PanelRightClose, PanelRightOpen, RefreshCcw } from "lucide-react";
+import { Activity, Check, Command, Eye, PanelRightClose, PanelRightOpen, RefreshCcw } from "lucide-react";
 
-import { titleCase } from "../../lib/format";
-import type { ProjectState } from "../../lib/types";
+import type { ProjectState, ReviewStage } from "../../lib/types";
+import { currentDecisionFor, workflowIndexFor, workflowStatus, workflowSteps } from "../../lib/workflow";
 import { Button } from "../ui/button";
 import { StatusBadge } from "../ui/status-badge";
 
 interface GateBarProps {
   state: ProjectState;
+  selectedStage: ReviewStage;
   inspectorOpen: boolean;
+  onStageChange: (stage: ReviewStage) => void;
   onToggleInspector: () => void;
   onToggleActivity: () => void;
   onToggleCommand: () => void;
   onRefresh: () => void;
 }
 
-export function GateBar({ state, inspectorOpen, onToggleInspector, onToggleActivity, onToggleCommand, onRefresh }: GateBarProps) {
+export function GateBar({ state, selectedStage, inspectorOpen, onStageChange, onToggleInspector, onToggleActivity, onToggleCommand, onRefresh }: GateBarProps) {
   const displayName = String(state.manifest.display_name ?? state.manifest.id ?? "Goodboy");
-  const gateSeverity = state.gate.install_ready ? "success" : state.gate.stage.includes("review") ? "warning" : "info";
+  const currentIndex = workflowIndexFor(state, selectedStage);
+  const decision = currentDecisionFor(state, selectedStage);
   return (
     <header className="gate-bar">
       <div className="brand-lockup">
@@ -28,9 +31,24 @@ export function GateBar({ state, inspectorOpen, onToggleInspector, onToggleActiv
           <p className="brand-subtitle">Review Room</p>
         </div>
       </div>
-      <div className="gate-summary">
-        <StatusBadge severity={gateSeverity}>{titleCase(state.gate.stage)}</StatusBadge>
-        <span className="gate-text">{titleCase(state.gate.next_action)}</span>
+      <div className="workflow-header" aria-label="Project workflow">
+        <ol className="workflow-timeline">
+          {workflowSteps.map((step, index) => {
+            const status = workflowStatus(index, currentIndex);
+            return (
+              <li key={step.id} className={`workflow-step ${status}`}>
+                <button type="button" disabled={!step.stage} onClick={() => step.stage && onStageChange(step.stage)} aria-current={status === "current" ? "step" : undefined}>
+                  <span className="workflow-dot">{status === "complete" ? <Check size={11} /> : index + 1}</span>
+                  <span>{step.label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+        <div className="workflow-current">
+          <StatusBadge severity={decision.severity}>{decision.title}</StatusBadge>
+          <span>Next: {decision.next}</span>
+        </div>
       </div>
       <div className="gate-actions">
         <Button variant="ghost" aria-label="Refresh project state" onClick={onRefresh}>

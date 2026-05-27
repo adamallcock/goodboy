@@ -11,7 +11,7 @@ status: active
 
 **Goal:** Build M10 as a local, artifact-first Review Room web UI for reviewing, steering, approving, exporting, and demoing Goodboy projects.
 
-**Architecture:** Add a local Python web server that exposes typed, path-safe Goodboy project APIs over the existing manifest-first pipeline. Add a React + Vite + TypeScript frontend whose default surface is an immersive Review Room: large central artifact canvas, slim stage rail, contextual inspector, gated next action, and optional advanced drawers for commands, logs, manifests, and job tables.
+**Architecture:** Add a local Python web server that exposes typed, path-safe Goodboy project APIs over the existing manifest-first pipeline. Add a React + Vite + TypeScript frontend whose default surface is an immersive Review Room: large central artifact canvas, top workflow navigation, contextual inspector, gated next action, and optional advanced drawers for commands, logs, manifests, and job tables.
 
 **Tech Stack:** Python 3.10+, existing Goodboy modules, FastAPI, Uvicorn, python-multipart, React, Vite, TypeScript, Tailwind, shadcn/Radix-style component primitives, Lucide React, TanStack Table, react-dropzone, PhotoSwipe or a small custom zoom viewer, react-compare-slider, cmdk, Sonner, Zustand, Playwright, unittest.
 
@@ -20,7 +20,7 @@ status: active
 Updated 2026-05-27:
 
 - Backend foundation is implemented under `src/goodboy/web/` with typed view models, artifact indexing, path-safe artifact serving, project registry, action wrappers, FastAPI routes, and `goodboy ui --help`.
-- Frontend first slice is implemented under `ui/` with the Review Room shell, stage rail, artifact canvas, zoom controls, draggable compare mode, contextual inspector, command palette, activity drawer, source/baseline/style/generation/QA/approval/demo panels, and fixture-driven demo mode.
+- Frontend first slice is implemented under `ui/` with the Review Room shell, top workflow navigation, artifact canvas, zoom controls, draggable compare mode, contextual inspector, command palette, activity drawer, source/baseline/style/generation/QA/approval/demo panels, and fixture-driven demo mode. The original left stage rail component has been retired from the active shell to avoid duplicate navigation.
 - Tests exist for backend models/artifacts/actions/API and frontend inspector interactions/accessibility gates.
 - Current smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`.
 - M10 is still in progress because live frontend actions, one-command launch, real artifact rendering coverage across all stages, and full documentation/troubleshooting are not complete.
@@ -47,7 +47,7 @@ M10 is complete when all of the following are true:
 - A user can launch the UI locally with one documented command.
 - The UI opens an existing Goodboy project.
 - The UI can create a new project and ingest source images.
-- The UI presents the Review Room shell with stage rail, artifact canvas, contextual inspector, gate banner, activity drawer, and command palette.
+- The UI presents the Review Room shell with top workflow navigation, artifact canvas, contextual inspector, gate banner, activity drawer, and command palette.
 - The UI can display source images, candidate baselines, selected baseline, style sheet, row-generation jobs, row strips, contact sheet, GIF previews, edge preview, centering overlay, QA reports, approval records, package files, and exports.
 - The UI can perform core Goodboy actions through backend APIs: source ingest, source-card update, candidate planning, candidate-image registration, baseline selection, style update, critique/feedback, row planning, handoff generation, generated-output import, review build, approval, finish/install, project export, and Petdex export.
 - The UI prevents install/finish unless the same Goodboy policy gates pass or an explicit override reason is recorded.
@@ -137,7 +137,6 @@ M10 is complete when all of the following are true:
 - Create: `ui/src/components/ui/segmented-control.tsx`
 - Create: `ui/src/components/ui/status-badge.tsx`
 - Create: `ui/src/components/review-room/ReviewRoomShell.tsx`
-- Create: `ui/src/components/review-room/StageRail.tsx`
 - Create: `ui/src/components/review-room/GateBar.tsx`
 - Create: `ui/src/components/review-room/ArtifactCanvas.tsx`
 - Create: `ui/src/components/review-room/InspectorPanel.tsx`
@@ -279,7 +278,7 @@ The Review Room default shell has five zones:
 Rules:
 
 - The canvas owns the page.
-- StageRail stays slim and calm.
+- Top workflow navigation stays readable and calm.
 - InspectorPanel is contextual and collapsible.
 - GateBar is always visible.
 - ActivityDrawer defaults collapsed.
@@ -1409,7 +1408,6 @@ git commit -m "Add Review Room API client state"
 **Files:**
 - Modify: `ui/src/App.tsx`
 - Create: `ui/src/components/review-room/ReviewRoomShell.tsx`
-- Create: `ui/src/components/review-room/StageRail.tsx`
 - Create: `ui/src/components/review-room/GateBar.tsx`
 - Create: `ui/src/components/review-room/ArtifactCanvas.tsx`
 - Create: `ui/src/components/review-room/InspectorPanel.tsx`
@@ -1426,7 +1424,7 @@ Create CSS variables for background, surface, border, text, muted text, accent, 
 
 - [ ] **Step 2: Build shell components**
 
-Implement StageRail, GateBar, ArtifactCanvas, InspectorPanel, ActivityDrawer, and CommandPalette using fixture project state.
+Implement GateBar, ArtifactCanvas, InspectorPanel, ActivityDrawer, and CommandPalette using fixture project state.
 
 - [ ] **Step 3: Wire the shell into App**
 
@@ -1485,7 +1483,7 @@ Use react-dropzone for source files. Submit to backend ingest endpoint.
 
 - [ ] **Step 4: Add Playwright source test**
 
-Create `ui/tests/review-room.spec.ts` with a test that opens the app, sees the stage rail, enters a fixture project path when configured, and reaches Sources.
+Create `ui/tests/review-room.spec.ts` with a test that opens the app, uses the top workflow navigation, enters a fixture project path when configured, and reaches Sources.
 
 - [ ] **Step 5: Run frontend checks**
 
@@ -1823,7 +1821,7 @@ git commit -m "Wire local UI development servers"
 
 - [ ] **Step 1: Add keyboard flow**
 
-Ensure StageRail, CommandPalette, artifact controls, approval notes, and export buttons are keyboard reachable.
+Ensure top workflow navigation, CommandPalette, artifact controls, approval notes, and export buttons are keyboard reachable.
 
 - [ ] **Step 2: Add reduced motion handling**
 
@@ -1831,7 +1829,7 @@ Pause autoplay effects and respect `prefers-reduced-motion`.
 
 - [ ] **Step 3: Add mobile/tablet review mode**
 
-Collapse stage rail and inspector. Keep artifact canvas and gate visible.
+Keep the top workflow compact and collapse the inspector. Keep artifact canvas and gate visible.
 
 - [ ] **Step 4: Add accessibility test**
 
@@ -2077,7 +2075,7 @@ Type consistency:
 
 - Backend `ProjectState`, `WorkflowGate`, and `ArtifactRef` are mirrored by frontend types.
 - Routes return refreshed `ProjectState` for mutating actions.
-- Stage names align with the Review Room stage rail: sources, baselines, style, generation, qa, approval, demo.
+- Stage names align with the Review Room workflow navigation: sources, baselines, style, generation, qa, approval, demo.
 
 Execution note:
 

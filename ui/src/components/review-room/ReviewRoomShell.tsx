@@ -7,7 +7,6 @@ import { CommandPalette } from "./CommandPalette";
 import { GateBar } from "./GateBar";
 import { InspectorPanel } from "./InspectorPanel";
 import { Onboarding } from "./Onboarding";
-import { StageRail } from "./StageRail";
 
 export function ReviewRoomShell() {
   const store = useProjectStore();
@@ -24,9 +23,15 @@ export function ReviewRoomShell() {
       }
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
       const key = event.key.toLowerCase();
+      if (key === "1") store.setStage("sources");
+      if (key === "2") store.setStage("baselines");
+      if (key === "3") store.setStage("style");
+      if (key === "4") store.setStage("generation");
+      if (key === "5") store.setStage("qa");
       if (key === "q") store.setStage("qa");
       if (key === "s") store.setStage("style");
       if (key === "b") store.setStage("baselines");
+      if (key === "g") store.setStage("generation");
       if (key === "r") void store.refresh();
       if (key === "i") store.toggleInspector();
     };
@@ -51,8 +56,8 @@ export function ReviewRoomShell() {
         onToggleCommand={store.toggleCommand}
         onRefresh={store.refresh}
       />
-      <StageRail selectedStage={store.selectedStage} state={store.state} onOpenOnboarding={store.openOnboarding} onStageChange={store.setStage} />
       <ArtifactCanvas
+        key={store.selectedStage}
         state={store.state}
         selectedStage={store.selectedStage}
         selectedArtifact={currentArtifact}
@@ -66,6 +71,7 @@ export function ReviewRoomShell() {
         onPlaybackSpeedChange={store.setPlaybackSpeed}
       />
       <InspectorPanel
+        key={`inspector-${store.selectedStage}`}
         open={store.inspectorOpen}
         state={store.state}
         selectedStage={store.selectedStage}

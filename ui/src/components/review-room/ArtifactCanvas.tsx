@@ -145,11 +145,62 @@ function ArtifactMedia({ artifact }: { artifact: ArtifactRef }) {
     setFailed(false);
   }, [artifact.id]);
 
-  if (artifactIsImage(artifact) && artifact.exists && !artifact.url.startsWith("/demo/") && !failed) {
+  if (artifact.url.startsWith("/demo/")) {
+    return <DemoArtifactPreview artifact={artifact} />;
+  }
+
+  if (artifactIsImage(artifact) && artifact.exists && !failed) {
     return <img className="artifact-image" src={artifact.url} alt={artifact.label} onError={() => setFailed(true)} />;
   }
 
   return <SyntheticArtifactGrid artifact={artifact} ariaLabel={artifact.url.startsWith("/demo/") ? "Demo artifact preview" : "Synthetic artifact fallback"} />;
+}
+
+function DemoArtifactPreview({ artifact }: { artifact: ArtifactRef }) {
+  if (artifact.kind === "source") {
+    return (
+      <div className="demo-source-preview" aria-label="Demo source image material">
+        <div className="demo-source-photo primary">
+          <span className="kitten-face" />
+        </div>
+        <div className="demo-source-notes">
+          <strong>Source reference</strong>
+          <span>Tabby-and-white kitten with pink nose, white muzzle, and rounded eyes.</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (artifact.kind === "candidate" || artifact.kind === "character") {
+    return (
+      <div className="demo-candidate-preview" aria-label="Demo baseline candidate material">
+        {["soft lifelike", "storybook", "sticker"].map((label, index) => (
+          <div key={label} className={`demo-candidate-card ${index === 0 ? "selected" : ""}`}>
+            <span className="kitten-face" />
+            <strong>{label}</strong>
+            <em>{index === 0 ? "selected baseline" : "alternate"}</em>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (artifact.kind === "package") {
+    return (
+      <div className="demo-package-preview" aria-label="Demo package material">
+        <div className="package-file">
+          <strong>spritesheet.webp</strong>
+          <span>Final Codex pet atlas</span>
+        </div>
+        <div className="package-file">
+          <strong>pet.json</strong>
+          <span>State map and metadata</span>
+        </div>
+      </div>
+    );
+  }
+
+  return <SyntheticArtifactGrid artifact={artifact} ariaLabel="Demo artifact preview" />;
 }
 
 function SyntheticArtifactGrid({ artifact, ariaLabel, tone = "current" }: { artifact?: ArtifactRef | null; ariaLabel: string; tone?: "current" | "qa" | "reference" }) {

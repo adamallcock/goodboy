@@ -1,5 +1,5 @@
 import { Command } from "cmdk";
-import { CheckCircle2, Download, Eye, GitBranch, Palette, RefreshCcw } from "lucide-react";
+import { CheckCircle2, Download, Eye, GitBranch, Images, Palette, RefreshCcw, Sparkles, WandSparkles } from "lucide-react";
 import { useEffect } from "react";
 
 import type { ReviewStage } from "../../lib/types";
@@ -33,17 +33,35 @@ export function CommandPalette({ open, onClose, onStageChange, onRefresh, onAppr
         <Command.Input className="command-input" autoFocus placeholder="Search Goodboy actions..." />
         <Command.List className="command-list">
           <Command.Empty>No action found.</Command.Empty>
-          <Command.Item className="command-item" onSelect={() => run(() => onStageChange("qa"))}>
+          <Command.Item className="command-item" onSelect={() => run(() => onStageChange("sources"))}>
             <span>
-              <Eye size={14} /> Open QA Review
+              <Images size={14} /> Open Sources
             </span>
-            <kbd>Q</kbd>
+            <kbd>1</kbd>
+          </Command.Item>
+          <Command.Item className="command-item" onSelect={() => run(() => onStageChange("baselines"))}>
+            <span>
+              <Sparkles size={14} /> Open Baselines
+            </span>
+            <kbd>2</kbd>
           </Command.Item>
           <Command.Item className="command-item" onSelect={() => run(() => onStageChange("style"))}>
             <span>
               <Palette size={14} /> Open Style Studio
             </span>
-            <kbd>S</kbd>
+            <kbd>3</kbd>
+          </Command.Item>
+          <Command.Item className="command-item" onSelect={() => run(() => onStageChange("generation"))}>
+            <span>
+              <WandSparkles size={14} /> Open Generated Rows
+            </span>
+            <kbd>4</kbd>
+          </Command.Item>
+          <Command.Item className="command-item" onSelect={() => run(() => onStageChange("qa"))}>
+            <span>
+              <Eye size={14} /> Open QA Review
+            </span>
+            <kbd>5</kbd>
           </Command.Item>
           <Command.Item className="command-item" onSelect={() => run(onRefresh)}>
             <span>

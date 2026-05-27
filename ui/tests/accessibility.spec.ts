@@ -15,7 +15,7 @@ test("primary inspector controls are keyboard reachable and named", async ({ pag
   await expect(page.getByPlaceholder("Search Goodboy actions...")).toBeVisible();
 
   await page.keyboard.press("Escape");
-  const qaStage = page.getByRole("navigation", { name: "Review stages" }).getByRole("button", { name: "QA", exact: true });
-  await qaStage.focus();
-  await expect(qaStage).toBeFocused();
+  const nextStep = page.getByRole("button", { name: /Baselines/ });
+  await nextStep.focus();
+  await expect(nextStep).toBeFocused();
 });

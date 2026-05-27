@@ -22,7 +22,10 @@ test("onboarding explains the paths into review room", async ({ page }) => {
 
 test("review room exposes interactive visual inspector controls", async ({ page }) => {
   await startDemo(page);
-  await page.getByRole("button", { name: "QA", exact: true }).click();
+  await page.getByRole("button", { name: /Baselines/ }).click();
+  await page.getByRole("button", { name: /Style/ }).click();
+  await page.getByRole("button", { name: /Generate/ }).click();
+  await page.getByRole("button", { name: /QA Review/ }).click();
 
   await expect(page.getByRole("heading", { name: "Shoulder Kitten" })).toBeVisible();
   await expect(page.getByRole("main").getByRole("heading", { name: "Qa" })).toBeVisible();
@@ -37,7 +40,8 @@ test("review room exposes interactive visual inspector controls", async ({ page 
   await page.getByLabel("Zoom level").fill("1.25");
   await expect(page.getByText("125%")).toBeVisible();
 
-  await page.getByRole("navigation", { name: "Review stages" }).getByRole("button", { name: "Style" }).click();
+  await page.keyboard.press("Meta+K");
+  await page.getByText("Open Style Studio").click();
   await expect(page.getByRole("heading", { name: "Style Studio" })).toBeVisible();
   await page.getByRole("button", { name: "anime" }).click();
   await expect(page.getByRole("button", { name: "anime" })).toHaveClass(/active/);
@@ -50,7 +54,6 @@ test("review room exposes interactive visual inspector controls", async ({ page 
   await page.getByRole("button", { name: "Back to start" }).first().click();
   await expect(page.getByRole("heading", { name: "Goodboy Review Room" })).toBeVisible();
   await page.getByRole("button", { name: /Explore demo/ }).click();
-  await page.getByRole("button", { name: "QA", exact: true }).click();
 
   await page.keyboard.press("Meta+K");
   await expect(page.getByPlaceholder("Search Goodboy actions...")).toBeVisible();
@@ -69,7 +72,7 @@ test("demo refresh is safe and recorded without a backend", async ({ page }) => 
 
 test("approval interaction updates gate and activity", async ({ page }) => {
   await startDemo(page);
-  await page.getByRole("button", { name: "QA", exact: true }).click();
+  await page.keyboard.press("5");
 
   await page.getByRole("button", { name: "Approve visual review" }).click();
   await expect(page.getByRole("banner").getByText("Ready to export")).toBeVisible();

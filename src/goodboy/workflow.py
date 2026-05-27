@@ -609,6 +609,7 @@ def review_artifacts(project_dir: Path, run_id: str | None) -> list[str]:
         Path("runs") / run_id / "qa" / "centering-report.json",
         Path("runs") / run_id / "qa" / "duplicate-audit.json",
         Path("runs") / run_id / "qa" / "review.json",
+        Path("runs") / run_id / "qa" / "human-review-checklist.json",
     ]
     previews_dir = project_dir / "runs" / run_id / "qa" / "previews"
     if previews_dir.is_dir():

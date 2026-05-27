@@ -86,6 +86,7 @@ def build_from_row_strips(
             "install_policy": qa_policy.to_dict(),
         },
     )
+    write_json(qa_dir / "human-review-checklist.json", human_review_checklist(run_id))
 
     package_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(final_dir / "spritesheet.webp", package_dir / "spritesheet.webp")
@@ -127,6 +128,21 @@ def build_from_row_strips(
             raise ValueError(f"suspicious renderer scripts block install: {', '.join(suspicious)}")
         install_package(package_dir=package_dir, pet_id=project.id, install_root=install_root)
     return summary
+
+
+def human_review_checklist(run_id: str) -> dict[str, object]:
+    return {
+        "run_id": run_id,
+        "required_before_approval": [
+            "Open qa/contact-sheet.png and confirm every state is recognizable.",
+            "Open qa/previews/*.gif and confirm loops do not drift, clip, or duplicate unnaturally.",
+            "Open qa/edge-preview-white.png and confirm there is no visible green halo.",
+            "Open qa/centering-overlay.png and confirm frame centers are stable enough for idle/waiting/review.",
+            "Read qa/review.json and qa/install-policy.json; approve only if hard failures are absent or intentionally overridden.",
+            "Confirm the character identity, style preset, and any user/AI critique overrides are reflected in the row art.",
+        ],
+        "approval_command": "goodboy approve <project-dir> --notes \"User approved contact sheet, previews, edge, centering, identity, and style\"",
+    }
 
 
 def install_package(*, package_dir: Path, pet_id: str, install_root: Path | None = None) -> Path:

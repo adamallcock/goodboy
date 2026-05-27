@@ -178,13 +178,19 @@ Risk:
 
 ## 7. Recommendation
 
-Proceed with Option A as the base design, plus:
+Proceed with Option C, Review Room, as the base design.
 
-- Option B's narrative strip for demo mode.
-- Option C's full-screen artifact review mode for baselines and QA.
-- Option D's command palette and gate explanations for trust and agent compatibility.
+Review Room is the better primary surface because Goodboy is fundamentally a visual judgment workflow. The permanent UI should ask one clear question at a time: which artifact are we reviewing, what does the QA/provenance say, and what is the next safe action?
 
-This gives us a UI that can be beautiful, easy to use, and credible as a serious engineering artifact.
+Borrow selectively:
+
+- Use Option A's Studio Console as an advanced mode for logs, job tables, manifests, and debugging.
+- Use Option B's narrative strip for demo mode and stage orientation.
+- Use Option D's command palette and gate explanations for trust and agent compatibility.
+
+This gives us a cleaner showcase surface without sacrificing the serious workflow underneath.
+
+Implementation plan: `docs/superpowers/plans/2026-05-27-goodboy-review-room-ui-implementation-plan.md`
 
 ## 8. Visual Concept Brief
 

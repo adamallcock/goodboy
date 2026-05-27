@@ -44,6 +44,8 @@ Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint,
 - Added tests for project init, ingest/source-card/candidate/feedback/style/handoff/validation flow, Agent Rail command flow, simplified handoff/import/build/finish flow, planning idempotence, approval/install command flow, suspicious renderer blocking, negative manifest validation across named manifest types, OpenAI and Gemini dry-run execution, QA policy, centering stabilization, portable synthetic fixture build, WebP transparency invariants, and existing Napoleon row-strip regression.
 - Added M10 local web UI requirements covering product ethos, information architecture, functional requirements, technical architecture, visual quality, QA surfaces, demo mode, and implementation milestones.
 - Added M10 off-the-shelf component scan and initial design direction options.
+- Chose Review Room as the primary M10 design direction, with Studio Console features reserved for advanced/debug panels.
+- Added the Review Room implementation plan under `docs/superpowers/plans/`.
 
 ## Not Yet Started
 
@@ -57,7 +59,7 @@ Early implementation. Goodboy now has a Python package skeleton, CLI entrypoint,
 
 ## Next Recommended Work
 
-1. Choose M10 visual design direction, then build the local web UI for candidate, row, QA, and approval review.
+1. Execute the Review Room implementation plan for the local web UI.
 2. Run live OpenAI and Gemini image execution smoke testing when keys are available.
 3. Add deeper source-analysis and visual-critic adapters.
 4. Revisit bundled Goodboy MCP tools after observing plugin usage.

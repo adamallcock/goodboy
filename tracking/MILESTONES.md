@@ -197,6 +197,8 @@ Status: `[~]`
 
 - `[x]` Create comprehensive UI functional and technical requirements.
 - `[x]` Scan off-the-shelf component options and define initial design directions.
+- `[x]` Choose Review Room as the primary M10 design direction.
+- `[x]` Create complete Review Room implementation plan.
 - `[ ]` Candidate browser.
 - `[ ]` Source-image comparison view.
 - `[ ]` Baseline selection view.

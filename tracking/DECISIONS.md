@@ -65,6 +65,12 @@ Goodboy should provide a local web UI for browsing candidate baselines, comparin
 
 Reason: the repo-scoped Codex plugin is useful for agent steering, but the current plugin surface should not be treated as the image-heavy review UI. M10 needs a dedicated local visual surface over the existing manifests.
 
+### D011: Review Room Is The Primary M10 UI Direction
+
+Goodboy M10 should default to an artifact-first Review Room rather than a permanently dense Studio Console.
+
+Reason: the most important Goodboy decisions are visual review decisions. A simpler Review Room better supports first-use clarity and hiring-manager demos, while Studio Console behaviors can still exist as advanced/debug drawers for logs, manifests, commands, and job tables.
+
 ## Open
 
 - Should Goodboy store generated images in-project by default, or use an external artifact cache with project references?

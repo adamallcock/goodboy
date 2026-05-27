@@ -614,13 +614,17 @@ Risk:
 
 ## 23. Recommended Direction
 
-Start from Option A: Studio Console, then borrow:
+Start from Option C: Review Room.
 
-- Option B's narrative timeline for demo mode.
-- Option C's full-screen artifact review for candidate and QA inspection.
-- Option D's command/log rigor for agent trust and debugging.
+Review Room should be the default product surface because Goodboy's highest-value user decisions are visual: compare the source, judge the baseline, inspect the animation, catch drift or residue, approve or request changes, then export/install. A simpler artifact-first interface is more compelling for users and stronger for hiring-manager demos than a permanently dense operations console.
 
-This hybrid gives Goodboy the best chance of being both beautiful and operationally credible.
+Borrow from the other options deliberately:
+
+- Use Option A's Studio Console structure only as an advanced/debug posture through collapsible command, log, job, and manifest panels.
+- Use Option B's narrative timeline for demo mode and project-stage orientation.
+- Use Option D's command/log rigor for agent trust, provenance, and workflow gates.
+
+This direction keeps the primary experience visual and simple while preserving Goodboy's operational credibility underneath.
 
 ## 24. Acceptance Criteria For M10
 
@@ -639,11 +643,10 @@ M10 should not be marked complete until:
 
 ## 25. Open Decisions
 
-1. Should M10 use FastAPI, Starlette, or another lightweight Python server?
-2. Should the frontend use Tailwind, CSS modules, or a small token-driven stylesheet?
-3. Should the UI ship inside the Python package, as a sibling `ui/` workspace, or as a separate package under the repo?
-4. Should install remain an explicit CLI-backed backend action, or should the UI call lower-level package functions directly?
-5. Should the first visual concept be generated as a high-fidelity app screen before implementation, or should we make low-fidelity wireframes first and then generate concepts?
+1. Should the frontend use Tailwind-only custom components or generated shadcn component files for the first slice?
+2. Should install remain an explicit CLI-backed backend action, or should the UI call lower-level package functions directly?
+3. How much of the first build should be read-only review before enabling mutating actions?
+4. Should demo mode use only synthetic fixture artifacts, or also include a bundled anonymized real pet project?
 
 ## 26. Immediate Next Step
 

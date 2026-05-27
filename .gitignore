@@ -1,0 +1,45 @@
+# Python and packaging
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+site/
+
+# Local environments and editor state
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+
+# Goodboy local pet projects and generated outputs
+projects/**
+!projects/.gitkeep
+*.tmp
+*.bak
+
+# Generated provider and QA artifacts, when produced outside project folders
+generated/
+outputs/
+artifacts/
+exports/
+runs/
+qa/
+final/
+package/
+
+# Secrets and local credentials
+*.pem
+*.key
+*.p12
+*.mobileprovision
+

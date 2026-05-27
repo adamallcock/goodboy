@@ -1,0 +1,278 @@
+"""Goodboy frame QA and preview helpers."""
+
+from __future__ import annotations
+
+import itertools
+import math
+from pathlib import Path
+
+from PIL import Image, ImageChops, ImageDraw, ImageStat
+
+from .contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, STATE_ORDER
+from .jsonio import write_json
+from .schemas import QAPolicyDecision, QAReport, ValidationReport
+
+APPROVED_ROW_PROVENANCE = {"provider_generated", "user_supplied", "test_fixture"}
+DISALLOWED_ROW_PROVENANCE = {"mock_renderer", "local_renderer", "programmatic_renderer", "ad_hoc_renderer"}
+VERTICAL_DRIFT_THRESHOLDS = {
+    "idle": 4,
+    "waiting": 6,
+    "review": 8,
+    "running": 10,
+}
+
+
+def audit_frames(frames_root: Path) -> QAReport:
+    report = QAReport(
+        ok=True,
+        states={},
+        duplicate_candidates=[],
+        green_edge_pixels=0,
+        visible_pixels=0,
+        errors=[],
+        warnings=[],
+    )
+    for state in STATE_ORDER:
+        expected = ROW_FRAME_COUNTS[state]
+        files = sorted((frames_root / state).glob("*.png"))
+        if len(files) != expected:
+            report.ok = False
+            report.errors.append(f"{state} has {len(files)} frames, expected {expected}")
+        imgs = [Image.open(path).convert("RGBA") for path in files]
+        rows = []
+        state_green = 0
+        state_visible = 0
+        max_components = 0
+        hashes: dict[int, list[str]] = {}
+        for path, img in zip(files, imgs):
+            bbox = img.getchannel("A").getbbox()
+            hashes.setdefault(hash(img.tobytes()), []).append(path.name)
+            components = count_alpha_components(img)
+            max_components = max(max_components, components)
+            if bbox:
+                left, top, right, bottom = bbox
+                rows.append(
+                    {
+                        "frame": path.name,
+                        "bbox": bbox,
+                        "cx": (left + right) / 2,
+                        "cy": (top + bottom) / 2,
+                        "w": right - left,
+                        "h": bottom - top,
+                        "components": components,
+                        "edge": {
+                            "left": left,
+                            "top": top,
+                            "right": CELL_WIDTH - right,
+                            "bottom": CELL_HEIGHT - bottom,
+                        },
+                    }
+                )
+            for red, green, blue, alpha in img.getdata():
+                if alpha:
+                    state_visible += 1
+                    if alpha < 230 and green > max(red, blue) + 8:
+                        state_green += 1
+        exact_duplicates = [names for names in hashes.values() if len(names) > 1]
+        if exact_duplicates:
+            report.ok = False
+            report.errors.append(f"{state} has exact duplicate frames: {exact_duplicates}")
+
+        near = near_duplicate_pairs(imgs)
+        if near:
+            report.duplicate_candidates.append({"state": state, "near_pairs": near[:10]})
+            possible_pairs = expected * (expected - 1) // 2
+            if state not in {"idle", "waiting"} and possible_pairs and len(near) >= possible_pairs - 1:
+                report.ok = False
+                report.errors.append(f"{state} has nearly static motion across the whole loop")
+        cx_range = max((row["cx"] for row in rows), default=0) - min((row["cx"] for row in rows), default=0)
+        cy_range = max((row["cy"] for row in rows), default=0) - min((row["cy"] for row in rows), default=0)
+        min_edge = min((min(row["edge"].values()) for row in rows), default=None)
+        if max_components > 8:
+            report.ok = False
+            report.errors.append(f"{state} has too many detached components in a frame: {max_components}")
+        elif max_components > 4:
+            report.warnings.append(f"{state} has high detached component count: {max_components}")
+        if min_edge is not None and min_edge < 4:
+            report.ok = False
+            report.errors.append(f"{state} has frame edge clearance below 4px")
+        elif min_edge is not None and min_edge < 10:
+            report.warnings.append(f"{state} has tight frame edge clearance: {min_edge}px")
+        if state != "jumping" and cx_range > 10:
+            report.warnings.append(f"{state} horizontal drift is {cx_range:.1f}px")
+        threshold = VERTICAL_DRIFT_THRESHOLDS.get(state)
+        if threshold is not None and cy_range > threshold:
+            report.warnings.append(f"{state} vertical center drift is {cy_range:.1f}px, threshold {threshold}px")
+        report.states[state] = {
+            "count": len(files),
+            "expected": expected,
+            "cx_range": round(cx_range, 2),
+            "cy_range": round(cy_range, 2),
+            "min_edge": min_edge,
+            "max_components": max_components,
+            "green_edge_pixels": state_green,
+            "visible_pixels": state_visible,
+            "frames": rows,
+        }
+        report.green_edge_pixels += state_green
+        report.visible_pixels += state_visible
+    return report
+
+
+def count_alpha_components(img: Image.Image, *, min_pixels: int = 80) -> int:
+    alpha = img.getchannel("A")
+    width, height = alpha.size
+    pixels = alpha.load()
+    seen: set[tuple[int, int]] = set()
+    components = 0
+    for y in range(height):
+        for x in range(width):
+            if (x, y) in seen or pixels[x, y] == 0:
+                continue
+            stack = [(x, y)]
+            seen.add((x, y))
+            size = 0
+            while stack:
+                px, py = stack.pop()
+                size += 1
+                for ny in range(py - 1, py + 2):
+                    for nx in range(px - 1, px + 2):
+                        if nx == px and ny == py:
+                            continue
+                        if nx < 0 or ny < 0 or nx >= width or ny >= height:
+                            continue
+                        if (nx, ny) in seen or pixels[nx, ny] == 0:
+                            continue
+                        seen.add((nx, ny))
+                        stack.append((nx, ny))
+            if size >= min_pixels:
+                components += 1
+    return components
+
+
+def evaluate_qa_policy(
+    validation: ValidationReport,
+    qa_report: QAReport,
+    *,
+    override_reason: str | None = None,
+    install_requested: bool = False,
+    row_provenance: str | None = None,
+    visual_approval: str | None = None,
+) -> QAPolicyDecision:
+    technical_failures = list(validation.errors) + list(qa_report.errors)
+    hard_failures = list(technical_failures)
+    warnings = list(validation.warnings) + list(qa_report.warnings)
+    approval_note = visual_approval.strip() if visual_approval else None
+    provenance = row_provenance.strip() if row_provenance else None
+    if install_requested:
+        if provenance in DISALLOWED_ROW_PROVENANCE:
+            hard_failures.append(
+                f"row strip provenance `{provenance}` is not installable; use provider_generated, user_supplied, or test_fixture"
+            )
+        elif provenance not in APPROVED_ROW_PROVENANCE:
+            hard_failures.append(
+                "row strip provenance is required for install; use provider_generated, user_supplied, or test_fixture"
+            )
+        if not approval_note:
+            hard_failures.append("visual approval is required for install")
+    technical_ok = not technical_failures or bool(override_reason)
+    gate_failures = hard_failures[len(technical_failures) :]
+    ok_to_install = technical_ok and not gate_failures
+    return QAPolicyDecision(
+        ok_to_install=ok_to_install,
+        hard_failures=hard_failures,
+        warnings=warnings,
+        override_reason=override_reason,
+        install_requested=install_requested,
+        row_provenance=provenance,
+        visual_approval=approval_note,
+    )
+
+
+def near_duplicate_pairs(imgs: list[Image.Image], threshold: float = 3.0) -> list[dict[str, object]]:
+    near = []
+    for (i, first), (j, second) in itertools.combinations(enumerate(imgs), 2):
+        first_bbox = first.getbbox()
+        second_bbox = second.getbbox()
+        if not first_bbox or not second_bbox:
+            continue
+        first_crop = first.crop(first_bbox).resize((128, 128), Image.Resampling.LANCZOS)
+        second_crop = second.crop(second_bbox).resize((128, 128), Image.Resampling.LANCZOS)
+        diff = ImageChops.difference(first_crop, second_crop)
+        rms = math.sqrt(sum(value * value for value in ImageStat.Stat(diff).rms) / 4)
+        if rms < threshold:
+            near.append({"pair": [i, j], "rms": round(rms, 3)})
+    return near
+
+
+def make_white_edge_preview(frames_root: Path, output_path: Path) -> None:
+    items = []
+    for state in STATE_ORDER:
+        limit = 3 if state in {"idle", "waving", "waiting"} else 2
+        for frame_path in sorted((frames_root / state).glob("*.png"))[:limit]:
+            items.append((state, frame_path))
+    cell_w, cell_h = 256, 290
+    columns = 4
+    rows = (len(items) + columns - 1) // columns
+    canvas = Image.new("RGB", (columns * cell_w, rows * cell_h), "white")
+    draw = ImageDraw.Draw(canvas)
+    for index, (state, path) in enumerate(items):
+        img = Image.open(path).convert("RGBA").resize((CELL_WIDTH * 2, CELL_HEIGHT * 2), Image.Resampling.NEAREST)
+        bg = Image.new("RGBA", img.size, "white")
+        bg.alpha_composite(img)
+        tile = bg.convert("RGB")
+        tile.thumbnail((cell_w, cell_h - 24), Image.Resampling.LANCZOS)
+        x = (index % columns) * cell_w + (cell_w - tile.width) // 2
+        y = (index // columns) * cell_h + 22
+        draw.text(((index % columns) * cell_w + 8, (index // columns) * cell_h + 6), f"{state} {path.stem}", fill=(0, 0, 0))
+        canvas.paste(tile, (x, y))
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(output_path)
+
+
+def make_centering_overlay(frames_root: Path, output_path: Path) -> None:
+    items = []
+    for state in STATE_ORDER:
+        for frame_path in sorted((frames_root / state).glob("*.png")):
+            items.append((state, frame_path))
+    cell_w, cell_h = 220, 252
+    columns = 8
+    rows = (len(items) + columns - 1) // columns
+    canvas = Image.new("RGB", (columns * cell_w, rows * cell_h), "white")
+    draw = ImageDraw.Draw(canvas)
+    for index, (state, path) in enumerate(items):
+        frame = Image.open(path).convert("RGBA")
+        bbox = frame.getchannel("A").getbbox()
+        x0 = (index % columns) * cell_w
+        y0 = (index // columns) * cell_h
+        draw.rectangle((x0, y0, x0 + cell_w - 1, y0 + cell_h - 1), outline=(220, 220, 220))
+        draw.text((x0 + 6, y0 + 5), f"{state} {path.stem}", fill=(0, 0, 0))
+        scale = min((cell_w - 20) / CELL_WIDTH, (cell_h - 32) / CELL_HEIGHT)
+        preview = frame.resize((round(CELL_WIDTH * scale), round(CELL_HEIGHT * scale)), Image.Resampling.NEAREST)
+        px = x0 + (cell_w - preview.width) // 2
+        py = y0 + 26
+        bg = Image.new("RGBA", preview.size, "white")
+        bg.alpha_composite(preview)
+        canvas.paste(bg.convert("RGB"), (px, py))
+        center_y = py + preview.height // 2
+        center_x = px + preview.width // 2
+        draw.line((px, center_y, px + preview.width, center_y), fill=(80, 140, 255), width=1)
+        draw.line((center_x, py, center_x, py + preview.height), fill=(80, 140, 255), width=1)
+        if bbox:
+            left, top, right, bottom = bbox
+            draw.rectangle(
+                (
+                    px + round(left * scale),
+                    py + round(top * scale),
+                    px + round(right * scale),
+                    py + round(bottom * scale),
+                ),
+                outline=(230, 80, 80),
+                width=1,
+            )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(output_path)
+
+
+def write_qa_report(path: Path, report: QAReport) -> None:
+    write_json(path, report.to_dict())

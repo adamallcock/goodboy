@@ -12,7 +12,7 @@ interface ProjectStore {
   onboardingOpen: boolean;
   selectedStage: ReviewStage;
   selectedArtifactId: string | null;
-  inspectorOpen: boolean;
+  detailsOpen: boolean;
   activityOpen: boolean;
   commandOpen: boolean;
   compareMode: boolean;
@@ -23,7 +23,7 @@ interface ProjectStore {
   activities: ActivityItem[];
   setStage: (stage: ReviewStage) => void;
   selectArtifact: (artifactId: string | null) => void;
-  toggleInspector: () => void;
+  toggleDetails: () => void;
   toggleActivity: () => void;
   toggleCommand: () => void;
   toggleCompare: () => void;
@@ -41,7 +41,7 @@ interface ProjectStore {
 
 function initialActivities(): ActivityItem[] {
   return [
-    { id: "a1", kind: "system", label: "Millie demo loaded", detail: "Review Room is running against a read-only completed pet example.", time: "now" },
+    { id: "a1", kind: "system", label: "Companion demo loaded", detail: "Review Room is running against a read-only completed pet example.", time: "now" },
     { id: "a2", kind: "qa", label: "QA ready", detail: "Contact sheet, row strips, edge preview, and package artifacts are available.", time: "now" }
   ];
 }
@@ -51,7 +51,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   onboardingOpen: true,
   selectedStage: "qa",
   selectedArtifactId: "runs-demo-qa-contact-sheet-png",
-  inspectorOpen: true,
+  detailsOpen: false,
   activityOpen: false,
   commandOpen: false,
   compareMode: false,
@@ -62,10 +62,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   activities: initialActivities(),
   setStage: (stage) => {
     const artifact = get().state.artifacts.find((item) => item.stage === stage);
-    set({ selectedStage: stage, selectedArtifactId: artifact?.id ?? null, compareMode: false });
+    set({ selectedStage: stage, selectedArtifactId: artifact?.id ?? null, compareMode: false, detailsOpen: false });
   },
   selectArtifact: (artifactId) => set({ selectedArtifactId: artifactId }),
-  toggleInspector: () => set((current) => ({ inspectorOpen: !current.inspectorOpen })),
+  toggleDetails: () => set((current) => ({ detailsOpen: !current.detailsOpen })),
   toggleActivity: () => set((current) => ({ activityOpen: !current.activityOpen })),
   toggleCommand: () => set((current) => ({ commandOpen: !current.commandOpen })),
   toggleCompare: () => set((current) => ({ compareMode: !current.compareMode })),
@@ -79,10 +79,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       state: demoProjectState,
       selectedStage: "sources",
       selectedArtifactId: "sources-originals-source-001-png",
+      detailsOpen: false,
       compareMode: false,
       error: null,
       activities: [
-        { id: `demo-${Date.now()}`, kind: "system", label: "Millie walkthrough started", detail: "Explore sources, baseline, style, generation, QA, and export without changing files.", time: "now" },
+        { id: `demo-${Date.now()}`, kind: "system", label: "Companion walkthrough started", detail: "Explore sources, baseline, style, generation, QA, and export without changing files.", time: "now" },
         ...initialActivities()
       ]
     }),
@@ -92,6 +93,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       state: demoProjectState,
       selectedStage: "qa",
       selectedArtifactId: "runs-demo-qa-contact-sheet-png",
+      detailsOpen: false,
       error: null,
       activities: initialActivities()
     }),
@@ -105,6 +107,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         state,
         selectedStage: "sources",
         selectedArtifactId: state.artifacts.find((item) => item.stage === "sources")?.id ?? null,
+        detailsOpen: false,
         activities: [
           { id: `open-${Date.now()}`, kind: "action", label: "Project opened", detail: opened.project_dir, time: "now" },
           ...get().activities

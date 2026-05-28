@@ -38,7 +38,7 @@ export function WalkthroughGuide({ open, selectedStage, onStageChange, onClose, 
     <aside className="walkthrough-guide" aria-label="Review Room walkthrough guide">
       <div className="walkthrough-guide-header">
         <div>
-          <strong>Millie demo walkthrough</strong>
+          <strong>Companion demo walkthrough</strong>
           <span>Follow the same decisions you will make for your own Codex pet.</span>
         </div>
         <button type="button" aria-label="Hide walkthrough guide" onClick={onClose}>

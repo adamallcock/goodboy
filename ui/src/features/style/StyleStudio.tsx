@@ -13,7 +13,7 @@ export function StyleStudio({ state }: { state: ProjectState }) {
   const [critique, setCritique] = useState("Make the silhouette read clearly at pet scale.");
   return (
     <section className="inspector-section">
-      <h3>Style Studio</h3>
+      <h3>Style controls</h3>
       <div className="form-grid">
         <div className="field">
           <label>Preset</label>

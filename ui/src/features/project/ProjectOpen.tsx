@@ -25,7 +25,7 @@ export function ProjectOpen() {
           <input
             id="project-dir"
             value={projectDir}
-            placeholder="/Users/adamallcock/Documents/Coding/goodboy/projects/my-pet"
+            placeholder="/path/to/goodboy/projects/my-pet"
             onChange={(event) => setProjectDir(event.target.value)}
           />
         </label>

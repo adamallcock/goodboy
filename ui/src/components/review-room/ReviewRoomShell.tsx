@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 
 import { selectedArtifact, useProjectStore } from "../../state/project-store";
 import { ActivityDrawer } from "./ActivityDrawer";
-import { ArtifactCanvas } from "./ArtifactCanvas";
 import { CommandPalette } from "./CommandPalette";
+import { DetailsDrawer } from "./DetailsDrawer";
 import { GateBar } from "./GateBar";
-import { InspectorPanel } from "./InspectorPanel";
 import { Onboarding } from "./Onboarding";
+import { PreviewModal } from "./PreviewModal";
+import { ReviewDecisionSurface } from "./ReviewDecisionSurface";
 import { WalkthroughGuide } from "./WalkthroughGuide";
 
 export function ReviewRoomShell() {
   const store = useProjectStore();
-  const [walkthroughOpen, setWalkthroughOpen] = useState(true);
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const currentArtifact = selectedArtifact(store.state, store.selectedArtifactId);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export function ReviewRoomShell() {
       if (key === "b") store.setStage("baselines");
       if (key === "g") store.setStage("generation");
       if (key === "r") void store.refresh();
-      if (key === "i") store.toggleInspector();
+      if (key === "i") store.toggleDetails();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -46,42 +48,35 @@ export function ReviewRoomShell() {
   }
 
   return (
-    <div className={`review-room ${store.inspectorOpen ? "" : "inspector-closed"}`}>
+    <div className="review-room">
       <GateBar
         state={store.state}
         selectedStage={store.selectedStage}
-        inspectorOpen={store.inspectorOpen}
+        detailsOpen={store.detailsOpen}
         onOpenOnboarding={store.openOnboarding}
         onStageChange={store.setStage}
-        onToggleInspector={store.toggleInspector}
+        onToggleDetails={store.toggleDetails}
         onToggleActivity={store.toggleActivity}
         onToggleCommand={store.toggleCommand}
         onToggleWalkthrough={() => setWalkthroughOpen((current) => !current)}
         onRefresh={store.refresh}
       />
-      <ArtifactCanvas
+      <ReviewDecisionSurface
         key={store.selectedStage}
         state={store.state}
         selectedStage={store.selectedStage}
         selectedArtifact={currentArtifact}
-        selectedArtifactId={store.selectedArtifactId}
-        compareMode={store.compareMode}
-        zoom={store.zoom}
-        playbackSpeed={store.playbackSpeed}
-        onSelectArtifact={store.selectArtifact}
-        onToggleCompare={store.toggleCompare}
-        onZoomChange={store.setZoom}
-        onPlaybackSpeedChange={store.setPlaybackSpeed}
+        onStageChange={store.setStage}
+        onOpenDetails={store.toggleDetails}
+        onOpenPreview={() => setPreviewOpen(true)}
+        onApproveDemo={store.approveDemo}
       />
-      <InspectorPanel
-        key={`inspector-${store.selectedStage}`}
-        open={store.inspectorOpen}
+      <DetailsDrawer
+        open={store.detailsOpen}
         state={store.state}
         selectedStage={store.selectedStage}
         selectedArtifact={currentArtifact}
-        onStageChange={store.setStage}
-        onOpenOnboarding={store.openOnboarding}
-        onApproveDemo={store.approveDemo}
+        onClose={store.toggleDetails}
       />
       <WalkthroughGuide
         open={walkthroughOpen}
@@ -91,6 +86,22 @@ export function ReviewRoomShell() {
         onOpenOnboarding={store.openOnboarding}
       />
       <ActivityDrawer open={store.activityOpen} activities={store.activities} />
+      <PreviewModal
+        open={previewOpen}
+        state={store.state}
+        selectedStage={store.selectedStage}
+        selectedArtifact={currentArtifact}
+        compareMode={store.compareMode}
+        zoom={store.zoom}
+        playbackSpeed={store.playbackSpeed}
+        onClose={() => {
+          if (store.compareMode) store.toggleCompare();
+          setPreviewOpen(false);
+        }}
+        onToggleCompare={store.toggleCompare}
+        onZoomChange={store.setZoom}
+        onPlaybackSpeedChange={store.setPlaybackSpeed}
+      />
       <CommandPalette
         open={store.commandOpen}
         onClose={store.toggleCommand}

@@ -1,6 +1,6 @@
 import type { ProjectState } from "../lib/types";
 
-const demoAssetRoot = "/assets/demo/millie";
+const demoAssetRoot = "/assets/demo/companion";
 
 function artifact(
   id: string,
@@ -33,10 +33,10 @@ function artifact(
 
 export const demoProjectState: ProjectState = {
   project_id: "demo-review-room",
-  project_dir: "/Users/adamallcock/Documents/Coding/goodboy/projects/millie-demo",
+  project_dir: "<repo>/projects/companion-demo",
   manifest: {
-    id: "millie-demo",
-    display_name: "Millie Demo",
+    id: "companion-demo",
+    display_name: "Companion Demo",
     species: "dog"
   },
   gate: {
@@ -49,26 +49,26 @@ export const demoProjectState: ProjectState = {
     install_ready: false
   },
   artifacts: [
-    artifact("sources-originals-source-001-png", "sources", "source", "source-reference.png", "sources/originals/source-reference.png", "info", null, "source-reference.png"),
-    artifact("candidates-contact-sheet-png", "baselines", "candidate", "contact-sheet.png", "candidates/contact-sheet.png", "info", null, "baseline-contact-sheet.png"),
-    artifact("character-selected-baseline-png", "baselines", "character", "selected-baseline.png", "character/selected-baseline.png", "success", null, "selected-baseline.png"),
-    artifact("runs-demo-row-strips-idle-png", "generation", "row-strip", "idle.png", "runs/demo/row-strips/idle.png", "success", "idle", "row-idle.png", 1536, 208),
-    artifact("runs-demo-row-strips-running-right-png", "generation", "row-strip", "running-right.png", "runs/demo/row-strips/running-right.png", "success", "running-right", "row-running-right.png", 1536, 208),
-    artifact("runs-demo-row-strips-running-left-png", "generation", "row-strip", "running-left.png", "runs/demo/row-strips/running-left.png", "success", "running-left", "row-running-left.png", 1536, 208),
-    artifact("runs-demo-row-strips-waiting-png", "generation", "row-strip", "waiting.png", "runs/demo/row-strips/waiting.png", "success", "waiting", "row-waiting.png", 1536, 208),
-    artifact("runs-demo-row-strips-running-png", "generation", "row-strip", "running.png", "runs/demo/row-strips/running.png", "success", "running", "row-running.png", 1536, 208),
-    artifact("runs-demo-row-strips-review-png", "generation", "row-strip", "review.png", "runs/demo/row-strips/review.png", "success", "review", "row-review.png", 1536, 208),
-    artifact("runs-demo-qa-contact-sheet-png", "qa", "qa", "contact-sheet.png", "runs/demo/qa/contact-sheet.png", "warning", null, "qa-contact-sheet.png", 1536, 1872),
-    artifact("runs-demo-qa-edge-preview-white-png", "qa", "qa", "edge-preview-white.png", "runs/demo/qa/edge-preview-white.png", "success", null, "edge-preview-white.png", 1536, 1872),
+    artifact("sources-originals-source-001-png", "sources", "source", "source-reference.png", "sources/originals/source-reference.png", "info", null, "source-reference.webp"),
+    artifact("candidates-contact-sheet-png", "baselines", "candidate", "contact-sheet.png", "candidates/contact-sheet.png", "info", null, "baseline-contact-sheet.webp"),
+    artifact("character-selected-baseline-png", "baselines", "character", "selected-baseline.png", "character/selected-baseline.png", "success", null, "selected-baseline.webp"),
+    artifact("runs-demo-row-strips-idle-png", "generation", "row-strip", "idle.png", "runs/demo/row-strips/idle.png", "success", "idle", "row-idle.webp", 1536, 208),
+    artifact("runs-demo-row-strips-running-right-png", "generation", "row-strip", "running-right.png", "runs/demo/row-strips/running-right.png", "success", "running-right", "row-running-right.webp", 1536, 208),
+    artifact("runs-demo-row-strips-running-left-png", "generation", "row-strip", "running-left.png", "runs/demo/row-strips/running-left.png", "success", "running-left", "row-running-left.webp", 1536, 208),
+    artifact("runs-demo-row-strips-waiting-png", "generation", "row-strip", "waiting.png", "runs/demo/row-strips/waiting.png", "success", "waiting", "row-waiting.webp", 1536, 208),
+    artifact("runs-demo-row-strips-running-png", "generation", "row-strip", "running.png", "runs/demo/row-strips/running.png", "success", "running", "row-running.webp", 1536, 208),
+    artifact("runs-demo-row-strips-review-png", "generation", "row-strip", "review.png", "runs/demo/row-strips/review.png", "success", "review", "row-review.webp", 1536, 208),
+    artifact("runs-demo-qa-contact-sheet-png", "qa", "qa", "contact-sheet.png", "runs/demo/qa/contact-sheet.png", "warning", null, "qa-contact-sheet.webp", 768, 936),
+    artifact("runs-demo-qa-edge-preview-white-png", "qa", "qa", "edge-preview-white.png", "runs/demo/qa/edge-preview-white.png", "success", null, "edge-preview-white.webp", 768, 936),
     artifact("runs-demo-package-spritesheet-webp", "approval", "package", "spritesheet.webp", "runs/demo/package/spritesheet.webp", "success", null, "spritesheet.webp", 1536, 1872)
   ],
   sources: [
-    { id: "source-001", path: "sources/originals/source-reference.png", notes: "Millie reference", width: 960, height: 540 }
+    { id: "source-001", path: "sources/originals/source-reference.png", notes: "Demo companion reference", width: 960, height: 540 }
   ],
   candidates: [
     {
       id: "baseline-001",
-      style_summary: "soft lifelike Maltese companion",
+      style_summary: "soft lifelike companion",
       character_delta: "balanced realism and charm",
       provider: "codex_builtin",
       model: "codex-imagegen",
@@ -87,9 +87,9 @@ export const demoProjectState: ProjectState = {
   ],
   selected_candidate: { id: "baseline-001", selected: true },
   character_card: {
-    canonical_name: "Millie",
-    one_sentence_identity: "A tiny friendly white Maltese dog with a teal bandana and soft expressive animation poses.",
-    do_not_change: ["white Maltese face", "small rounded body", "teal bandana", "friendly expression"]
+    canonical_name: "Companion",
+    one_sentence_identity: "A tiny friendly white companion dog with a teal bandana and soft expressive animation poses.",
+    do_not_change: ["white companion face", "small rounded body", "teal bandana", "friendly expression"]
   },
   style_sheet: {
     id: "happy-codex-default",

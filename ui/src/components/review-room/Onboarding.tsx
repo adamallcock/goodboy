@@ -31,7 +31,7 @@ const paths: Array<{
   },
   {
     id: "demo",
-    title: "Explore Millie demo",
+    title: "Explore companion demo",
     description: "Walk through a real completed pet example with sources, baselines, generated rows, QA, and approval.",
     icon: PlayCircle,
     cta: "Start demo"
@@ -160,8 +160,8 @@ function DemoPreview({ onStart }: { onStart: () => void }) {
         ))}
       </div>
       <div className="demo-preview-copy">
-        <h4>Millie demo</h4>
-        <p>Uses a real completed Millie pet package as the walkthrough example. No files are installed or changed.</p>
+        <h4>Companion demo</h4>
+        <p>Uses a completed pet package as the walkthrough example. No files are installed or changed.</p>
         <Button variant="primary" onClick={onStart}>
           Start demo walkthrough
           <Images size={14} />

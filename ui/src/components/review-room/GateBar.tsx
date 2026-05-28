@@ -8,10 +8,10 @@ import { StatusBadge } from "../ui/status-badge";
 interface GateBarProps {
   state: ProjectState;
   selectedStage: ReviewStage;
-  inspectorOpen: boolean;
+  detailsOpen: boolean;
   onOpenOnboarding: () => void;
   onStageChange: (stage: ReviewStage) => void;
-  onToggleInspector: () => void;
+  onToggleDetails: () => void;
   onToggleActivity: () => void;
   onToggleCommand: () => void;
   onToggleWalkthrough: () => void;
@@ -21,10 +21,10 @@ interface GateBarProps {
 export function GateBar({
   state,
   selectedStage,
-  inspectorOpen,
+  detailsOpen,
   onOpenOnboarding,
   onStageChange,
-  onToggleInspector,
+  onToggleDetails,
   onToggleActivity,
   onToggleCommand,
   onToggleWalkthrough,
@@ -81,8 +81,9 @@ export function GateBar({
         <Button variant="ghost" aria-label="Toggle activity drawer" onClick={onToggleActivity}>
           <Activity size={15} />
         </Button>
-        <Button variant="ghost" aria-label="Toggle inspector" onClick={onToggleInspector}>
-          {inspectorOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+        <Button variant="ghost" aria-label={detailsOpen ? "Hide details" : "Open details"} onClick={onToggleDetails}>
+          {detailsOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+          Details
         </Button>
       </div>
     </header>

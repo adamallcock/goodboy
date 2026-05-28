@@ -10,15 +10,19 @@ htmlcov/
 build/
 dist/
 site/
+*.log
 
 # Local environments and editor state
 .venv/
+.venv*/
 venv/
 node_modules/
 ui/node_modules/
 ui/test-results/
 ui/playwright-report/
+playwright-report/
 ui/*.tsbuildinfo
+*.tsbuildinfo
 ui/*.js
 ui/*.d.ts
 .env

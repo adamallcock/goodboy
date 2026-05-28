@@ -8,9 +8,30 @@ version = "0.1.0"
 description = "Repeatable pipeline for turning pet references into Codex pet spritesheets."
 readme = "README.md"
 requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Adam Allcock" },
+]
+keywords = ["codex", "pets", "spritesheets", "image-generation", "qa"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: Software Development :: Build Tools",
+]
 dependencies = [
   "Pillow>=10.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/adamallcock/goodboy"
+Repository = "https://github.com/adamallcock/goodboy"
+Issues = "https://github.com/adamallcock/goodboy/issues"
 
 [project.optional-dependencies]
 ui = [
@@ -18,6 +39,14 @@ ui = [
   "httpx>=0.27.0",
   "python-multipart>=0.0.9",
   "uvicorn[standard]>=0.30.0",
+]
+dev = [
+  "fastapi>=0.115.0",
+  "httpx>=0.27.0",
+  "python-multipart>=0.0.9",
+  "uvicorn[standard]>=0.30.0",
+  "pytest>=8.0.0",
+  "build>=1.2.0",
 ]
 
 [project.scripts]

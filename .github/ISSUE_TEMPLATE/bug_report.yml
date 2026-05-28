@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a Goodboy CLI, QA, packaging, or UI bug.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include commands, project stage, and relevant artifact paths. Do not include private source images or API keys.
+      placeholder: |
+        1. Run ...
+        2. Open ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or reports
+      description: Paste non-sensitive excerpts from validation, QA, or UI output.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Goodboy version or commit
+      placeholder: 0.1.0-alpha or commit SHA

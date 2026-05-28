@@ -149,6 +149,7 @@ def prepare_handoff(project_dir: Path, run_id: str, job_id: str) -> ProviderInvo
             "state": job.state,
             "prompt_path": job.prompt_path,
             "input_images": job.input_images,
+            "input_image_roles": job.input_image_roles,
             "expected_output": job.expected_output,
             "capabilities": capabilities.to_dict(),
         },

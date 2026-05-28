@@ -60,7 +60,7 @@ If a pet fails QA, Goodboy should say why in concrete terms:
 - `idle` has 4 near-duplicate pairs
 - `review` has 22px horizontal drift
 - transparent pixels contain nonzero RGB residue
-- white-edge preview shows green halo above threshold
+- white-edge preview shows chroma halo above threshold
 
 ### Gentle Defaults, Deep Overrides
 
@@ -194,7 +194,7 @@ Examples:
 ```text
 goodboy feedback baseline-03 "Make her look older, with softer eyes and less puppy-like proportions."
 goodboy feedback row:waiting "Too sad; make this expectant and cheerful."
-goodboy feedback qa:green-edge "Trim more aggressively around the ears."
+goodboy feedback qa:chroma-edge "Trim more aggressively around the ears."
 ```
 
 ## 7. Data Model
@@ -377,7 +377,7 @@ Fields:
 - `warnings`
 - `atlas_contract`
 - `transparent_rgb_residue`
-- `green_edge_pixels`
+- `chroma_edge_pixels`
 - `frame_counts`
 - `edge_clearance`
 - `drift`
@@ -476,7 +476,7 @@ The default pet should be generally happy, warm, entertaining, and unobtrusive.
 
 ### idle
 
-Calm breathing, tiny blink, subtle head or tail motion. No large gestures.
+Quiet always-on presence. Almost still, with only a tiny blink or barely perceptible breathing cue. No tail wagging, bouncing, rhythmic head bobbing, or attention-seeking motion.
 
 ### running-right
 
@@ -632,7 +632,7 @@ Goodboy may use a strong visual intake model, such as Gemini Flash/Pro-class vis
 - source images vs baseline candidates
 - selected baseline vs generated rows
 - contact sheet vs style sheet
-- edge preview vs green-halo thresholds
+- edge preview vs chroma-halo thresholds
 
 Visual critique outputs should be structured:
 
@@ -682,7 +682,7 @@ Pipeline stages:
 10. Compose atlas.
 11. Validate atlas.
 
-The legacy Napoleon centered builder proved the need for component-based extraction and state-specific baselines.
+The legacy centered builder proved the need for component-based extraction and state-specific baselines.
 
 ## 15. QA Gates
 
@@ -701,7 +701,7 @@ Required hard gates:
 
 Recommended soft gates:
 
-- green-edge pixel threshold
+- chroma-edge pixel threshold
 - visual critic identity score
 - visual critic style score
 - row motion readability

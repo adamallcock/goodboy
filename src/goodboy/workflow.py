@@ -764,12 +764,20 @@ def update_invocation_for_import(project_dir: Path, run_id: str, job: dict[str, 
     write_json(path, invocation)
 
 
-def build_review(project_dir: Path, *, run_id: str, row_provenance: str, force: bool = True) -> dict[str, Any]:
+def build_review(
+    project_dir: Path,
+    *,
+    run_id: str,
+    row_provenance: str,
+    extraction_method: str = "auto",
+    force: bool = True,
+) -> dict[str, Any]:
     summary = build_from_row_strips(
         project_dir=project_dir,
         rows_dir=project_dir / "runs" / run_id / "row-strips",
         run_id=run_id,
         row_provenance=row_provenance,
+        extraction_method=extraction_method,
         force=force,
     )
     validation = validate_project(project_dir, write_report=True)

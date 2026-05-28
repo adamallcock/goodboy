@@ -317,7 +317,7 @@ Responsibilities:
 
 - detect chroma key
 - remove background
-- despill green/magenta edge pixels
+- despill chroma edge pixels
 - trim low-alpha matte residue
 - normalize transparent RGB
 
@@ -411,7 +411,7 @@ Responsibilities:
 - measure drift
 - apply state-specific vertical drift thresholds
 - measure edge clearance
-- measure green-edge pixels
+- measure chroma-edge pixels
 - produce centering report and overlay for visual inspection
 - produce QA report
 
@@ -428,7 +428,7 @@ Outputs:
 - `qa/duplicate-audit.json`
 - `qa/centering-report.json`
 - `qa/centering-overlay.png`
-- `qa/green-edge-report.json`
+- `qa/chroma-edge-report.json`
 - `qa/run-summary.json`
 
 Acceptance criteria:

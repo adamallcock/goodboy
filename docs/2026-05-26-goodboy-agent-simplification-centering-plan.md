@@ -9,7 +9,7 @@ status: implemented
 
 ## Problem
 
-The shoulder-kitten run still required too much agent orchestration even after Agent Rail v1. The command log shows repeated validation, repeated planning, shell loops around row handoffs, manual copying from Codex generated-image folders, ad hoc Python to update generation metadata, environment probing that did not affect the chosen provider, and separate review/install checks.
+The sample-kitten run still required too much agent orchestration even after Agent Rail v1. The command log shows repeated validation, repeated planning, shell loops around row handoffs, manual copying from Codex generated-image folders, ad hoc Python to update generation metadata, environment probing that did not affect the chosen provider, and separate review/install checks.
 
 The current idle animation also looks imperfectly centered. QA confirms that horizontal center is stable, but vertical positioning is not: idle has `cx_range = 0.5px`, `cy_range = 9.0px`, and every frame is bottom-pinned at a 12px margin. The visible issue is therefore not horizontal drift; it is pose-height/body-center bob caused by bottom anchoring plus differing generated pose heights.
 
@@ -189,7 +189,7 @@ The current raster pipeline bottom-pins most non-jump states:
 idle bottom_margin = 12
 ```
 
-For shoulder-kitten idle, all frames have `bottom = 12`, but heights vary from 158px to 176px. That creates center movement from `cy = 108.0` to `cy = 117.0`. The pet is technically grounded, but visually bobbing.
+For sample-kitten idle, all frames have `bottom = 12`, but heights vary from 158px to 176px. That creates center movement from `cy = 108.0` to `cy = 117.0`. The pet is technically grounded, but visually bobbing.
 
 ### 1. Add State-Specific Anchor Policies
 
@@ -249,7 +249,7 @@ Current QA only warns on horizontal drift for most states. Add state-specific ve
 - jumping allowed larger range
 - failed allowed larger range but should be reported
 
-For shoulder-kitten, idle would currently fail or warn because `cy_range = 9.0px`.
+For sample-kitten, idle would currently fail or warn because `cy_range = 9.0px`.
 
 ### 5. Add Centering Visual Preview
 
@@ -267,7 +267,7 @@ The overlay should show each frame bbox and center line. This makes centering re
 For a new project:
 
 ```bash
-goodboy start <project-dir> --pet-id shoulder-kitten --display-name "Shoulder Kitten" --species cat --source img1 --source img2
+goodboy start <project-dir> --pet-id sample-kitten --display-name "Sample Kitten" --species cat --source img1 --source img2
 goodboy advance <project-dir> --agent-mode
 # generate baseline candidates through the selected provider, then select one:
 goodboy advance <project-dir> --agent-mode --candidate-id baseline-003 --baseline-image /path/to/generated-baseline.png --run-id row-gen-20260526
@@ -327,4 +327,4 @@ goodboy advance <project-dir> --agent-mode --approval-notes "..."
 - No command should require custom Python snippets for manifest updates.
 - No row state should require a hand-written shell copy sequence.
 - Idle QA should fail or warn when `cy_range > 4px`.
-- The shoulder-kitten idle animation should have post-build idle `cy_range <= 4px` unless the user intentionally approves stronger bobbing.
+- The sample-kitten idle animation should have post-build idle `cy_range <= 4px` unless the user intentionally approves stronger bobbing.

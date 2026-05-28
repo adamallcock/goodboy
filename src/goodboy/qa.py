@@ -9,6 +9,7 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageStat
 
 from .contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, STATE_ORDER
+from .jsonio import read_json
 from .jsonio import write_json
 from .schemas import QAPolicyDecision, QAReport, ValidationReport
 
@@ -23,6 +24,13 @@ VERTICAL_DRIFT_THRESHOLDS = {
 
 
 def audit_frames(frames_root: Path) -> QAReport:
+    frame_manifest = load_frame_manifest(frames_root)
+    chroma_key = manifest_chroma_key(frame_manifest)
+    methods = {
+        row.get("state"): row.get("method")
+        for row in frame_manifest.get("rows", [])
+        if isinstance(row, dict)
+    }
     report = QAReport(
         ok=True,
         states={},
@@ -41,6 +49,9 @@ def audit_frames(frames_root: Path) -> QAReport:
         imgs = [Image.open(path).convert("RGBA") for path in files]
         rows = []
         state_green = 0
+        state_chroma_adjacent = 0
+        state_guide_like = 0
+        state_white_background_like = 0
         state_visible = 0
         max_components = 0
         hashes: dict[int, list[str]] = {}
@@ -73,6 +84,12 @@ def audit_frames(frames_root: Path) -> QAReport:
                     state_visible += 1
                     if alpha < 230 and green > max(red, blue) + 8:
                         state_green += 1
+                    if chroma_key and alpha > 16 and color_distance((red, green, blue), chroma_key) <= 150:
+                        state_chroma_adjacent += 1
+                    if alpha > 230 and is_guide_like_pixel(red, green, blue):
+                        state_guide_like += 1
+                    if alpha > 245 and red > 244 and green > 244 and blue > 244:
+                        state_white_background_like += 1
         exact_duplicates = [names for names in hashes.values() if len(names) > 1]
         if exact_duplicates:
             report.ok = False
@@ -103,6 +120,16 @@ def audit_frames(frames_root: Path) -> QAReport:
         threshold = VERTICAL_DRIFT_THRESHOLDS.get(state)
         if threshold is not None and cy_range > threshold:
             report.warnings.append(f"{state} vertical center drift is {cy_range:.1f}px, threshold {threshold}px")
+        method = methods.get(state)
+        if method == "stable-slots":
+            report.warnings.append(f"{state} used stable-slots extraction; visually confirm scale and clipping")
+        if state_chroma_adjacent > 800:
+            report.warnings.append(f"{state} has {state_chroma_adjacent} visible pixels close to the selected chroma key")
+        if state_guide_like > 120:
+            report.warnings.append(f"{state} has {state_guide_like} guide-colored pixels; check for copied layout guide marks")
+        cell_pixels = CELL_WIDTH * CELL_HEIGHT * max(1, len(files))
+        if state_visible > cell_pixels * 0.80 and state_white_background_like / state_visible > 0.65:
+            report.warnings.append(f"{state} may contain a white or nontransparent cell background")
         report.states[state] = {
             "count": len(files),
             "expected": expected,
@@ -111,12 +138,46 @@ def audit_frames(frames_root: Path) -> QAReport:
             "min_edge": min_edge,
             "max_components": max_components,
             "green_edge_pixels": state_green,
+            "chroma_adjacent_pixels": state_chroma_adjacent,
+            "guide_like_pixels": state_guide_like,
+            "white_background_like_pixels": state_white_background_like,
+            "extraction_method": method,
             "visible_pixels": state_visible,
             "frames": rows,
         }
         report.green_edge_pixels += state_green
         report.visible_pixels += state_visible
     return report
+
+
+def load_frame_manifest(frames_root: Path) -> dict[str, object]:
+    path = frames_root / "frames-manifest.json"
+    if not path.is_file():
+        return {}
+    try:
+        raw = read_json(path)
+        return raw if isinstance(raw, dict) else {}
+    except Exception:
+        return {}
+
+
+def manifest_chroma_key(raw: dict[str, object]) -> tuple[int, int, int] | None:
+    chroma_key = raw.get("chroma_key")
+    if not isinstance(chroma_key, dict):
+        return None
+    rgb = chroma_key.get("rgb")
+    if isinstance(rgb, list) and len(rgb) == 3:
+        return tuple(int(value) for value in rgb)
+    return None
+
+
+def color_distance(left: tuple[int, int, int], right: tuple[int, int, int]) -> float:
+    return math.sqrt(sum((left[index] - right[index]) ** 2 for index in range(3)))
+
+
+def is_guide_like_pixel(red: int, green: int, blue: int) -> bool:
+    guide_colors = ((17, 17, 17), (47, 128, 237), (184, 184, 184), (247, 247, 247))
+    return any(color_distance((red, green, blue), guide) <= 18 for guide in guide_colors)
 
 
 def count_alpha_components(img: Image.Image, *, min_pixels: int = 80) -> int:

@@ -23,7 +23,8 @@ from goodboy.jsonio import read_json, write_json
 from goodboy.pipeline import build_from_row_strips
 from goodboy.project import init_project, load_project
 from goodboy.qa import audit_frames, evaluate_qa_policy
-from goodboy.style import plan_row_generation_jobs, save_default_style_sheet
+from goodboy.raster import remove_chroma_background
+from goodboy.style import choose_chroma_key, plan_row_generation_jobs, save_default_style_sheet
 from goodboy.validation import validate_project
 
 
@@ -73,7 +74,7 @@ class GoodboyCoreTests(unittest.TestCase):
     def test_ingest_source_card_style_and_handoff_flow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "pet"
-            init_project(root, pet_id="millie", display_name="Millie", species="dog")
+            init_project(root, pet_id="companion", display_name="Companion", species="dog")
             source = Path(tmp) / "source.png"
             image = Image.new("RGB", (64, 48), (240, 236, 220))
             draw = ImageDraw.Draw(image)
@@ -132,16 +133,33 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertEqual(len(jobs), len(STATE_ORDER))
             self.assertEqual(jobs[0].status, "planned")
             self.assertTrue((root / jobs[0].prompt_path).is_file())
+            self.assertTrue((root / "runs" / "planned" / "layout-guides" / "idle.png").is_file())
+            self.assertIn("runs/planned/layout-guides/idle.png", jobs[0].input_images)
+            self.assertEqual(
+                jobs[0].input_image_roles["runs/planned/layout-guides/idle.png"],
+                "layout guide only; use for spacing, do not copy guide lines",
+            )
+            prompt_text = (root / jobs[0].prompt_path).read_text(encoding="utf-8")
+            self.assertIn("canonical base", prompt_text)
+            self.assertIn("invisible equal-width slots", prompt_text)
+            self.assertIn("safe padding", prompt_text)
+            self.assertIn("Idle plays continuously", prompt_text)
+            self.assertIn("near-still pose", prompt_text)
+            self.assertIn("avoid vertical bobbing", prompt_text)
+            metadata = read_json(root / "runs" / "planned" / "run-metadata.json")
+            self.assertEqual(metadata["chroma_key"]["selection"], "auto")
+            self.assertNotEqual(metadata["chroma_key"]["hex"].lower(), "#00ff00")
 
             invocation = prepare_handoff(root, "planned", jobs[0].id)
             self.assertEqual(invocation.adapter, "codex_builtin")
             self.assertEqual(invocation.status, "prepared")
+            self.assertIn("input_image_roles", invocation.request_metadata)
             self.assertTrue((root / "runs" / "planned" / "provider-invocations" / f"{invocation.id}.json").is_file())
 
             event = create_feedback_event(
                 project_dir=root,
                 target="baseline-001",
-                text="make her happier and trim green closer",
+                text="make the expression happier and trim chroma edges closer",
             )
             self.assertEqual(event.author, "human")
             self.assertTrue((root / "branches" / event.branch_id / "branch.json").is_file())
@@ -193,17 +211,18 @@ class GoodboyCoreTests(unittest.TestCase):
             sheet = save_default_style_sheet(
                 root,
                 style_id="anime-lamp",
-                style_preset="anime",
+                style_preset="clay",
                 subject_kind="inanimate_object",
                 user_style_overrides=["make the lamp look cozy and magical"],
                 ai_critique_overrides=["increase silhouette readability around the shade"],
             )
-            self.assertEqual(sheet.style_preset, "anime")
+            self.assertEqual(sheet.style_preset, "clay")
             self.assertEqual(sheet.subject_kind, "inanimate_object")
             jobs = plan_row_generation_jobs(project_dir=root, run_id="rows", provider="codex_builtin", model_alias="codex-imagegen")
             prompt = (root / jobs[0].prompt_path).read_text(encoding="utf-8")
-            self.assertIn("anime-inspired", prompt)
+            self.assertIn("handmade clay", prompt)
             self.assertIn("inanimate object", prompt)
+            self.assertIn("squash/stretch", prompt)
             self.assertIn("make the lamp look cozy", prompt)
             self.assertIn("increase silhouette readability", prompt)
 
@@ -265,9 +284,9 @@ class GoodboyCoreTests(unittest.TestCase):
                     "make",
                     str(root),
                     "--pet-id",
-                    "shoulder-kitten",
+                    "sample-kitten",
                     "--display-name",
-                    "Shoulder Kitten",
+                    "Sample Kitten",
                     "--species",
                     "cat",
                     "--source",
@@ -446,7 +465,7 @@ class GoodboyCoreTests(unittest.TestCase):
             jobs = read_json(root / "runs" / "rows" / "generation-jobs.json")["jobs"]
             self.assertTrue(all(job["status"] == "complete" for job in jobs))
 
-            code, stdout, stderr = self.run_cli(["build-review", str(root), "--run-id", "rows", "--row-provenance", "test_fixture"])
+            code, stdout, stderr = self.run_cli(["build-review", str(root), "--run-id", "rows", "--row-provenance", "test_fixture", "--extraction-method", "stable-slots"])
             self.assertEqual(code, 0, stderr)
             review = json.loads(stdout)
             self.assertTrue(review["validation"]["ok"])
@@ -454,6 +473,8 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertIn("runs/rows/qa/centering-overlay.png", review["review_artifacts"])
             self.assertIn("runs/rows/qa/centering-report.json", review["review_artifacts"])
             self.assertTrue((root / "runs" / "rows" / "qa" / "review-summary.json").is_file())
+            manifest = read_json(root / "runs" / "rows" / "frames" / "frames-manifest.json")
+            self.assertEqual({row["method"] for row in manifest["rows"]}, {"stable-slots"})
 
             code, stdout, stderr = self.run_cli(["finish", str(root), "--run-id", "rows", "--row-provenance", "test_fixture", "--install-root", str(install_root), "--approval-notes", "Approved simplified flow"])
             self.assertEqual(code, 0, stderr)
@@ -555,7 +576,8 @@ class GoodboyCoreTests(unittest.TestCase):
             )
             self.assertEqual(invocation.adapter, "openai_images")
             self.assertEqual(invocation.status, "prepared")
-            self.assertEqual(invocation.request_metadata["endpoint"], "/v1/images/generations")
+            self.assertEqual(invocation.request_metadata["endpoint"], "/v1/images/edits")
+            self.assertGreaterEqual(invocation.request_metadata["input_image_count"], 1)
 
             reference = root / "character" / "selected-baseline.png"
             reference.parent.mkdir(parents=True, exist_ok=True)
@@ -1008,6 +1030,53 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertTrue(any(frame["shift_y"] != 0 for frame in centering["states"]["idle"]["frames"]))
             self.assertTrue((root / "runs" / "centered" / "qa" / "centering-overlay.png").is_file())
 
+    def test_stable_slots_extraction_is_explicit_and_reported(self) -> None:
+        rows = Path("tests/fixtures/synthetic-row-strips").resolve()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "stable"
+            code, stdout, stderr = self.run_cli(
+                [
+                    "build-from-rows",
+                    str(root),
+                    "--rows-dir",
+                    str(rows),
+                    "--run-id",
+                    "stable-slots",
+                    "--pet-id",
+                    "stable",
+                    "--display-name",
+                    "Stable",
+                    "--extraction-method",
+                    "stable-slots",
+                ]
+            )
+            self.assertEqual(code, 0, stderr)
+            summary = json.loads(stdout)
+            self.assertTrue(summary["ok"])
+            manifest = read_json(root / "runs" / "stable-slots" / "frames" / "frames-manifest.json")
+            methods = {row["state"]: row["method"] for row in manifest["rows"]}
+            self.assertEqual(methods["idle"], "stable-slots")
+            review = read_json(root / "runs" / "stable-slots" / "qa" / "review.json")
+            self.assertIn("stable-slots extraction", " ".join(review["warnings"]))
+
+    def test_chroma_key_selection_and_explicit_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "pet"
+            init_project(root, pet_id="pet", display_name="Pet", species="object")
+            source = Path(tmp) / "source.png"
+            Image.new("RGB", (64, 64), (255, 0, 255)).save(source)
+            ingest_images(root, [source], role="primary_reference", notes="magenta subject")
+
+            chroma = choose_chroma_key(root)
+            self.assertNotEqual(chroma["hex"].lower(), "#ff00ff")
+
+            strip = Image.new("RGB", (40, 40), tuple(chroma["rgb"]))
+            draw = ImageDraw.Draw(strip)
+            draw.rectangle((12, 12, 28, 28), fill=(230, 220, 200))
+            cleaned = remove_chroma_background(strip, tuple(chroma["rgb"]))
+            self.assertEqual(cleaned.getpixel((0, 0))[3], 0)
+            self.assertEqual(cleaned.getpixel((20, 20))[3], 255)
+
     def test_qa_policy_blocks_hard_failures_without_override(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             frames = Path(tmp) / "frames"
@@ -1044,17 +1113,20 @@ class GoodboyCoreTests(unittest.TestCase):
         self.assertEqual(entry["policy"]["installation"], "AVAILABLE")
         self.assertEqual(entry["policy"]["authentication"], "ON_INSTALL")
 
-    def test_existing_napoleon_rows_regression_if_available(self) -> None:
-        rows = Path("/Users/adamallcock/Documents/Coding/pet-napoleon/generated/v7-happier-row-strips")
+    def test_existing_legacy_rows_regression_if_available(self) -> None:
+        row_dir = os.environ.get("GOODBOY_LEGACY_ROW_STRIPS")
+        if not row_dir:
+            self.skipTest("GOODBOY_LEGACY_ROW_STRIPS is not set to a legacy row-strip folder")
+        rows = Path(row_dir)
         if not rows.is_dir():
-            self.skipTest("Napoleon reference row strips are not available on this machine")
+            self.skipTest("GOODBOY_LEGACY_ROW_STRIPS is not set to a legacy row-strip folder")
         with tempfile.TemporaryDirectory() as tmp:
             summary = build_from_row_strips(
-                project_dir=Path(tmp) / "napoleon",
+                project_dir=Path(tmp) / "legacy",
                 rows_dir=rows,
-                run_id="napoleon-regression",
-                pet_id="napoleon",
-                display_name="Napoleon",
+                run_id="legacy-regression",
+                pet_id="legacy",
+                display_name="Legacy",
             )
             self.assertTrue(summary.ok)
             validation = Path(summary.validation)

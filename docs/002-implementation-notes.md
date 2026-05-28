@@ -12,14 +12,14 @@ Implemented modules:
 - `ingest.py` - source-image import, hashing, dedupe, thumbnails, EXIF capture, provenance reporting, and source-card scaffolding.
 - `candidates.py` - baseline candidate planning, candidate prompts, selection, selected-baseline normalization, character-card creation, and candidate contact-sheet rendering.
 - `feedback.py` - feedback events and branch manifests for human or AI critique.
-- `style.py` - default/custom emotion style sheets, style presets, subject-kind guidance, critique-aware row prompts, and row-generation job planning.
+- `style.py` - default/custom emotion style sheets, style presets, subject-kind guidance, critique-aware row prompts, automatic chroma-key selection, layout-guide generation, and row-generation job planning.
 - `critique.py` - structured human/AI critique reports and optional style override application.
 - `exports.py` - Goodboy project and Petdex-ready export bundles.
 - `adapters.py` - provider capability registry, provider handoff manifest preparation, dry-run-safe OpenAI text-to-image plus image-input edit execution, and dry-run-safe Gemini/Nano Banana execution.
 - `validation.py` - strict manifest validation for project, source, candidate, character, style, feedback, branch, job, invocation, and run-summary manifests.
-- `raster.py` - chroma-key cleanup, despill, component extraction, state-aware centering, idle stabilization, frame generation, and frame centering reports.
+- `raster.py` - chroma-key cleanup, despill, component/slot/stable-slot extraction, state-aware centering, idle stabilization, frame generation, and frame centering reports.
 - `atlas.py` - atlas composition, WebP output, validation, contact sheets, and GIF previews.
-- `qa.py` - duplicate, drift, component-count, motion, edge-clearance, green-edge, centering-overlay, state-specific drift threshold, and install-policy audits.
+- `qa.py` - duplicate, drift, component-count, motion, edge-clearance, chroma-residue, copied-guide, white-background, centering-overlay, state-specific drift threshold, and install-policy audits.
 - `pipeline.py` - high-level build from existing row strips.
 - `workflow.py` - agent-safe `make`, `next`, `doctor`, batch handoff, generated-output import, review build, approval, finish, review-status, and approved-install workflow rails.
 - `safety.py` - suspicious local renderer script detection before install.
@@ -27,17 +27,16 @@ Implemented modules:
 
 Important implementation detail:
 
-The WebP writer must use `exact=True`; otherwise transparent pixels can acquire hidden RGB residue when decoded. This was caught by the first Napoleon row-strip regression and is covered by `test_webp_validation_preserves_transparent_rgb_invariant`.
+The WebP writer must use `exact=True`; otherwise transparent pixels can acquire hidden RGB residue when decoded. This was caught by the first legacy row-strip regression and is covered by `test_webp_validation_preserves_transparent_rgb_invariant`.
 
 Current proof:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 \
-  -m goodboy.cli build-from-rows /tmp/goodboy-napoleon-rebuild \
-  --pet-id napoleon \
-  --display-name Napoleon \
-  --run-id napoleon-v7-centered \
-  --rows-dir /Users/adamallcock/Documents/Coding/pet-napoleon/generated/v7-happier-row-strips
+goodboy build-from-rows /tmp/goodboy-legacy-rebuild \
+  --pet-id legacy \
+  --display-name legacy pet \
+  --run-id legacy-v7-centered \
+  --rows-dir /path/to/legacy-row-strips
 ```
 
 This produces a passing Goodboy run with:
@@ -50,7 +49,7 @@ This produces a passing Goodboy run with:
 - contact sheet
 - GIF previews
 - white edge preview
-- duplicate/drift/green-edge audit
+- duplicate/drift/chroma-edge audit
 - install policy
 - package `pet.json`
 - package `spritesheet.webp`
@@ -108,13 +107,16 @@ Provider failures now update the relevant generation job's retry metadata with a
 
 Style sheets now support style presets, subject kinds, user overrides, and AI critique overrides. This lets Goodboy handle realistic pets, anime/sticker/pixel/storybook variants, and mascot-like inanimate objects while keeping the chosen direction in `style/emotion-style-sheet.json`.
 
+Hatch-informed row planning now writes `runs/<run-id>/layout-guides/<state>.png`, records an automatic selected chroma key in `runs/<run-id>/run-metadata.json`, attaches input image roles to row jobs, and strengthens prompts around invisible equal-width slots, safe padding, stable baseline/scale, and not copying guide marks. New style presets include `auto`, `plush`, `clay`, `flat-vector`, `3d-toy`, `painterly`, and `brand-inspired`. The idle prompt is deliberately low-motion because it plays continuously: near-still, tiny blink or barely perceptible breathing only, and no tail wagging, bouncing, rhythmic head bobbing, or vertical bobbing.
+
+Raster builds now read the stored chroma key when available and fall back to border-color inference for legacy rows. `build-review` and `build-from-rows` accept `--extraction-method auto|components|slots|stable-slots`; `stable-slots` is an explicit recovery mode for visually good rows that drift because frame extraction crops each pose differently.
+
 Review builds write `qa/human-review-checklist.json`. Export commands can produce a full Goodboy project bundle or a Petdex-ready folder/zip from an approved package run.
 
-The skill wrapper was initialized with the system skill creator. After adding a temporary Python environment with PyYAML, the official skill validator passed for both `codex-skill/goodboy` and the installed copy at `/Users/adamallcock/.codex/skills/goodboy`.
+The skill wrapper was initialized with the system skill creator. After adding a temporary Python environment with PyYAML, the official skill validator passed for both `codex-skill/goodboy` and the installed copy at `$CODEX_HOME/skills/goodboy`.
 
 Test command:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 \
-  -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```

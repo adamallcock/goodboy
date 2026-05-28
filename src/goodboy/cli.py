@@ -218,12 +218,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     build_cmd.add_argument("--visual-approval", help="Human visual approval note required before installing.")
     build_cmd.add_argument("--reuse-transparent", action="store_true")
+    build_cmd.add_argument("--extraction-method", choices=["auto", "components", "slots", "stable-slots"], default="auto")
 
     build_review_cmd = sub.add_parser("build-review", help="Build a run for review, run QA, validate, and summarize review artifacts.")
     build_review_cmd.add_argument("project_dir")
     build_review_cmd.add_argument("--run-id", required=True)
     build_review_cmd.add_argument("--row-provenance", choices=["provider_generated", "user_supplied", "test_fixture"], required=True)
     build_review_cmd.add_argument("--reuse-transparent", action="store_true")
+    build_review_cmd.add_argument("--extraction-method", choices=["auto", "components", "slots", "stable-slots"], default="auto")
 
     approve_cmd = sub.add_parser("approve", help="Record human visual approval or rejection for a run artifact.")
     approve_cmd.add_argument("project_dir")
@@ -574,6 +576,7 @@ def main(argv: list[str] | None = None) -> int:
                 install_override_reason=args.install_override_reason,
                 row_provenance=args.row_provenance,
                 visual_approval=args.visual_approval,
+                extraction_method=args.extraction_method,
                 force=not args.reuse_transparent,
             )
         except ValueError as exc:
@@ -587,6 +590,7 @@ def main(argv: list[str] | None = None) -> int:
                 Path(args.project_dir).expanduser().resolve(),
                 run_id=args.run_id,
                 row_provenance=args.row_provenance,
+                extraction_method=args.extraction_method,
                 force=not args.reuse_transparent,
             )
         except (ValueError, FileNotFoundError) as exc:

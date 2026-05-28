@@ -1,4 +1,4 @@
-import { Activity, ArrowLeft, ArrowRight, Command, Home, PanelRightClose, PanelRightOpen, RefreshCcw } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, Command, Home, Map, PanelRightClose, PanelRightOpen, RefreshCcw } from "lucide-react";
 
 import type { ProjectState, ReviewStage } from "../../lib/types";
 import { currentDecisionFor, currentWorkflowStep, nextWorkflowStep, previousWorkflowStep } from "../../lib/workflow";
@@ -14,10 +14,22 @@ interface GateBarProps {
   onToggleInspector: () => void;
   onToggleActivity: () => void;
   onToggleCommand: () => void;
+  onToggleWalkthrough: () => void;
   onRefresh: () => void;
 }
 
-export function GateBar({ state, selectedStage, inspectorOpen, onOpenOnboarding, onStageChange, onToggleInspector, onToggleActivity, onToggleCommand, onRefresh }: GateBarProps) {
+export function GateBar({
+  state,
+  selectedStage,
+  inspectorOpen,
+  onOpenOnboarding,
+  onStageChange,
+  onToggleInspector,
+  onToggleActivity,
+  onToggleCommand,
+  onToggleWalkthrough,
+  onRefresh
+}: GateBarProps) {
   const displayName = String(state.manifest.display_name ?? state.manifest.id ?? "Goodboy");
   const decision = currentDecisionFor(state, selectedStage);
   const previousStep = previousWorkflowStep(state, selectedStage);
@@ -57,6 +69,10 @@ export function GateBar({ state, selectedStage, inspectorOpen, onOpenOnboarding,
       <div className="gate-actions">
         <Button variant="ghost" aria-label="Refresh project state" onClick={onRefresh}>
           <RefreshCcw size={15} />
+        </Button>
+        <Button variant="ghost" aria-label="Toggle walkthrough guide" onClick={onToggleWalkthrough}>
+          <Map size={15} />
+          Guide
         </Button>
         <Button variant="ghost" aria-label="Open command palette" onClick={onToggleCommand}>
           <Command size={15} />

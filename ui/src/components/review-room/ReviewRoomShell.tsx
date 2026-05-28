@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { selectedArtifact, useProjectStore } from "../../state/project-store";
 import { ActivityDrawer } from "./ActivityDrawer";
@@ -7,9 +7,11 @@ import { CommandPalette } from "./CommandPalette";
 import { GateBar } from "./GateBar";
 import { InspectorPanel } from "./InspectorPanel";
 import { Onboarding } from "./Onboarding";
+import { WalkthroughGuide } from "./WalkthroughGuide";
 
 export function ReviewRoomShell() {
   const store = useProjectStore();
+  const [walkthroughOpen, setWalkthroughOpen] = useState(true);
   const currentArtifact = selectedArtifact(store.state, store.selectedArtifactId);
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export function ReviewRoomShell() {
         onToggleInspector={store.toggleInspector}
         onToggleActivity={store.toggleActivity}
         onToggleCommand={store.toggleCommand}
+        onToggleWalkthrough={() => setWalkthroughOpen((current) => !current)}
         onRefresh={store.refresh}
       />
       <ArtifactCanvas
@@ -79,6 +82,13 @@ export function ReviewRoomShell() {
         onStageChange={store.setStage}
         onOpenOnboarding={store.openOnboarding}
         onApproveDemo={store.approveDemo}
+      />
+      <WalkthroughGuide
+        open={walkthroughOpen}
+        selectedStage={store.selectedStage}
+        onStageChange={store.setStage}
+        onClose={() => setWalkthroughOpen(false)}
+        onOpenOnboarding={store.openOnboarding}
       />
       <ActivityDrawer open={store.activityOpen} activities={store.activities} />
       <CommandPalette

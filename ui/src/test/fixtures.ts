@@ -1,15 +1,28 @@
 import type { ProjectState } from "../lib/types";
 
-function artifact(id: string, stage: string, kind: string, label: string, relativePath: string, severity = "info", state: string | null = null) {
+const demoAssetRoot = "/assets/demo/millie";
+
+function artifact(
+  id: string,
+  stage: string,
+  kind: string,
+  label: string,
+  relativePath: string,
+  severity = "info",
+  state: string | null = null,
+  assetName: string | null = null,
+  width = 960,
+  height = 540
+) {
   return {
     id,
     kind,
     label,
     relative_path: relativePath,
-    url: `/demo/${relativePath}`,
+    url: assetName ? `${demoAssetRoot}/${assetName}` : `/demo/${relativePath}`,
     exists: true,
-    width: 960,
-    height: 540,
+    width,
+    height,
     bytes: 240000,
     modified_at: "1779900000",
     stage,
@@ -20,44 +33,42 @@ function artifact(id: string, stage: string, kind: string, label: string, relati
 
 export const demoProjectState: ProjectState = {
   project_id: "demo-review-room",
-  project_dir: "/Users/adamallcock/Documents/Coding/goodboy/projects/demo-review-room",
+  project_dir: "/Users/adamallcock/Documents/Coding/goodboy/projects/millie-demo",
   manifest: {
-    id: "shoulder-kitten",
-    display_name: "Shoulder Kitten",
-    species: "cat"
+    id: "millie-demo",
+    display_name: "Millie Demo",
+    species: "dog"
   },
   gate: {
     stage: "built_for_review",
     next_action: "visual_review",
     required_user_input: ["visual approval of contact sheet and previews"],
-    artifacts_to_show_user: ["runs/demo/qa/contact-sheet.png", "runs/demo/qa/previews/idle.gif"],
+    artifacts_to_show_user: ["runs/demo/qa/contact-sheet.png", "runs/demo/qa/edge-preview-white.png"],
     blocked_actions: ["installing before approval"],
     recommended_command: "goodboy advance /project --run-id demo --approval-notes <notes>",
     install_ready: false
   },
   artifacts: [
-    artifact("sources-originals-source-001-png", "sources", "source", "source-001.png", "sources/originals/source-001.png"),
-    artifact("sources-originals-source-002-png", "sources", "source", "source-002.png", "sources/originals/source-002.png"),
-    artifact("candidates-contact-sheet-png", "baselines", "candidate", "contact-sheet.png", "candidates/contact-sheet.png"),
-    artifact("character-selected-baseline-png", "baselines", "character", "selected-baseline.png", "character/selected-baseline.png", "success"),
-    artifact("runs-demo-row-strips-idle-png", "generation", "row-strip", "idle.png", "runs/demo/row-strips/idle.png", "success", "idle"),
-    artifact("runs-demo-row-strips-running-png", "generation", "row-strip", "running.png", "runs/demo/row-strips/running.png", "success", "running"),
-    artifact("runs-demo-row-strips-review-png", "generation", "row-strip", "review.png", "runs/demo/row-strips/review.png", "success", "review"),
-    artifact("runs-demo-row-strips-waiting-png", "generation", "row-strip", "waiting.png", "runs/demo/row-strips/waiting.png", "success", "waiting"),
-    artifact("runs-demo-qa-contact-sheet-png", "qa", "qa", "contact-sheet.png", "runs/demo/qa/contact-sheet.png", "warning"),
-    artifact("runs-demo-qa-centering-overlay-png", "qa", "qa", "centering-overlay.png", "runs/demo/qa/centering-overlay.png", "success"),
-    artifact("runs-demo-qa-edge-preview-white-png", "qa", "qa", "edge-preview-white.png", "runs/demo/qa/edge-preview-white.png", "success"),
-    artifact("runs-demo-qa-previews-idle-gif", "qa", "qa", "idle.gif", "runs/demo/qa/previews/idle.gif", "success"),
-    artifact("runs-demo-package-spritesheet-webp", "approval", "package", "spritesheet.webp", "runs/demo/package/spritesheet.webp", "success")
+    artifact("sources-originals-source-001-png", "sources", "source", "source-reference.png", "sources/originals/source-reference.png", "info", null, "source-reference.png"),
+    artifact("candidates-contact-sheet-png", "baselines", "candidate", "contact-sheet.png", "candidates/contact-sheet.png", "info", null, "baseline-contact-sheet.png"),
+    artifact("character-selected-baseline-png", "baselines", "character", "selected-baseline.png", "character/selected-baseline.png", "success", null, "selected-baseline.png"),
+    artifact("runs-demo-row-strips-idle-png", "generation", "row-strip", "idle.png", "runs/demo/row-strips/idle.png", "success", "idle", "row-idle.png", 1536, 208),
+    artifact("runs-demo-row-strips-running-right-png", "generation", "row-strip", "running-right.png", "runs/demo/row-strips/running-right.png", "success", "running-right", "row-running-right.png", 1536, 208),
+    artifact("runs-demo-row-strips-running-left-png", "generation", "row-strip", "running-left.png", "runs/demo/row-strips/running-left.png", "success", "running-left", "row-running-left.png", 1536, 208),
+    artifact("runs-demo-row-strips-waiting-png", "generation", "row-strip", "waiting.png", "runs/demo/row-strips/waiting.png", "success", "waiting", "row-waiting.png", 1536, 208),
+    artifact("runs-demo-row-strips-running-png", "generation", "row-strip", "running.png", "runs/demo/row-strips/running.png", "success", "running", "row-running.png", 1536, 208),
+    artifact("runs-demo-row-strips-review-png", "generation", "row-strip", "review.png", "runs/demo/row-strips/review.png", "success", "review", "row-review.png", 1536, 208),
+    artifact("runs-demo-qa-contact-sheet-png", "qa", "qa", "contact-sheet.png", "runs/demo/qa/contact-sheet.png", "warning", null, "qa-contact-sheet.png", 1536, 1872),
+    artifact("runs-demo-qa-edge-preview-white-png", "qa", "qa", "edge-preview-white.png", "runs/demo/qa/edge-preview-white.png", "success", null, "edge-preview-white.png", 1536, 1872),
+    artifact("runs-demo-package-spritesheet-webp", "approval", "package", "spritesheet.webp", "runs/demo/package/spritesheet.webp", "success", null, "spritesheet.webp", 1536, 1872)
   ],
   sources: [
-    { id: "source-001", path: "sources/originals/source-001.png", notes: "front view", width: 1280, height: 960 },
-    { id: "source-002", path: "sources/originals/source-002.png", notes: "side markings", width: 1280, height: 960 }
+    { id: "source-001", path: "sources/originals/source-reference.png", notes: "Millie reference", width: 960, height: 540 }
   ],
   candidates: [
     {
       id: "baseline-001",
-      style_summary: "soft lifelike kitten mascot",
+      style_summary: "soft lifelike Maltese companion",
       character_delta: "balanced realism and charm",
       provider: "codex_builtin",
       model: "codex-imagegen",
@@ -76,9 +87,9 @@ export const demoProjectState: ProjectState = {
   ],
   selected_candidate: { id: "baseline-001", selected: true },
   character_card: {
-    canonical_name: "Shoulder Kitten",
-    one_sentence_identity: "A tiny tabby-and-white kitten with a soft, curious expression.",
-    do_not_change: ["pink nose", "white muzzle", "tabby cap", "round kitten eyes"]
+    canonical_name: "Millie",
+    one_sentence_identity: "A tiny friendly white Maltese dog with a teal bandana and soft expressive animation poses.",
+    do_not_change: ["white Maltese face", "small rounded body", "teal bandana", "friendly expression"]
   },
   style_sheet: {
     id: "happy-codex-default",

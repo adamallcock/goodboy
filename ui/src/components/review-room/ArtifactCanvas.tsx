@@ -100,18 +100,24 @@ export function ArtifactCanvas({
             <ArtifactPreviewContent artifact={selectedArtifact} selectedStage={selectedStage} />
           )}
         </div>
-        <div className="artifact-filmstrip" aria-label="Stage artifacts">
-          {stageArtifacts.map((artifact) => (
-            <button
-              type="button"
-              key={artifact.id}
-              className={`artifact-thumb ${artifact.id === selectedArtifactId ? "active" : ""}`}
-              onClick={() => onSelectArtifact(artifact.id)}
-            >
-              <StatusBadge severity={artifact.severity}>{artifact.kind}</StatusBadge>
-              <span>{artifact.label}</span>
-            </button>
-          ))}
+        <div className="artifact-filmstrip" aria-label="Artifacts in this step">
+          <div className="artifact-filmstrip-copy">
+            <strong>Artifacts in this step</strong>
+            <span>Switch between files Goodboy created for {stageTitle.toLowerCase()}.</span>
+          </div>
+          <div className="artifact-thumb-list">
+            {stageArtifacts.map((artifact) => (
+              <button
+                type="button"
+                key={artifact.id}
+                className={`artifact-thumb ${artifact.id === selectedArtifactId ? "active" : ""}`}
+                onClick={() => onSelectArtifact(artifact.id)}
+              >
+                <StatusBadge severity={artifact.severity}>{artifact.kind}</StatusBadge>
+                <span>{artifact.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
     </main>

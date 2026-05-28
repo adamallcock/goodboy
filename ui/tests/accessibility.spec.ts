@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("primary inspector controls are keyboard reachable and named", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("button", { name: /Explore demo/ }).click();
+  await page.getByRole("button", { name: /Explore Millie demo/ }).click();
 
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Back to start" }).first()).toBeFocused();

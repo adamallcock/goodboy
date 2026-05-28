@@ -655,20 +655,23 @@ The first Review Room implementation slice exists under `ui/`, backed by the Fas
 Implemented:
 
 - Review Room shell with top workflow navigation, gate banner, large artifact canvas, inspector, activity drawer, and command palette.
-- Onboarding screen with Create with Codex, Open project, and Explore demo paths.
+- Onboarding screen with Create with Codex, Open project, and Explore Millie demo paths.
 - Readable current-step header that makes previous, current, next, and the next user decision explicit.
 - Persistent Home navigation back to onboarding.
 - Decision-focused inspector copy and actions for approval/change requests.
-- Demo fixture project with visible source, baseline, row-strip, QA, and package materials for hiring-manager walkthroughs without requiring provider credentials.
+- Millie demo project with visible source, baseline, row-strip, QA, and package materials for hiring-manager walkthroughs without requiring provider credentials.
+- Labeled per-step artifact filmstrip that explains the files Goodboy created for the current stage.
+- Walkthrough guide with stage-by-stage navigation and a copyable starter prompt for generating a new pet.
 - Zoom, fit, playback-speed, artifact filmstrip, and draggable compare interactions.
 - Source, baseline, style, generation, QA, approval/export, and demo-stage panels.
 - Guided project-open card for pasting a Goodboy folder path and connecting the UI to a running Goodboy backend.
 - Approval interaction that records a visual decision and updates the install-readiness gate in the demo state.
 - Frontend typecheck/build and Playwright coverage for visual inspector controls, keyboard reachability, safe refresh, and approval gating.
-- Onboarding screenshot: `docs/assets/review-room-onboarding-2026-05-27.png`.
-- Generation demo screenshot: `docs/assets/review-room-generation-demo-2026-05-27.png`.
+- Onboarding screenshot: `docs/assets/review-room-onboarding-2026-05-28.png`.
+- Baseline demo screenshot: `docs/assets/review-room-baseline-millie-demo-2026-05-28.png`.
+- Generation demo screenshot: `docs/assets/review-room-generation-demo-2026-05-28.png`.
 - Open-project screenshot: `docs/assets/review-room-open-project-2026-05-27.png`.
-- Smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`.
+- Smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-28.png`.
 
 Still required before M10 can be marked complete:
 

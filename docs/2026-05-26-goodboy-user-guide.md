@@ -139,13 +139,15 @@ Goodboy also has a first M10 local UI slice called Review Room. Use it when you 
 
 Current capabilities:
 
-- Demo Review Room shell with top workflow navigation, gate banner, artifact canvas, contextual inspector, activity drawer, and command palette.
-- Onboarding paths for agent-led creation, opening an existing Goodboy folder, and exploring a safe demo.
+- Demo Review Room shell with top workflow navigation, gate banner, artifact canvas, contextual inspector, activity drawer, walkthrough guide, and command palette.
+- Onboarding paths for agent-led creation, opening an existing Goodboy folder, and exploring a safe Millie demo.
 - Readable current-step header that shows the previous step, current step, next step, and next user decision.
 - Persistent Home navigation in the header for returning to the onboarding screen.
 - Decision panel that explains whether to approve, request changes, or continue reviewing.
 - Zoom, fit, playback-speed, and draggable compare controls.
-- Demo fixture materials for source, baseline, row-strip, QA, and export review stages.
+- Labeled per-step artifact filmstrip that explains the files Goodboy created for the current stage.
+- Real Millie demo materials for source, baseline, row-strip, QA, and export review stages.
+- Walkthrough guide with step-by-step stage navigation and a copyable starter prompt for creating your own pet.
 - Source, baseline, style, generation, QA, approval/export, and demo panels.
 - Guided project-open card for pasting a local Goodboy folder path and connecting to the FastAPI backend when it is running.
 - Visual approval demo flow that updates the gate and activity drawer.

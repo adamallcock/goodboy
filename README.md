@@ -28,7 +28,7 @@ These are copied references, not the live source of truth for Millie or Napoleon
 - `docs/2026-05-27-goodboy-local-web-ui-requirements.md` - M10 local web UI functional, technical, and design requirements.
 - `docs/2026-05-27-goodboy-ui-component-scan-and-design-options.md` - M10 component scan and first design direction options.
 - `docs/superpowers/plans/2026-05-27-goodboy-review-room-ui-implementation-plan.md` - M10 Review Room implementation plan.
-- `docs/assets/review-room-ui-smoke-2026-05-27.png` - current smoke screenshot for the Review Room visual inspector.
+- `docs/assets/review-room-ui-smoke-2026-05-28.png` - current smoke screenshot for the Review Room visual inspector.
 - `docs/2026-05-27-goodboy-codex-plugin-feasibility.md` - Codex plugin feasibility decision and first implemented plugin slice.
 - `docs/2026-05-27-goodboy-milestone-completion-audit.md` - milestone-by-milestone completion decisions before M10.
 - `tracking/MILESTONES.md` - implementation milestones and progress tracking.
@@ -105,7 +105,7 @@ OpenAI and Gemini API keys are optional accelerators, not requirements. Without 
 
 ## Review Room UI
 
-The M10 local UI now has a first implementation slice under `ui/` plus a FastAPI backend foundation under `src/goodboy/web/`. The UI opens with onboarding paths for agent-led creation, existing projects, and a safe demo walkthrough. The Review Room shell uses the top current-step header as the primary workflow navigation, with persistent Home navigation, a large artifact canvas, zoom controls, draggable compare mode, a decision panel, command palette, activity drawer, approval gate, visible demo fixture materials, and Playwright coverage.
+The M10 local UI now has a first implementation slice under `ui/` plus a FastAPI backend foundation under `src/goodboy/web/`. The UI opens with onboarding paths for agent-led creation, existing projects, and a safe Millie demo walkthrough. The Review Room shell uses the top current-step header as the primary workflow navigation, with persistent Home navigation, a large artifact canvas, labeled per-step artifact filmstrip, zoom controls, draggable compare mode, a decision panel, command palette, walkthrough guide, activity drawer, approval gate, real Millie demo assets, and Playwright coverage.
 
 Run the frontend demo:
 

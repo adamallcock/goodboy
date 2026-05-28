@@ -41,8 +41,8 @@ interface ProjectStore {
 
 function initialActivities(): ActivityItem[] {
   return [
-    { id: "a1", kind: "system", label: "Demo project loaded", detail: "Review Room is running against fixture artifacts.", time: "now" },
-    { id: "a2", kind: "qa", label: "QA ready", detail: "Contact sheet, previews, edge preview, and centering overlay are available.", time: "now" }
+    { id: "a1", kind: "system", label: "Millie demo loaded", detail: "Review Room is running against a read-only completed pet example.", time: "now" },
+    { id: "a2", kind: "qa", label: "QA ready", detail: "Contact sheet, row strips, edge preview, and package artifacts are available.", time: "now" }
   ];
 }
 
@@ -82,7 +82,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       compareMode: false,
       error: null,
       activities: [
-        { id: `demo-${Date.now()}`, kind: "system", label: "Demo walkthrough started", detail: "Explore sources, baseline, style, generation, QA, and export without changing files.", time: "now" },
+        { id: `demo-${Date.now()}`, kind: "system", label: "Millie walkthrough started", detail: "Explore sources, baseline, style, generation, QA, and export without changing files.", time: "now" },
         ...initialActivities()
       ]
     }),

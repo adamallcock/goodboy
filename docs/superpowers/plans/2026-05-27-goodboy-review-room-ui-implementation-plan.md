@@ -17,12 +17,12 @@ status: active
 
 ## 0. Implementation Progress
 
-Updated 2026-05-27:
+Updated 2026-05-28:
 
 - Backend foundation is implemented under `src/goodboy/web/` with typed view models, artifact indexing, path-safe artifact serving, project registry, action wrappers, FastAPI routes, and `goodboy ui --help`.
-- Frontend first slice is implemented under `ui/` with the Review Room shell, top workflow navigation, artifact canvas, zoom controls, draggable compare mode, contextual inspector, command palette, activity drawer, source/baseline/style/generation/QA/approval/demo panels, and fixture-driven demo mode. The original left stage rail component has been retired from the active shell to avoid duplicate navigation.
+- Frontend first slice is implemented under `ui/` with the Review Room shell, top workflow navigation, artifact canvas, labeled per-step artifact filmstrip, zoom controls, draggable compare mode, contextual inspector, command palette, walkthrough guide, activity drawer, source/baseline/style/generation/QA/approval/demo panels, and a real Millie-asset demo mode. The original left stage rail component has been retired from the active shell to avoid duplicate navigation.
 - Tests exist for backend models/artifacts/actions/API and frontend inspector interactions/accessibility gates.
-- Current smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-27.png`.
+- Current smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-28.png`.
 - M10 is still in progress because live frontend actions, one-command launch, real artifact rendering coverage across all stages, and full documentation/troubleshooting are not complete.
 
 ---
@@ -2050,7 +2050,7 @@ Use frequent commits matching the task boundaries:
 | Artifact serving leaks local files | Privacy/security failure | Serve only indexed artifacts from registered project roots; test traversal attempts. |
 | Missing optional provider keys look like failures | User confusion | Label API keys as optional accelerators and keep Codex handoff path primary. |
 | Frontend becomes generic shadcn dashboard | Weak hiring-manager impression | Use custom tokens, artifact-first layout, and Review Room-specific components. |
-| Demo mode uses fake artifacts | Product feels shallow | Use synthetic fixture artifacts and real Goodboy artifact shapes. |
+| Demo mode uses fake artifacts | Product feels shallow | Use the bundled Millie demo assets and real Goodboy artifact shapes. |
 | Playwright setup becomes brittle | Slow verification | Keep e2e flows focused on core gates and visual surfaces. |
 
 ## 11. Self-Review

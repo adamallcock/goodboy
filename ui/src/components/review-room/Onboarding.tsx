@@ -31,8 +31,8 @@ const paths: Array<{
   },
   {
     id: "demo",
-    title: "Explore demo",
-    description: "Walk through a sample pet project with sources, baselines, generated rows, QA, and approval.",
+    title: "Explore Millie demo",
+    description: "Walk through a real completed pet example with sources, baselines, generated rows, QA, and approval.",
     icon: PlayCircle,
     cta: "Start demo"
   }
@@ -69,6 +69,7 @@ export function Onboarding() {
           <h2>Review Room keeps the user decisions clear while Codex handles the pipeline.</h2>
           <p>
             Choose how you want to begin. The app will show where the project is, which artifact needs review, and what happens after approval or feedback.
+            The demo is read-only, so it is safe to explore before making your own.
           </p>
         </section>
 
@@ -109,7 +110,7 @@ export function Onboarding() {
 }
 
 function CreateWithCodex() {
-  const prompt = "Use Goodboy to create a Codex pet from these source images.";
+  const prompt = "Use Goodboy to create a Codex pet from these source images. Plan baseline candidates first, then pause for my visual choice before generating animation rows.";
   const copyPrompt = async () => {
     try {
       await navigator.clipboard.writeText(prompt);
@@ -159,8 +160,8 @@ function DemoPreview({ onStart }: { onStart: () => void }) {
         ))}
       </div>
       <div className="demo-preview-copy">
-        <h4>Shoulder Kitten demo</h4>
-        <p>No files are installed or changed. You can move through each artifact stage and try approval safely.</p>
+        <h4>Millie demo</h4>
+        <p>Uses a real completed Millie pet package as the walkthrough example. No files are installed or changed.</p>
         <Button variant="primary" onClick={onStart}>
           Start demo walkthrough
           <Images size={14} />

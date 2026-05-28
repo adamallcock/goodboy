@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 async function startDemo(page: import("@playwright/test").Page) {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Goodboy Review Room" })).toBeVisible();
-  await page.getByRole("button", { name: /Explore demo/ }).click();
+  await page.getByRole("button", { name: /Explore Millie demo/ }).click();
 }
 
 test("onboarding explains the paths into review room", async ({ page }) => {
@@ -12,7 +12,7 @@ test("onboarding explains the paths into review room", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Goodboy Review Room" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Create with Codex/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Open a project/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Explore demo/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Explore Millie demo/ })).toBeVisible();
   await page.getByRole("button", { name: /Create with Codex/ }).click();
   await expect(page.getByRole("button", { name: "Copy Codex prompt" })).toBeVisible();
 
@@ -27,9 +27,11 @@ test("review room exposes interactive visual inspector controls", async ({ page 
   await page.getByRole("button", { name: /Generate/ }).click();
   await page.getByRole("button", { name: /QA Review/ }).click();
 
-  await expect(page.getByRole("heading", { name: "Shoulder Kitten" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Millie Demo" })).toBeVisible();
   await expect(page.getByRole("main").getByRole("heading", { name: "Qa" })).toBeVisible();
   await expect(page.getByLabel("Visual artifact canvas")).toBeVisible();
+  await expect(page.getByLabel("Artifacts in this step")).toContainText("Artifacts in this step");
+  await expect(page.getByLabel("Review Room walkthrough guide")).toContainText("Millie demo walkthrough");
   await expect(page.getByRole("banner").getByText("Decision needed: visual QA")).toBeVisible();
   await expect(page.getByLabel("Project progress")).toContainText("Current step");
   await expect(page.getByLabel("Project progress")).toContainText("QA Review");
@@ -53,7 +55,7 @@ test("review room exposes interactive visual inspector controls", async ({ page 
 
   await page.getByRole("button", { name: "Back to start" }).first().click();
   await expect(page.getByRole("heading", { name: "Goodboy Review Room" })).toBeVisible();
-  await page.getByRole("button", { name: /Explore demo/ }).click();
+  await page.getByRole("button", { name: /Explore Millie demo/ }).click();
 
   await page.keyboard.press("Meta+K");
   await expect(page.getByPlaceholder("Search Goodboy actions...")).toBeVisible();

@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Goodboy",
     "shortDescription": "Create Codex pets from source images.",
-    "longDescription": "Goodboy packages the guided Codex workflow for creating, validating, reviewing, and installing animated Codex pets from source images. It steers agents toward the start/advance rails, provenance capture, visual QA, and install safety gates.",
+    "longDescription": "Goodboy packages the guided Codex workflow for creating, validating, reviewing, and installing animated Codex pets from source images. It steers agents toward the start/advance rails, provenance capture, Review Room visual QA, and install safety gates.",
     "developerName": "Adam Allcock",
     "category": "Productivity",
     "capabilities": [

@@ -1,0 +1,39 @@
+name: Pet generation failure
+description: Report a failed pet build, QA gate, row-generation handoff, or install policy issue.
+title: "[Pet failure]: "
+labels: ["pet-generation", "triage"]
+body:
+  - type: textarea
+    id: stage
+    attributes:
+      label: Failing stage
+      description: Which Goodboy stage failed?
+      placeholder: baseline selection, row generation, build-review, QA, approval, install, export
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or UI action
+      description: Include the command or UI action that triggered the failure. Redact private paths if needed.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Non-sensitive report excerpts
+      description: Paste relevant validation, install-policy, duplicate-audit, centering-report, or console output. Do not include private source images or provider keys.
+      render: text
+  - type: textarea
+    id: visual
+    attributes:
+      label: Visual symptoms
+      description: Describe clipping, drift, duplicate frames, chroma residue, identity mismatch, or other visible issues.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I have removed private source images, API keys, and personal project paths from this public report.
+          required: true

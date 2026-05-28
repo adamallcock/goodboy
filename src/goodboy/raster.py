@@ -14,6 +14,7 @@ from .schemas import default_frame_manifest
 
 
 RGBA = tuple[int, int, int, int]
+EXTRACTION_METHODS = {"auto", "components", "slots", "stable-slots"}
 
 ANCHOR_POLICIES = {
     "idle": "stable_center",
@@ -87,9 +88,9 @@ def trim_alpha_edge(image: Image.Image) -> Image.Image:
     return clear_transparent_rgb(Image.frombytes("RGBA", rgba.size, bytes(data)))
 
 
-def remove_chroma_background(image: Image.Image) -> Image.Image:
+def remove_chroma_background(image: Image.Image, chroma_key: tuple[int, int, int] | None = None) -> Image.Image:
     rgb = image.convert("RGB")
-    key = border_key(rgb)
+    key = chroma_key or border_key(rgb)
     data = bytearray()
     for red, green, blue in rgb.getdata():
         distance = ((red - key[0]) ** 2 + (green - key[1]) ** 2 + (blue - key[2]) ** 2) ** 0.5
@@ -237,11 +238,76 @@ def crop_equal_slots(strip: Image.Image, count: int) -> list[tuple[Image.Image, 
     return frames
 
 
-def extract_subjects(strip: Image.Image, count: int) -> list[tuple[Image.Image, tuple[int, int, int, int] | None]]:
+def extract_subjects(
+    strip: Image.Image,
+    count: int,
+    method: str,
+) -> tuple[list[tuple[Image.Image, tuple[int, int, int, int] | None]], str]:
+    if method not in EXTRACTION_METHODS:
+        raise ValueError(f"unknown extraction method `{method}`; expected one of {sorted(EXTRACTION_METHODS)}")
+    if method == "slots":
+        return crop_equal_slots(strip, count), "slots"
+    if method == "stable-slots":
+        return stable_slot_subjects(strip, count), "stable-slots"
     groups = component_frame_groups(strip, count)
     if groups is None:
-        return crop_equal_slots(strip, count)
-    return [(component_group_image(strip, group), component_bounds(group)) for group in groups]
+        if method == "components":
+            raise ValueError(f"could not find {count} sprite components in generated strip")
+        return crop_equal_slots(strip, count), "slots"
+    return [(component_group_image(strip, group), component_bounds(group)) for group in groups], "components"
+
+
+def fit_viewport_to_cell(image: Image.Image) -> Image.Image:
+    target = Image.new("RGBA", (CELL_WIDTH, CELL_HEIGHT), (0, 0, 0, 0))
+    if alpha_bbox(image) is None:
+        return target
+    viewport = image.convert("RGBA")
+    max_width = CELL_WIDTH - 10
+    max_height = CELL_HEIGHT - 10
+    scale = min(max_width / viewport.width, max_height / viewport.height, 1.0)
+    if scale != 1.0:
+        viewport = viewport.resize(
+            (max(1, round(viewport.width * scale)), max(1, round(viewport.height * scale))),
+            Image.Resampling.LANCZOS,
+        )
+    left = (CELL_WIDTH - viewport.width) // 2
+    top = (CELL_HEIGHT - viewport.height) // 2
+    target.alpha_composite(viewport, (left, top))
+    return clear_transparent_rgb(target)
+
+
+def stable_slot_subjects(strip: Image.Image, count: int) -> list[tuple[Image.Image, tuple[int, int, int, int] | None]]:
+    padding = 4
+    groups = component_frame_groups(strip, count)
+    if groups is not None:
+        bboxes = [component_bounds(group) for group in groups]
+        shared_top = max(0, min(bbox[1] for bbox in bboxes) - padding)
+        shared_bottom = min(strip.height, max(bbox[3] for bbox in bboxes) + padding)
+        viewport_width = max(bbox[2] - bbox[0] for bbox in bboxes) + padding * 2
+        viewport_height = max(1, shared_bottom - shared_top)
+        subjects = []
+        for group, bbox in zip(groups, bboxes):
+            grouped = component_group_image(strip, group, padding=padding)
+            grouped_top = max(0, bbox[1] - padding)
+            viewport = Image.new("RGBA", (viewport_width, viewport_height), (0, 0, 0, 0))
+            left = (viewport_width - grouped.width) // 2
+            viewport.alpha_composite(grouped, (left, grouped_top - shared_top))
+            subjects.append((viewport, bbox))
+        return subjects
+
+    slots = crop_equal_slots(strip, count)
+    bboxes = [bbox for _slot, bbox in slots if bbox is not None]
+    if not bboxes:
+        return slots
+    shared_top = max(0, min(bbox[1] for bbox in bboxes) - padding)
+    shared_bottom = min(strip.height, max(bbox[3] for bbox in bboxes) + padding)
+    subjects = []
+    for slot, bbox in slots:
+        if bbox is None:
+            subjects.append((slot, None))
+            continue
+        subjects.append((clear_transparent_rgb(slot.crop((0, shared_top, slot.width, shared_bottom))), bbox))
+    return subjects
 
 
 def keep_main_component(image: Image.Image, min_pixels: int = 260) -> Image.Image:
@@ -306,12 +372,14 @@ def subject_to_cell(
     return clear_transparent_rgb(keep_main_component(cell))
 
 
-def build_row(strip: Image.Image, state: str, count: int) -> list[Image.Image]:
-    subjects = extract_subjects(strip, count)
+def build_row(strip: Image.Image, state: str, count: int, method: str) -> tuple[list[Image.Image], str]:
+    subjects, used_method = extract_subjects(strip, count, method)
+    if used_method == "stable-slots":
+        return [fit_viewport_to_cell(subject) for subject, _original_bbox in subjects], used_method
     bboxes = [alpha_bbox(subject) for subject, _ in subjects]
     visible = [bbox for bbox in bboxes if bbox is not None]
     if not visible:
-        return [Image.new("RGBA", (CELL_WIDTH, CELL_HEIGHT), (0, 0, 0, 0)) for _ in subjects]
+        return [Image.new("RGBA", (CELL_WIDTH, CELL_HEIGHT), (0, 0, 0, 0)) for _ in subjects], used_method
     content_w = max(bbox[2] for bbox in visible) - min(bbox[0] for bbox in visible)
     content_h = max(bbox[3] for bbox in visible) - min(bbox[1] for bbox in visible)
     scale = min((CELL_WIDTH - 28) / max(1, content_w), (CELL_HEIGHT - 32) / max(1, content_h), 1.0)
@@ -326,10 +394,11 @@ def build_row(strip: Image.Image, state: str, count: int) -> list[Image.Image]:
         if original_bboxes
         else None
     )
-    return [
+    frames = [
         subject_to_cell(subject, scale=scale, state=state, original_bbox=original_bbox, row_bbox=row_bbox)
         for subject, original_bbox in subjects
     ]
+    return frames, used_method
 
 
 def save_state_frames(frames_root: Path, state: str, frames: list[Image.Image]) -> None:
@@ -427,11 +496,17 @@ def build_frames_from_row_strips(
     source_dir: Path,
     transparent_dir: Path,
     frames_root: Path,
+    chroma_key: tuple[int, int, int] | None = None,
+    chroma_key_metadata: dict[str, Any] | None = None,
+    extraction_method: str = "auto",
     force: bool = False,
 ) -> None:
+    if extraction_method not in EXTRACTION_METHODS:
+        raise ValueError(f"unknown extraction method `{extraction_method}`; expected one of {sorted(EXTRACTION_METHODS)}")
     transparent_dir.mkdir(parents=True, exist_ok=True)
     frames_root.mkdir(parents=True, exist_ok=True)
     centering_report: dict[str, Any] = {"states": {}}
+    row_methods: dict[str, str] = {}
     for state in STATE_ORDER:
         count = ROW_FRAME_COUNTS[state]
         source_path = source_dir / f"{state}.png"
@@ -441,16 +516,20 @@ def build_frames_from_row_strips(
         if transparent_path.is_file() and not force:
             strip = Image.open(transparent_path).convert("RGBA")
         else:
-            strip = remove_chroma_background(Image.open(source_path))
+            strip = remove_chroma_background(Image.open(source_path), chroma_key)
             strip.save(transparent_path)
-        frames = build_row(strip, state, count)
+        frames, used_method = build_row(strip, state, count, extraction_method)
+        row_methods[state] = used_method
         frames, report = stabilize_state_frames(frames, state)
+        report["extraction_method"] = used_method
         centering_report["states"][state] = report
         save_state_frames(frames_root, state, frames)
     manifest = default_frame_manifest(
         source_dir,
         centering_policy="component-centered-state-baseline",
         cleanup_policy="chroma-key-despill-low-alpha-trim",
+        chroma_key=chroma_key_metadata,
+        row_methods=row_methods,
     )
     write_json(frames_root / "frames-manifest.json", manifest.to_dict())
     write_json(frames_root / "centering-report.json", centering_report)

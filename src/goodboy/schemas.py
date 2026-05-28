@@ -200,6 +200,7 @@ class GenerationJob:
     input_images: list[str]
     expected_output: str
     state: str | None = None
+    input_image_roles: dict[str, str] = field(default_factory=dict)
     retry_policy: dict[str, Any] = field(default_factory=dict)
     selected_output_path: str | None = None
     provider_invocation_id: str | None = None
@@ -407,12 +408,19 @@ class RunSummary:
         return asdict(self)
 
 
-def default_frame_manifest(source: Path, *, centering_policy: str, cleanup_policy: str) -> FrameManifest:
+def default_frame_manifest(
+    source: Path,
+    *,
+    centering_policy: str,
+    cleanup_policy: str,
+    chroma_key: dict[str, Any] | None = None,
+    row_methods: dict[str, str] | None = None,
+) -> FrameManifest:
     return FrameManifest(
-        chroma_key={"hex": "#00ff00", "rgb": [0, 255, 0]},
+        chroma_key=chroma_key or {"hex": "#00ff00", "rgb": [0, 255, 0]},
         source=str(source),
         rows=[
-            FrameManifestRow(state=state, frames=count, method="components-centered")
+            FrameManifestRow(state=state, frames=count, method=(row_methods or {}).get(state, "components-centered"))
             for state, count in ROW_FRAME_COUNTS.items()
         ],
         centering_policy=centering_policy,

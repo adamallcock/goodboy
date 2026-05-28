@@ -218,12 +218,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     build_cmd.add_argument("--visual-approval", help="Human visual approval note required before installing.")
     build_cmd.add_argument("--reuse-transparent", action="store_true")
+    build_cmd.add_argument("--extraction-method", choices=["auto", "components", "slots", "stable-slots"], default="auto")
 
     build_review_cmd = sub.add_parser("build-review", help="Build a run for review, run QA, validate, and summarize review artifacts.")
     build_review_cmd.add_argument("project_dir")
     build_review_cmd.add_argument("--run-id", required=True)
     build_review_cmd.add_argument("--row-provenance", choices=["provider_generated", "user_supplied", "test_fixture"], required=True)
     build_review_cmd.add_argument("--reuse-transparent", action="store_true")
+    build_review_cmd.add_argument("--extraction-method", choices=["auto", "components", "slots", "stable-slots"], default="auto")
 
     approve_cmd = sub.add_parser("approve", help="Record human visual approval or rejection for a run artifact.")
     approve_cmd.add_argument("project_dir")
@@ -259,6 +261,12 @@ def main(argv: list[str] | None = None) -> int:
     export_cmd.add_argument("--run-id", required=True)
     export_cmd.add_argument("--output-dir")
     export_cmd.add_argument("--no-zip", action="store_true")
+
+    ui_cmd = sub.add_parser("ui", help="Launch the local Goodboy Review Room web UI.")
+    ui_cmd.add_argument("project_dir", nargs="?")
+    ui_cmd.add_argument("--host", default="127.0.0.1")
+    ui_cmd.add_argument("--port", type=int, default=8787)
+    ui_cmd.add_argument("--no-open", action="store_true")
 
     validate_cmd = sub.add_parser("validate", help="Validate Goodboy manifests and artifact references.")
     validate_cmd.add_argument("project_dir")
@@ -568,6 +576,7 @@ def main(argv: list[str] | None = None) -> int:
                 install_override_reason=args.install_override_reason,
                 row_provenance=args.row_provenance,
                 visual_approval=args.visual_approval,
+                extraction_method=args.extraction_method,
                 force=not args.reuse_transparent,
             )
         except ValueError as exc:
@@ -581,6 +590,7 @@ def main(argv: list[str] | None = None) -> int:
                 Path(args.project_dir).expanduser().resolve(),
                 run_id=args.run_id,
                 row_provenance=args.row_provenance,
+                extraction_method=args.extraction_method,
                 force=not args.reuse_transparent,
             )
         except (ValueError, FileNotFoundError) as exc:
@@ -677,6 +687,17 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 1
         print(json.dumps(summary, indent=2))
+        return 0
+    if args.command == "ui":
+        from .web import launch_dev_server
+
+        payload = launch_dev_server(
+            project_dir=Path(args.project_dir).expanduser().resolve() if args.project_dir else None,
+            host=args.host,
+            port=args.port,
+            open_browser=not args.no_open,
+        )
+        print(json.dumps(payload, indent=2, sort_keys=True))
         return 0
     if args.command == "validate":
         report = validate_project(

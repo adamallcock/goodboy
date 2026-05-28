@@ -10,20 +10,31 @@ htmlcov/
 build/
 dist/
 site/
+*.log
 
 # Local environments and editor state
 .venv/
+.venv*/
 venv/
+node_modules/
+ui/node_modules/
+ui/test-results/
+ui/playwright-report/
+playwright-report/
+ui/*.tsbuildinfo
+*.tsbuildinfo
+ui/*.js
+ui/*.d.ts
 .env
 .env.*
 !.env.example
 .DS_Store
 .idea/
 .vscode/
+.private-goodboy-archive/
 
 # Goodboy local pet projects and generated outputs
 projects/**
-!projects/.gitkeep
 *.tmp
 *.bak
 
@@ -34,6 +45,8 @@ artifacts/
 exports/
 runs/
 qa/
+!ui/src/features/qa/
+!ui/src/features/qa/**
 final/
 package/
 
@@ -42,4 +55,3 @@ package/
 *.key
 *.p12
 *.mobileprovision
-

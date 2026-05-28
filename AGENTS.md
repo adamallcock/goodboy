@@ -19,9 +19,8 @@
 - Run focused tests after code changes and the full suite before publishing:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```
 
 - Validate the Codex skill after editing `codex-skill/goodboy/SKILL.md`.
 - Keep user-facing docs aligned with the current happy path: `start`, `advance`, provider generation, generated-output map import, visual approval, and install.
-

@@ -14,6 +14,27 @@ from .safety import find_suspicious_renderer_scripts
 from .schemas import RunSummary
 
 
+def parse_chroma_key(raw: dict[str, object] | None) -> tuple[int, int, int] | None:
+    if not raw:
+        return None
+    rgb = raw.get("rgb")
+    if isinstance(rgb, list) and len(rgb) == 3:
+        return tuple(int(value) for value in rgb)
+    hex_value = raw.get("hex")
+    if isinstance(hex_value, str) and len(hex_value) == 7 and hex_value.startswith("#"):
+        return tuple(int(hex_value[index : index + 2], 16) for index in (1, 3, 5))
+    return None
+
+
+def run_chroma_key_metadata(run_dir: Path) -> dict[str, object] | None:
+    metadata_path = run_dir / "run-metadata.json"
+    if not metadata_path.is_file():
+        return None
+    raw = read_json(metadata_path)
+    chroma_key = raw.get("chroma_key")
+    return chroma_key if isinstance(chroma_key, dict) else None
+
+
 def build_from_row_strips(
     *,
     project_dir: Path,
@@ -26,6 +47,7 @@ def build_from_row_strips(
     install_override_reason: str | None = None,
     row_provenance: str | None = None,
     visual_approval: str | None = None,
+    extraction_method: str = "auto",
     force: bool = True,
 ) -> RunSummary:
     if not (project_dir / "goodboy.json").exists():
@@ -45,11 +67,15 @@ def build_from_row_strips(
     final_dir = run_dir / "final"
     qa_dir = run_dir / "qa"
     package_dir = run_dir / "package"
+    chroma_metadata = run_chroma_key_metadata(run_dir)
 
     build_frames_from_row_strips(
         source_dir=rows_dir,
         transparent_dir=transparent_dir,
         frames_root=frames_root,
+        chroma_key=parse_chroma_key(chroma_metadata),
+        chroma_key_metadata=chroma_metadata,
+        extraction_method=extraction_method,
         force=force,
     )
     compose_atlas(
@@ -136,7 +162,7 @@ def human_review_checklist(run_id: str) -> dict[str, object]:
         "required_before_approval": [
             "Open qa/contact-sheet.png and confirm every state is recognizable.",
             "Open qa/previews/*.gif and confirm loops do not drift, clip, or duplicate unnaturally.",
-            "Open qa/edge-preview-white.png and confirm there is no visible green halo.",
+            "Open qa/edge-preview-white.png and confirm there is no visible chroma-key halo or colored residue.",
             "Open qa/centering-overlay.png and confirm frame centers are stable enough for idle/waiting/review.",
             "Read qa/review.json and qa/install-policy.json; approve only if hard failures are absent or intentionally overridden.",
             "Confirm the character identity, style preset, and any user/AI critique overrides are reflected in the row art.",

@@ -1,10 +1,12 @@
 # Goodboy
 
-Goodboy is a repeatable pipeline for turning reference images into polished Codex pet packages.
+Goodboy helps you turn a few reference images into a polished animated Codex pet, with guided generation, visual review, QA checks, and packaging.
 
 It combines a manifest-first CLI, image-generation handoffs, deterministic sprite processing, QA gates, install/export tooling, a Codex skill/plugin wrapper, and a local Review Room UI for visual decisions.
 
-Goodboy is currently an **alpha developer tool**. The CLI pipeline is usable, the Review Room is a strong local demo/review surface, and direct provider execution is optional. Expect the image-generation provider names and UI integration surface to continue evolving.
+Goodboy is currently an early `0.1.0` developer tool. The CLI pipeline is the reliable workflow, the Review Room is a strong local demo/review surface, and direct provider execution is optional. Expect the image-generation provider names and UI integration surface to continue evolving.
+
+A finished Codex pet package contains a `pet.json` manifest and `spritesheet.webp` atlas that can be installed into Codex or exported for compatible pet viewers.
 
 ## What Goodboy Does
 
@@ -46,7 +48,7 @@ python -m pip install -e ".[ui,dev]"
 goodboy --help
 ```
 
-For source-checkout development without installing console scripts, run:
+After installing dependencies, source-checkout development can also use the module entrypoint without installing console scripts:
 
 ```bash
 PYTHONPATH=src python -m goodboy.cli --help
@@ -68,6 +70,8 @@ goodboy advance /tmp/goodboy-demo --agent-mode
 
 `start` initializes the project, ingests sources, drafts the source card, plans baseline candidates, renders `candidates/contact-sheet.png`, writes `workflow-state.json`, and stops. `advance --agent-mode` runs safe deterministic steps until it reaches provider generation, baseline choice, visual approval, or QA/user override.
 
+When Goodboy stops for image generation, it writes provider prompts and manifests instead of inventing local placeholder art. For Codex built-in generation, ask Codex to generate from the planned prompt and attached references, then pass the generated image path back to `advance`. For API-backed generation, use `execute-openai` or `execute-gemini` when keys are available.
+
 After provider-generated baselines exist, select one:
 
 ```bash
@@ -77,6 +81,30 @@ goodboy advance /tmp/goodboy-demo \
   --baseline-image /absolute/path/to/generated-baseline.png \
   --run-id planned-row-generation \
   --selection-notes "selected by the user"
+```
+
+That selection plans the row-generation run. To inspect the planned row handoffs directly:
+
+```bash
+goodboy generate-handoff /tmp/goodboy-demo \
+  --run-id planned-row-generation \
+  --all
+```
+
+Generated row outputs can be imported with a JSON map:
+
+```json
+{
+  "idle": "/absolute/path/to/idle.png",
+  "running-right": "/absolute/path/to/running-right.png",
+  "running-left": "/absolute/path/to/running-left.png",
+  "waving": "/absolute/path/to/waving.png",
+  "jumping": "/absolute/path/to/jumping.png",
+  "failed": "/absolute/path/to/failed.png",
+  "waiting": "/absolute/path/to/waiting.png",
+  "running": "/absolute/path/to/running.png",
+  "review": "/absolute/path/to/review.png"
+}
 ```
 
 After provider-generated row strips exist, import them and build the review artifacts:
@@ -105,7 +133,7 @@ OpenAI and Gemini API keys are optional accelerators, not setup requirements. Wi
 
 Review Room is the local visual interface under `ui/`. It is designed as a status and decision surface: the user reviews one thing at a time, can inspect final sprite states in a Petdex-style animated viewer, and can open a details drawer only when raw files or QA metadata matter.
 
-Run the UI demo:
+Run the read-only UI demo:
 
 ```bash
 cd ui
@@ -121,7 +149,8 @@ http://127.0.0.1:5173/
 
 Current UI status:
 
-- Onboarding paths for Codex-led creation, opening a project, and a bundled generic companion demo.
+- Bundled generic companion demo that works without private source photos, provider credentials, generated images, or a local Goodboy project.
+- Onboarding paths for Codex-led creation and opening a project.
 - Simplified decision surface for sources, baselines, style, generation, QA, approval, and export.
 - Animated `spritesheet.webp` state viewer for completed pet QA.
 - Details drawer for generated files, contact sheets, edge previews, QA reports, provenance, and install policy.
@@ -131,7 +160,7 @@ Current UI status:
 Still evolving:
 
 - One-command backend-plus-frontend launch.
-- Full live frontend wiring for every mutating backend action.
+- Full live frontend wiring for opening real projects and mutating backend actions. Use the CLI `start` / `advance` workflow as the source of truth today.
 - Visual regression screenshots for every primary screen.
 
 ## Codex Skill And Plugin

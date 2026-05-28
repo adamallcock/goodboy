@@ -2,7 +2,7 @@
 
 import { spawnSync } from "node:child_process";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 const args = process.argv.slice(2);
 
 function printHelp() {

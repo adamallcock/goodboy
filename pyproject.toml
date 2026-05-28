@@ -4,11 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "goodboy"
-version = "0.1.0"
+version = "0.1.1"
 description = "Repeatable pipeline for turning pet references into Codex pet spritesheets."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   { name = "Adam Allcock" },
 ]
@@ -16,7 +17,6 @@ keywords = ["codex", "pets", "spritesheets", "image-generation", "qa"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -32,6 +32,7 @@ dependencies = [
 Homepage = "https://github.com/adamallcock/goodboy"
 Repository = "https://github.com/adamallcock/goodboy"
 Issues = "https://github.com/adamallcock/goodboy/issues"
+NPM = "https://www.npmjs.com/package/@adamallcock/goodboy"
 
 [project.optional-dependencies]
 ui = [

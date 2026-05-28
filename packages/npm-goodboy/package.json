@@ -1,6 +1,6 @@
 {
   "name": "@adamallcock/goodboy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "npm launcher for Goodboy, a Codex pet generation pipeline.",
   "license": "MIT",
   "author": "Adam Allcock",
@@ -20,7 +20,7 @@
     "qa"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "repository": {
     "type": "git",

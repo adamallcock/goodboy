@@ -1,12 +1,27 @@
 # Goodboy
 
+[![CI](https://github.com/adamallcock/goodboy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/adamallcock/goodboy/actions/workflows/ci.yml)
+[![GitHub release](https://img.shields.io/github/v/release/adamallcock/goodboy?include_prereleases)](https://github.com/adamallcock/goodboy/releases)
+[![npm](https://img.shields.io/npm/v/%40adamallcock%2Fgoodboy)](https://www.npmjs.com/package/@adamallcock/goodboy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+[![Node 24+](https://img.shields.io/badge/Node-24%2B-5FA04E.svg)](ui/package.json)
+
 Goodboy helps you turn a few reference images into a polished animated Codex pet, with guided generation, visual review, QA checks, and packaging.
 
 It combines a manifest-first CLI, image-generation handoffs, deterministic sprite processing, QA gates, install/export tooling, a Codex skill/plugin wrapper, and a local Review Room UI for visual decisions.
 
-Goodboy is currently an early `0.1.0` developer tool. The CLI pipeline is the reliable workflow, the Review Room is a strong local demo/review surface, and direct provider execution is optional. Expect the image-generation provider names and UI integration surface to continue evolving.
+Goodboy is currently an early `0.1.1` developer tool. The CLI pipeline is the reliable workflow, the Review Room is a strong local demo/review surface, and direct provider execution is optional. Expect the image-generation provider names and UI integration surface to continue evolving.
 
 A finished Codex pet package contains a `pet.json` manifest and `spritesheet.webp` atlas that can be installed into Codex or exported for compatible pet viewers.
+
+## Examples
+
+These are small Goodboy-generated state previews from real Codex pet packages:
+
+| Napoleon | Millie | Shoulder Cat |
+| --- | --- | --- |
+| <img src="assets/examples/napoleon-running-right.gif" alt="Napoleon running right preview" width="180"> | <img src="assets/examples/millie-waving.gif" alt="Millie waving preview" width="180"> | <img src="assets/examples/shoulder-cat-running-right.gif" alt="Shoulder Cat running right preview" width="180"> |
 
 ## What Goodboy Does
 
@@ -54,7 +69,7 @@ After installing dependencies, source-checkout development can also use the modu
 PYTHONPATH=src python -m goodboy.cli --help
 ```
 
-For npm users, `@adamallcock/goodboy` is also available as a small launcher package:
+For npm users, [`@adamallcock/goodboy`](https://www.npmjs.com/package/@adamallcock/goodboy) is also available as a small launcher package:
 
 ```bash
 npx @adamallcock/goodboy --help

@@ -1,0 +1,5 @@
+# Require Adam's review for every change that lands on the protected default branch.
+* @adamallcock
+
+# Protect the ownership rules themselves.
+/.github/CODEOWNERS @adamallcock

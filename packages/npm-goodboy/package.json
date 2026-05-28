@@ -1,0 +1,34 @@
+{
+  "name": "goodboy",
+  "version": "0.1.0",
+  "description": "npm launcher for Goodboy, a Codex pet generation pipeline.",
+  "license": "MIT",
+  "author": "Adam Allcock",
+  "type": "module",
+  "bin": {
+    "goodboy": "bin/goodboy.js"
+  },
+  "files": [
+    "bin/",
+    "README.md"
+  ],
+  "keywords": [
+    "codex",
+    "codex-pets",
+    "image-generation",
+    "spritesheets",
+    "qa"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamallcock/goodboy.git",
+    "directory": "packages/npm-goodboy"
+  },
+  "bugs": {
+    "url": "https://github.com/adamallcock/goodboy/issues"
+  },
+  "homepage": "https://github.com/adamallcock/goodboy#readme"
+}

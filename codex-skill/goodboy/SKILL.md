@@ -15,7 +15,7 @@ Default project root is `/path/to/goodboy` unless the user specifies another Goo
 goodboy <command>
 ```
 
-For detailed user-facing instructions, read `docs/2026-05-26-goodboy-user-guide.md` in the Goodboy repository.
+For public-facing setup and usage, read `README.md` in the Goodboy repository.
 
 ## Workflow
 

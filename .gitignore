@@ -31,10 +31,10 @@ ui/*.d.ts
 .DS_Store
 .idea/
 .vscode/
+.private-goodboy-archive/
 
 # Goodboy local pet projects and generated outputs
 projects/**
-!projects/.gitkeep
 *.tmp
 *.bak
 

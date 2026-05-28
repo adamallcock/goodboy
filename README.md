@@ -6,7 +6,7 @@ It combines a manifest-first CLI, image-generation handoffs, deterministic sprit
 
 Goodboy is currently an **alpha developer tool**. The CLI pipeline is usable, the Review Room is a strong local demo/review surface, and direct provider execution is optional. Expect the image-generation provider names and UI integration surface to continue evolving.
 
-## What Goodboy Adds
+## What Goodboy Does
 
 - Source-image ingest with copied references, hashes, thumbnails, EXIF/provenance, and source cards.
 - Baseline candidate planning with stored style intent and provider metadata before images are generated.
@@ -190,22 +190,6 @@ git diff --check
 ## Demo Assets
 
 The Review Room demo uses a generic companion fixture under `ui/public/assets/demo/companion/`. These optimized WebP assets are included so the UI can be explored without private source photos, provider credentials, generated images, or a local Goodboy project. See `ui/public/assets/demo/README.md` for asset notes.
-
-Historical implementation references live under `references/legacy-pipeline/`. They are retained as design archaeology for the techniques that became Goodboy’s generalized pipeline.
-
-## Documentation
-
-- `docs/2026-05-26-goodboy-user-guide.md` - day-to-day usage, UI usage, commands, troubleshooting.
-- `docs/000-goodboy-master-plan.md` - full project charter, architecture, modules, data model, QA gates, and milestones.
-- `docs/001-module-catalog.md` - module-by-module implementation map.
-- `docs/002-implementation-notes.md` - implementation decisions and proof points.
-- `docs/2026-05-27-goodboy-local-web-ui-requirements.md` - Review Room requirements and current UI state.
-- `docs/2026-05-28-public-github-readiness-scan.md` - public release-readiness scan.
-- `docs/2026-05-28-license-decision.md` - license options and current decision.
-- `tracking/STATUS.md` - current state and next recommended work.
-- `tracking/MILESTONES.md` - milestone checklist.
-- `tracking/DECISIONS.md` - accepted and open decisions.
-- `tracking/RISK_REGISTER.md` - known risks and mitigations.
 
 ## License
 

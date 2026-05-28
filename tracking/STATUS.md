@@ -1,75 +1,52 @@
 # Goodboy Status
 
-Last updated: 2026-05-27
+Last updated: 2026-05-28
 
 ## Current Phase
 
-M10 Review Room implementation. Goodboy now has a Python package skeleton, CLI entrypoint, manifest dataclasses, strict manifest validation, source ingest with EXIF/provenance reporting, source-card scaffolding, baseline candidate planning/selection/image storage, explicit feedback and critique branches, customizable emotion style sheets for pets or inanimate/object mascots, row-job planning, provider handoff manifests, dry-run-safe OpenAI Images and Gemini/Nano Banana execution paths, provider failure/retry reporting, deterministic raster pipeline, state-aware centering, centering reports/overlays, atlas validation, QA reports and human review checklist, install policy, installer/package/export generation, Agent Rail commands for safer Codex operation, an installed Codex skill wrapper, a repo-scoped Codex plugin package, a portable synthetic fixture, regression tests against existing Napoleon row strips, M10 local web UI requirements, a FastAPI backend foundation, and a first interactive Review Room frontend slice.
+Public-readiness alpha hardening on branch `review-room-ui`.
 
-## Completed This Session
+Goodboy now has the CLI/pipeline core, Hatch-informed row planning, optional provider adapters, QA/install gates, Codex skill and plugin surfaces, a generic bundled Review Room demo, CI/governance files, public package metadata, and user-facing documentation for installation, day-to-day operation, and release validation.
 
-- Created `/Users/adamallcock/Documents/Coding/goodboy`.
-- Copied reference scripts from hatch-pet, Napoleon, and Millie.
-- Added project README.
-- Added master plan.
-- Added module catalog.
-- Added milestone tracker.
-- Added decisions log.
-- Added risk register.
-- Added legacy reference README.
-- Added `pyproject.toml`.
-- Added `src/goodboy` package skeleton.
-- Added project manifest creation/loading.
-- Added Codex pet constants and manifest dataclasses.
-- Added strict manifest validation for project, source, candidate, character, style, feedback, branch, job, invocation, and run-summary manifests.
-- Added source image ingest with hash-based dedupe, thumbnails, and manual source-card scaffolding.
-- Added baseline style candidate planning with preserved prompts, provider/model metadata, character deltas, selection notes, selected-baseline preservation, and character-card creation.
-- Added human/AI feedback events and explicit branch manifests.
-- Added candidate contact-sheet rendering for planned or generated candidates.
-- Added default happy Codex emotion style sheet and row-generation job planner.
-- Added generation adapter capability registry for `codex_builtin`, `openai_images`, `gemini_nano_banana_2`, and `gemini_nano_banana_pro`.
-- Added provider handoff manifests for planned generation jobs.
-- Added dry-run-safe OpenAI Images API execution path for text-to-image and image-input edit jobs.
-- Added dry-run-safe Gemini/Nano Banana execution path for text and image-input jobs.
-- Added generalized chroma-key cleanup, despill, component extraction, state-aware centering, atlas composition, validation, contact sheet, GIF preview, white edge preview, centering overlay/report, QA audit, package generation, and optional install.
-- Added install-blocking QA policy with explicit override reason support.
-- Added Agent Rail v1: `goodboy make`, `goodboy next`, `goodboy approve`, `goodboy review-status`, `goodboy install`, `workflow-state.json`, approval records, and suspicious renderer-script install blocking.
-- Added Agent Rail v2: `goodboy doctor`, batch `goodboy generate-handoff --all`, `goodboy import-generated --map`, `goodboy build-review`, `goodboy finish`, executable `next --agent-mode` fields, and idempotent `plan-candidates`/`style-default`/`plan-rows` behavior with `--refresh`.
-- Added Agent Rail v3: `goodboy start`, `goodboy advance --agent-mode`, default baseline candidate-sheet rendering, short-form `goodboy approve --notes`, and optional API accelerator reporting for OpenAI/Gemini keys.
-- Added portable synthetic row-strip fixture.
-- Added Codex skill wrapper under `codex-skill/goodboy`, installed it to `/Users/adamallcock/.codex/skills/goodboy`, and validated both copies with the official skill validator using a temporary Python environment with PyYAML.
-- Added Codex plugin feasibility decision and a repo-scoped plugin package under `plugins/goodboy`, exposed through `.agents/plugins/marketplace.json`.
-- Added EXIF/provenance reporting, candidate image storage, customizable style presets/subject kinds, structured critique reports, provider retry/failure metadata, human review checklist, project export, and Petdex-ready export.
-- Added `goodboy init`, `goodboy inspect`, `goodboy start`, `goodboy advance`, `goodboy make`, `goodboy doctor`, `goodboy next`, `goodboy ingest`, `goodboy source-card`, `goodboy plan-candidates`, `goodboy select-candidate`, `goodboy candidate-sheet`, `goodboy feedback`, `goodboy style-default`, `goodboy plan-rows`, `goodboy adapters`, `goodboy generate-handoff`, `goodboy import-generated`, `goodboy build-review`, `goodboy finish`, `goodboy handoff`, `goodboy execute-openai`, `goodboy execute-gemini`, `goodboy build-from-rows`, `goodboy approve`, `goodboy review-status`, `goodboy install`, and `goodboy validate`.
-- Added tests for project init, ingest/source-card/candidate/feedback/style/handoff/validation flow, Agent Rail command flow, simplified handoff/import/build/finish flow, planning idempotence, approval/install command flow, suspicious renderer blocking, negative manifest validation across named manifest types, OpenAI and Gemini dry-run execution, QA policy, centering stabilization, portable synthetic fixture build, WebP transparency invariants, and existing Napoleon row-strip regression.
-- Added M10 local web UI requirements covering product ethos, information architecture, functional requirements, technical architecture, visual quality, QA surfaces, demo mode, and implementation milestones.
-- Added M10 off-the-shelf component scan and initial design direction options.
-- Chose Review Room as the primary M10 design direction, with Studio Console features reserved for advanced/debug panels.
-- Added the Review Room implementation plan under `docs/superpowers/plans/`.
-- Added the Review Room backend foundation under `src/goodboy/web/`, including project state, artifact indexing, path-safe artifact routes, workflow action routes, and `goodboy ui --help`.
-- Added the Review Room frontend under `ui/`, including stage rail, gate banner, artifact canvas, zoom/fit/playback controls, draggable compare mode, contextual inspector, command palette, activity drawer, project-open form, source/baseline/style/generation/QA/approval/demo panels, and demo fixture state.
-- Added UI validation through TypeScript typecheck, production build, Playwright tests, and smoke screenshot evidence at `docs/assets/review-room-ui-smoke-2026-05-27.png`.
+## Completed
 
-## Not Yet Started
+- Manifest-first project model, validation, source ingest, provenance, baseline candidate planning, selected character cards, feedback branches, style sheets, critique records, and provider/job manifests.
+- Agent-safe fast path: `goodboy start`, `goodboy advance --agent-mode`, `doctor`, `generate-handoff --all`, `import-generated --map`, `build-review`, `finish`, `review-status`, and `validate`.
+- Generation adapters and handoffs for Codex built-in generation, OpenAI Images, Gemini Nano Banana 2, and Gemini Nano Banana Pro aliases.
+- Hatch-informed row generation: layout guides, canonical baseline references, automatic chroma-key choice, stronger invisible-slot prompt language, object/inanimate subject guidance, and deliberately quiet idle prompts.
+- Deterministic raster pipeline: chroma cleanup, despill, component/slot/stable-slot extraction, state-aware centering, atlas composition, WebP exact-alpha output, previews, and package generation.
+- QA/install policy: clipping, drift, duplicate/static frames, component sanity checks, transparent RGB residue, chroma residue, copied guide pixels, white/nontransparent backgrounds, visual review checklist, approval records, suspicious renderer-script blocking, and explicit override recording.
+- Review Room UI first slice: onboarding, Codex/create/open/demo modes, simplified decision surface, Petdex-style animated state viewer, generic companion demo assets, details drawer, preview modal, command/activity drawers, and Playwright coverage.
+- Codex integration: standalone skill under `codex-skill/goodboy`, repo-scoped plugin under `plugins/goodboy`, marketplace descriptor under `.agents/plugins/marketplace.json`, and lightweight CI skill validation.
+- Public repo hygiene: MIT license, contribution/security/code-of-conduct docs, changelog, GitHub Actions workflow, package metadata, dev extras, `.gitignore` hardening, generic optimized demo assets, and public install docs.
 
-- One-command backend-plus-frontend Review Room launch.
-- Full live frontend wiring for all mutating backend actions.
-- Visual snapshots for every primary Review Room screen.
+## Still Not Complete
 
-## In Progress
+- One-command Review Room launch that serves the backend and built frontend together.
+- Full live frontend wiring for every mutating backend action.
+- Visual regression screenshots for each primary Review Room screen.
+- Live provider smoke tests with real `OPENAI_API_KEY` and `GEMINI_API_KEY`.
+- Deeper source-analysis/visual-critic adapters.
 
-- M10 local web UI implementation.
-- Live OpenAI/Gemini execution smoke testing with real API keys.
-- Live provider smoke testing with real API keys.
+## Current Release Posture
+
+Recommended public label: **alpha developer tool**.
+
+The CLI and review pipeline are usable with provider handoffs. The UI is useful for demo/review and still evolving toward full live operation.
+
+## Verification Gate
+
+Before publishing or tagging:
+
+- `python -m unittest discover -s tests -v`
+- `python scripts/validate_skills.py codex-skill/goodboy plugins/goodboy/skills/goodboy`
+- `cd ui && npm ci && npm run typecheck && npm run build && npm run test:e2e`
+- `git diff --check`
+- secret/path/generated-file scan from `docs/2026-05-28-public-github-readiness-scan.md`
 
 ## Next Recommended Work
 
-1. Complete one-command Review Room launch and live project auto-open.
-2. Run live OpenAI and Gemini image execution smoke testing when keys are available.
-3. Add deeper source-analysis and visual-critic adapters.
-4. Revisit bundled Goodboy MCP tools after observing plugin usage.
-
-## Reference Projects
-
-- Napoleon current final: `v7-happier-green-trim-centered`
-- Millie current final: `v5-green-trim`
+1. Run the full validation gate after final docs and commits.
+2. Commit in logical chunks and push `review-room-ui`.
+3. Add one-command Review Room launch and live project auto-open.
+4. Run live OpenAI/Gemini smoke tests when keys are intentionally available.

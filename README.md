@@ -1,63 +1,77 @@
 # Goodboy
 
-Goodboy is a repeatable production pipeline for turning one or more pet reference images into a polished Codex pet package.
+Goodboy is a repeatable pipeline for turning reference images into polished Codex pet packages.
 
-The project grew out of the Millie and Napoleon pet runs. Those runs proved that image generation can create charming, lifelike pet sprite rows, but the durable system needs more than prompts: it needs source-image ingestion, candidate tracking, character cards, provider-agnostic generation adapters, deterministic frame extraction, centering, edge cleanup, QA gates, package installation, and clear provenance.
+It combines a manifest-first CLI, image-generation handoffs, deterministic sprite processing, QA gates, install/export tooling, a Codex skill/plugin wrapper, and a local Review Room UI for visual decisions.
 
-## Current Status
+Goodboy is currently an **alpha developer tool**. The CLI pipeline is usable, the Review Room is a strong local demo/review surface, and direct provider execution is optional. Expect the image-generation provider names and UI integration surface to continue evolving.
 
-This repository can initialize a project, ingest source images, capture EXIF/provenance, draft source and character cards, plan baseline candidates, store generated candidate images, record feedback and critique branches, customize style presets for animals or inanimate/object mascots, plan row-generation jobs, prepare or execute provider jobs, import generated row outputs, build review artifacts, stabilize frame centering, render candidate/review sheets, validate manifests, export packages, finish an approved install, enforce QA install policy, and run the first Review Room local UI slice for artifact-first visual inspection.
+## What Goodboy Adds
 
-Seeded reference material lives under:
+- Source-image ingest with copied references, hashes, thumbnails, EXIF/provenance, and source cards.
+- Baseline candidate planning with stored style intent and provider metadata before images are generated.
+- Durable character cards, style sheets, feedback branches, and critique records.
+- Provider adapters for Codex built-in handoff, OpenAI Images, and Gemini/Nano Banana aliases.
+- Row-generation manifests with canonical baseline references, layout guides, chroma-key selection, and agent-safe handoffs.
+- Deterministic raster cleanup, frame extraction, centering, atlas composition, previews, and package generation.
+- QA reports for clipping, drift, duplicate/static frames, chroma residue, guide copying, transparent RGB residue, and install policy.
+- A Codex skill and repo-scoped plugin package that steer agents through safe commands instead of one-off renderer scripts.
+- Review Room, a local visual UI for onboarding, demos, state preview, approvals, and details inspection.
 
-```text
-references/legacy-pipeline/
+```mermaid
+flowchart LR
+  A["Source images"] --> B["Baseline candidates"]
+  B --> C["Selected character"]
+  C --> D["Style sheet"]
+  D --> E["Row generation jobs"]
+  E --> F["Generated row strips"]
+  F --> G["Raster + QA"]
+  G --> H["Human approval"]
+  H --> I["Codex pet package"]
 ```
 
-These are copied references, not the live source of truth for Millie or Napoleon. The original projects remain intact at:
+## Installation
 
-```text
-/Users/adamallcock/Documents/Coding/pet-millie
-/Users/adamallcock/Documents/Coding/pet-napoleon
+Clone the repository, create a virtual environment, and install the editable package:
+
+```bash
+git clone https://github.com/adamallcock/goodboy.git
+cd goodboy
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+python -m pip install -e ".[ui,dev]"
+
+goodboy --help
 ```
 
-## Primary Docs
+For source-checkout development without installing console scripts, run:
 
-- `docs/2026-05-26-goodboy-user-guide.md` - start here for day-to-day usage, command examples, and troubleshooting.
-- `docs/000-goodboy-master-plan.md` - full project charter, requirements, architecture, modules, data model, QA gates, milestones, and delivery plan.
-- `docs/2026-05-27-goodboy-local-web-ui-requirements.md` - M10 local web UI functional, technical, and design requirements.
-- `docs/2026-05-27-goodboy-ui-component-scan-and-design-options.md` - M10 component scan and first design direction options.
-- `docs/superpowers/plans/2026-05-27-goodboy-review-room-ui-implementation-plan.md` - M10 Review Room implementation plan.
-- `docs/assets/review-room-ui-smoke-2026-05-28.png` - current smoke screenshot for the Review Room visual inspector.
-- `docs/2026-05-27-goodboy-codex-plugin-feasibility.md` - Codex plugin feasibility decision and first implemented plugin slice.
-- `docs/2026-05-27-goodboy-milestone-completion-audit.md` - milestone-by-milestone completion decisions before M10.
-- `tracking/MILESTONES.md` - implementation milestones and progress tracking.
-- `tracking/DECISIONS.md` - architecture decisions and open decisions.
-- `tracking/RISK_REGISTER.md` - known risks, mitigations, and owners.
-- `references/legacy-pipeline/README.md` - copied scripts and why they matter.
+```bash
+PYTHONPATH=src python -m goodboy.cli --help
+```
 
 ## Quick Start
 
-Run from this repository with `PYTHONPATH=src` before packaging/installing the project:
+Create a project and stop at the first real image-generation/user gate:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy
-
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli start /tmp/goodboy-demo \
+goodboy start /tmp/goodboy-demo \
   --pet-id demo \
   --display-name Demo \
   --species dog \
   --source /absolute/path/to/source.png
 
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli advance /tmp/goodboy-demo --agent-mode
+goodboy advance /tmp/goodboy-demo --agent-mode
 ```
 
-`goodboy start` initializes the project, ingests source images, drafts the source card, plans baseline candidates, renders `candidates/contact-sheet.png`, writes `workflow-state.json`, and stops at the first real provider/user gate. `goodboy advance --agent-mode` runs every safe deterministic step it can, then stops only for provider generation, baseline choice, visual approval, or QA/user override. Use `goodboy doctor --agent-mode` for diagnostics.
+`start` initializes the project, ingests sources, drafts the source card, plans baseline candidates, renders `candidates/contact-sheet.png`, writes `workflow-state.json`, and stops. `advance --agent-mode` runs safe deterministic steps until it reaches provider generation, baseline choice, visual approval, or QA/user override.
 
-After provider-generated baselines exist, select one and let `advance` plan row jobs plus handoffs:
+After provider-generated baselines exist, select one:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli advance /tmp/goodboy-demo \
+goodboy advance /tmp/goodboy-demo \
   --agent-mode \
   --candidate-id baseline-001 \
   --baseline-image /absolute/path/to/generated-baseline.png \
@@ -65,138 +79,134 @@ PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goo
   --selection-notes "selected by the user"
 ```
 
-After provider-generated row strips exist, import them and build for review with one command:
+After provider-generated row strips exist, import them and build the review artifacts:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli advance /tmp/goodboy-demo \
+goodboy advance /tmp/goodboy-demo \
   --agent-mode \
   --run-id planned-row-generation \
   --generated-map /absolute/path/to/generated-output-map.json \
   --row-provenance provider_generated
 ```
 
-After visual approval, finish:
+After visual approval, finish and install:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli advance /tmp/goodboy-demo \
+goodboy advance /tmp/goodboy-demo \
   --agent-mode \
   --run-id planned-row-generation \
   --row-provenance provider_generated \
-  --approval-notes "User approved contact sheet and previews on 2026-05-26"
+  --approval-notes "User approved contact sheet and previews"
 ```
 
-The review build creates transparent strips, stabilized frames, atlas PNG/WebP, contact sheet, GIF previews, white edge preview, centering overlay, validation report, duplicate/drift/green-edge audit, install policy, run summary, and package files. Lower-level `make`, `next`, `plan-rows`, `generate-handoff`, `import-generated`, `build-review`, `review-status`, `approve`, `finish`, and `install` commands remain available for advanced/manual recovery.
-
-For direct OpenAI Images API jobs, use:
-
-```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli execute-openai /tmp/goodboy-demo \
-  --run-id planned-row-generation \
-  --job-id row-idle \
-  --dry-run
-
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli execute-gemini /tmp/goodboy-demo \
-  --run-id planned-row-generation \
-  --job-id row-idle \
-  --dry-run
-```
-
-OpenAI and Gemini API keys are optional accelerators, not requirements. Without keys, Goodboy uses Codex built-in handoff. With `OPENAI_API_KEY` or `GEMINI_API_KEY`, direct provider execution can be faster; Goodboy never writes raw API keys to disk.
+OpenAI and Gemini API keys are optional accelerators, not setup requirements. Without keys, use the Codex built-in handoff flow. With `OPENAI_API_KEY` or `GEMINI_API_KEY`, direct provider execution can be faster; Goodboy never writes raw API keys to disk.
 
 ## Review Room UI
 
-The M10 local UI now has a first implementation slice under `ui/` plus a FastAPI backend foundation under `src/goodboy/web/`. The UI opens with onboarding paths for agent-led creation, existing projects, and a safe Millie demo walkthrough. The Review Room shell uses the top current-step header as the primary workflow navigation, with persistent Home navigation, a large artifact canvas, labeled per-step artifact filmstrip, zoom controls, draggable compare mode, a decision panel, command palette, walkthrough guide, activity drawer, approval gate, real Millie demo assets, and Playwright coverage.
+Review Room is the local visual interface under `ui/`. It is designed as a status and decision surface: the user reviews one thing at a time, can inspect final sprite states in a Petdex-style animated viewer, and can open a details drawer only when raw files or QA metadata matter.
 
-Run the frontend demo:
+Run the UI demo:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy/ui
+cd ui
 npm install
 npm run dev
 ```
 
-Then open `http://127.0.0.1:5173/`.
+Then open:
+
+```text
+http://127.0.0.1:5173/
+```
+
+Current UI status:
+
+- Onboarding paths for Codex-led creation, opening a project, and a bundled generic companion demo.
+- Simplified decision surface for sources, baselines, style, generation, QA, approval, and export.
+- Animated `spritesheet.webp` state viewer for completed pet QA.
+- Details drawer for generated files, contact sheets, edge previews, QA reports, provenance, and install policy.
+- Playwright coverage for the state viewer, details drawer, keyboard reachability, safe demo refresh, and approval gating.
+- FastAPI backend foundation under `src/goodboy/web/`.
+
+Still evolving:
+
+- One-command backend-plus-frontend launch.
+- Full live frontend wiring for every mutating backend action.
+- Visual regression screenshots for every primary screen.
+
+## Codex Skill And Plugin
+
+Goodboy includes both a standalone Codex skill and a repo-scoped Codex plugin package:
+
+```text
+codex-skill/goodboy/
+plugins/goodboy/
+.agents/plugins/marketplace.json
+```
+
+The skill/plugin is intentionally a wrapper over the CLI. Its most important job is to keep agents on the safe path:
+
+- use `goodboy start` and `goodboy advance --agent-mode`;
+- stop at provider and visual approval gates;
+- record provenance, feedback, and approvals in manifests;
+- never draw placeholder row strips with local renderer scripts unless the user explicitly asks for a test fixture or mock.
+
+To add the repo marketplace from a checkout:
+
+```bash
+codex plugin marketplace add /absolute/path/to/goodboy
+```
+
+## Development
+
+Run Python tests:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Run skill validation:
+
+```bash
+python scripts/validate_skills.py codex-skill/goodboy plugins/goodboy/skills/goodboy
+```
 
 Run UI checks:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy/ui
+cd ui
+npm ci
 npm run typecheck
 npm run build
 npm run test:e2e
 ```
 
-Backend API checks are included in the Python suite. The `goodboy ui` command is registered and the backend routes are in place; full one-command launch and all live mutating frontend actions remain M10 follow-up work.
-
-Useful customization commands:
+Run whitespace checks:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli provenance /tmp/goodboy-demo
-
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli style-default /tmp/goodboy-demo \
-  --preset anime \
-  --subject-kind inanimate_object \
-  --user-style "make the object feel cozy and magical"
-
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli critique /tmp/goodboy-demo \
-  --critique-id vision-001 \
-  --target style \
-  --finding "silhouette is weak" \
-  --recommendation "increase contrast around the ears or object edges" \
-  --apply-to-style
-
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli export petdex /tmp/goodboy-demo \
-  --run-id planned-row-generation
+git diff --check
 ```
 
-Run tests:
+## Demo Assets
 
-```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest discover -s tests -v
-```
+The Review Room demo uses a generic companion fixture under `ui/public/assets/demo/companion/`. These optimized WebP assets are included so the UI can be explored without private source photos, provider credentials, generated images, or a local Goodboy project. See `ui/public/assets/demo/README.md` for asset notes.
 
-## Target Outputs
+Historical implementation references live under `references/legacy-pipeline/`. They are retained as design archaeology for the techniques that became Goodboy’s generalized pipeline.
 
-For each pet, Goodboy should ultimately produce:
+## Documentation
 
-- `pet.json`
-- `spritesheet.webp`
-- contact sheet
-- animated previews
-- source rows
-- transparent rows
-- extracted frames
-- candidate images
-- character card
-- style sheet
-- generation manifest
-- feedback events and branch manifests
-- critique reports
-- QA reports
-- run summary
-- optional Petdex-ready package
+- `docs/2026-05-26-goodboy-user-guide.md` - day-to-day usage, UI usage, commands, troubleshooting.
+- `docs/000-goodboy-master-plan.md` - full project charter, architecture, modules, data model, QA gates, and milestones.
+- `docs/001-module-catalog.md` - module-by-module implementation map.
+- `docs/002-implementation-notes.md` - implementation decisions and proof points.
+- `docs/2026-05-27-goodboy-local-web-ui-requirements.md` - Review Room requirements and current UI state.
+- `docs/2026-05-28-public-github-readiness-scan.md` - public release-readiness scan.
+- `docs/2026-05-28-license-decision.md` - license options and current decision.
+- `tracking/STATUS.md` - current state and next recommended work.
+- `tracking/MILESTONES.md` - milestone checklist.
+- `tracking/DECISIONS.md` - accepted and open decisions.
+- `tracking/RISK_REGISTER.md` - known risks and mitigations.
 
-## Planned Integrations
+## License
 
-Generation adapters:
-
-- Codex built-in image generation
-- OpenAI Images API, default alias `gpt-image-2`
-- Google Gemini Nano Banana 2, default alias `gemini-3.1-flash-image-preview`
-- Google Gemini Nano Banana Pro, default alias `gemini-3-pro-image-preview`
-
-Provider aliases are intentionally configurable. Goodboy records the provider and model alias used for each job because image-generation model names and capabilities can drift.
-
-Product surfaces:
-
-- CLI and Python library
-- Codex skill wrapper
-- Codex plugin package under `plugins/goodboy`
-- repo marketplace under `.agents/plugins/marketplace.json`
-- local Review Room UI under `ui/` for candidate, QA, approval, and visual-inspection workflows
-
-To add the repo marketplace from this checkout:
-
-```bash
-codex plugin marketplace add /Users/adamallcock/Documents/Coding/goodboy
-```
+Goodboy is released under the MIT License. See `LICENSE`.

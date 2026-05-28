@@ -1,6 +1,6 @@
 ---
 name: goodboy
-description: Create, continue, validate, QA, branch, and package Goodboy projects that turn pet source images into Codex pets. Use when the user asks to make a Codex pet from images, regenerate pet sprite sheets, record pet-generation feedback such as happier/centered/trim green, run Goodboy CLI workflows, validate Goodboy manifests, or install/export Goodboy pet packages.
+description: Create, continue, validate, QA, branch, and package Goodboy projects that turn pet source images into Codex pets. Use when the user asks to make a Codex pet from images, regenerate pet sprite sheets, record pet-generation feedback such as happier/centered/trim chroma edges, run Goodboy CLI workflows, validate Goodboy manifests, or install/export Goodboy pet packages.
 ---
 
 # Goodboy
@@ -9,10 +9,10 @@ description: Create, continue, validate, QA, branch, and package Goodboy project
 
 Use Goodboy as the manifest-first workflow for producing Codex pets from source images. Keep source images, candidate prompts, selected baselines, feedback branches, provider handoffs, QA reports, and installable packages in the project folder rather than in chat history.
 
-Default project root is `/Users/adamallcock/Documents/Coding/goodboy` unless the user specifies another Goodboy checkout. Run commands from the Goodboy repository with:
+Default project root is `/path/to/goodboy` unless the user specifies another Goodboy checkout. Run commands from the Goodboy repository with:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli <command>
+goodboy <command>
 ```
 
 For detailed user-facing instructions, read `docs/2026-05-26-goodboy-user-guide.md` in the Goodboy repository.
@@ -22,9 +22,9 @@ For detailed user-facing instructions, read `docs/2026-05-26-goodboy-user-guide.
 1. Prefer `goodboy start` for new projects; it initializes, ingests sources, drafts the source card, plans candidates, renders `candidates/contact-sheet.png`, writes `workflow-state.json`, and stops at the first real gate.
 2. Use `goodboy advance <project-dir> --agent-mode` as the main loop. It runs safe deterministic steps, then stops only for provider generation, baseline choice, visual approval, or QA/user override.
 3. When `advance` asks for baseline selection, rerun it with `--candidate-id`, `--baseline-image`, optional `--run-id`, and `--selection-notes`.
-4. When `advance` asks for row generation, generate provider outputs and rerun it with `--generated-map <generated-output-map.json>`.
-5. When `advance` asks for approval, inspect contact sheet, GIF previews, edge preview, and centering overlay, or use the Review Room UI for visual inspection; then rerun it with `--approval-notes`.
-6. Record every user or AI adjustment with `feedback`; branch names should reflect the reason, such as happier, center-napoleon, or trim-green.
+4. When `advance` asks for row generation, generate provider outputs from the planned handoffs. Row jobs include the canonical selected baseline plus run-local layout guides; attach both and treat guides as spacing references only.
+5. When `advance` asks for approval, inspect the animated state preview or contact sheet, GIF previews, white edge preview, and centering overlay; then rerun it with `--approval-notes`.
+6. Record every user or AI adjustment with `feedback`; branch names should reflect the reason, such as happier, center-subject, or trim-chroma.
 7. Use style presets, subject kinds, and critique reports when the user asks for realistic/anime/object/inanimate customization.
 8. Run tests and `goodboy validate` before claiming completion.
 
@@ -65,12 +65,12 @@ goodboy critique <project-dir> --critique-id vision-001 --target style --finding
 goodboy plan-rows <project-dir> --run-id <run-id> --provider codex_builtin --model-alias codex-imagegen --character-reference character/selected-baseline.png [--refresh]
 goodboy generate-handoff <project-dir> --run-id <run-id> --all
 goodboy import-generated <project-dir> --run-id <run-id> --map <generated-output-map.json>
-goodboy build-review <project-dir> --run-id <run-id> --row-provenance provider_generated
+goodboy build-review <project-dir> --run-id <run-id> --row-provenance provider_generated [--extraction-method auto|components|slots|stable-slots]
 goodboy finish <project-dir> --run-id <run-id> --row-provenance provider_generated --approval-notes "<human approval note>"
 goodboy handoff <project-dir> --run-id <run-id> --job-id row-idle
 goodboy execute-openai <project-dir> --run-id <run-id> --job-id row-idle --dry-run
 goodboy execute-gemini <project-dir> --run-id <run-id> --job-id row-idle --dry-run
-goodboy build-from-rows <project-dir> --run-id <run-id> --rows-dir <row-strip-dir>
+goodboy build-from-rows <project-dir> --run-id <run-id> --rows-dir <row-strip-dir> [--extraction-method auto|components|slots|stable-slots]
 goodboy review-status <project-dir> --run-id <run-id> --agent-mode
 goodboy approve <project-dir> --notes "<human approval note>"
 goodboy approve <project-dir> --run-id <run-id> --artifact contact-sheet --decision approved --notes "<human approval note>"
@@ -82,7 +82,7 @@ goodboy validate <project-dir>
 
 ## Style And Critique
 
-- Use `--preset realistic`, `--preset anime`, `--preset storybook`, `--preset pixel`, `--preset sticker`, or `--preset soft-lifelike` for durable style direction.
+- Use `--preset auto`, `--preset soft-lifelike`, `--preset realistic`, `--preset anime`, `--preset storybook`, `--preset pixel`, `--preset sticker`, `--preset plush`, `--preset clay`, `--preset flat-vector`, `--preset 3d-toy`, `--preset painterly`, or `--preset brand-inspired` for durable style direction.
 - Use `--subject-kind inanimate_object` or `--subject-kind object` when the user wants a pet-like mascot made from a non-animal object.
 - Use `critique --apply-to-style` for AI or human recommendations that should affect later row prompts.
 - Do not silently rewrite selected baselines or generated rows from critique; create critique/feedback artifacts and branch records.
@@ -93,6 +93,14 @@ goodboy validate <project-dir>
 - `openai_images`, `gemini_nano_banana_2`, and `gemini_nano_banana_pro` are optional accelerators. Never present missing keys as a blocker for Codex built-in handoff.
 - Use `execute-openai` only with `OPENAI_API_KEY` in the environment, and `execute-gemini` only with `GEMINI_API_KEY` in the environment. Use `--dry-run` for planning and validation. Never write raw API keys into manifests, docs, logs, or memory.
 - Provider model names are aliases. Preserve the exact alias and invocation metadata in manifests.
+
+## Row Generation Details
+
+- `plan-rows` automatically writes `runs/<run-id>/layout-guides/<state>.png` and `runs/<run-id>/run-metadata.json`.
+- Row prompts use the selected chroma key from run metadata rather than assuming green. Production sprites must not include white borders, white backgrounds, guide marks, or copied slot lines.
+- Each row handoff includes `input_image_roles`. The selected baseline is the canonical identity reference. The layout guide is only for invisible equal-width slots, safe margins, center lines, and stable baseline/scale.
+- Idle is the always-on animation. Keep it intentionally quiet: near-still, tiny blink or barely perceptible breathing only, no tail wagging, bouncing, rhythmic head bobbing, vertical bobbing, or attention-seeking motion.
+- If a good generated row drifts because extraction cropped frames differently, rebuild with `--extraction-method stable-slots` and visually inspect the resulting centering and clipping warnings.
 
 ## QA Bar
 
@@ -111,6 +119,12 @@ Do not call a pet done until these artifacts exist and are current:
 - `runs/<run-id>/package/pet.json`
 - `runs/<run-id>/package/spritesheet.webp`
 
+Compact visual QA prompt for agents:
+
+```text
+Inspect the contact sheet, GIF previews, white edge preview, and centering overlay. Return row-specific repair notes only: state name, issue type, visible evidence, and exact regeneration instruction. Check identity, clipping, drift, duplicated/static frames, copied guide marks, white/nontransparent backgrounds, and chroma-colored residue.
+```
+
 If QA fails, fix the source row/artifact or record an explicit user-approved override. Do not silently install a failing pet. Validation means technically packageable; final installation also requires provenance, a recorded approval, and a clean renderer-script scan.
 
 ## Review Room UI
@@ -120,10 +134,10 @@ Use the local Review Room UI when the user wants visual inspection, a hiring-man
 Current UI validation commands:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy/ui
+cd /path/to/goodboy/ui
 npm run typecheck
 npm run build
 npm run test:e2e
 ```
 
-The first UI slice includes a demo fixture, stage rail, artifact canvas, zoom controls, draggable compare mode, inspector, command palette, activity drawer, and approval demo flow. Full one-command launch and all live mutating frontend actions are still M10 follow-up work, so do not imply the UI replaces the `advance` rail yet.
+The current UI slice includes a demo fixture, simplified decision surface, Petdex-style animated state preview, details drawer, command palette, activity drawer, and approval demo flow. Full one-command launch and all live mutating frontend actions are still M10 follow-up work, so do not imply the UI replaces the `advance` rail yet.

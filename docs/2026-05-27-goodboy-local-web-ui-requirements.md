@@ -261,7 +261,7 @@ Purpose: record human or AI feedback, create branch manifests, inspect critique 
 - FR-QA-003: Show raw row strips and extracted frame grids.
 - FR-QA-004: Show edge preview on white and transparent/checkerboard backgrounds.
 - FR-QA-005: Show centering overlay and centering report.
-- FR-QA-006: Highlight states with clipping, drift, static/duplicate frames, green-edge residue, transparent RGB residue, dimension problems, or component-count warnings.
+- FR-QA-006: Highlight states with clipping, drift, static/duplicate frames, chroma-edge residue, transparent RGB residue, dimension problems, or component-count warnings.
 - FR-QA-007: Provide per-state metrics: frame count, max drift, edge clearance, duplicate suspicion, component counts, and install-blocking severity.
 - FR-QA-008: Provide a human review checklist.
 - FR-QA-009: Let users record approval notes only after required review artifacts exist.
@@ -270,7 +270,7 @@ Purpose: record human or AI feedback, create branch manifests, inspect critique 
 ### 11.7 Feedback And Forks
 
 - FR-FB-001: Record feedback events targeted at source, baseline, style, row, QA, or package.
-- FR-FB-002: Create branch manifests for meaningful changes such as happier, trim-green, center-idle, anime-style, or object-mascot.
+- FR-FB-002: Create branch manifests for meaningful changes such as happier, trim-chroma, center-idle, anime-style, or object-mascot.
 - FR-FB-003: Show branch lineage and active branch.
 - FR-FB-004: Let a user fork from selected baseline, style sheet, row generation run, or QA failure.
 - FR-FB-005: Separate human critique, AI critique, and provider observations in the history.
@@ -351,7 +351,7 @@ Required component families:
 - Use icons for tool actions where familiar symbols exist.
 - Use labels where precision matters, especially for gates and QA severity.
 - Use color sparingly and semantically: pass, warning, fail, selected, provider, branch.
-- Avoid green accents that could visually conflict with chroma-key/green-edge QA.
+- Avoid green accents that could visually conflict with chroma-key/chroma-edge QA.
 - Show real images and previews whenever available.
 - For missing artifacts, show precise empty states with next action, not decorative placeholders.
 - Keep typography tight and professional in dense panels.
@@ -654,21 +654,21 @@ The first Review Room implementation slice exists under `ui/`, backed by the Fas
 
 Implemented:
 
-- Review Room shell with top workflow navigation, gate banner, large artifact canvas, inspector, activity drawer, and command palette.
-- Onboarding screen with Create with Codex, Open project, and Explore Millie demo paths.
+- Review Room shell with top workflow navigation, a simplified decision surface, Petdex-style state preview, details drawer, activity drawer, and command palette.
+- Onboarding screen with Create with Codex, Open project, and Explore companion demo paths.
 - Readable current-step header that makes previous, current, next, and the next user decision explicit.
 - Persistent Home navigation back to onboarding.
-- Decision-focused inspector copy and actions for approval/change requests.
-- Millie demo project with visible source, baseline, row-strip, QA, and package materials for hiring-manager walkthroughs without requiring provider credentials.
-- Labeled per-step artifact filmstrip that explains the files Goodboy created for the current stage.
+- Decision-focused copy and actions for approval/change requests.
+- Generic companion demo project with visible source, baseline, row-strip, QA, and package materials for hiring-manager walkthroughs without requiring provider credentials.
+- Details drawer for generated files, contact sheets, edge preview, QA reports, provenance, and install policy.
 - Walkthrough guide with stage-by-stage navigation and a copyable starter prompt for generating a new pet.
-- Zoom, fit, playback-speed, artifact filmstrip, and draggable compare interactions.
+- Zoom, fit, playback-speed, and compare interactions inside focused preview/detail views.
 - Source, baseline, style, generation, QA, approval/export, and demo-stage panels.
 - Guided project-open card for pasting a Goodboy folder path and connecting the UI to a running Goodboy backend.
 - Approval interaction that records a visual decision and updates the install-readiness gate in the demo state.
-- Frontend typecheck/build and Playwright coverage for visual inspector controls, keyboard reachability, safe refresh, and approval gating.
+- Frontend typecheck/build and Playwright coverage for state preview, details drawer, keyboard reachability, safe refresh, and approval gating.
 - Onboarding screenshot: `docs/assets/review-room-onboarding-2026-05-28.png`.
-- Baseline demo screenshot: `docs/assets/review-room-baseline-millie-demo-2026-05-28.png`.
+- Baseline demo screenshot: `docs/assets/review-room-baseline-companion-demo-2026-05-28.png`.
 - Generation demo screenshot: `docs/assets/review-room-generation-demo-2026-05-28.png`.
 - Open-project screenshot: `docs/assets/review-room-open-project-2026-05-27.png`.
 - Smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-28.png`.

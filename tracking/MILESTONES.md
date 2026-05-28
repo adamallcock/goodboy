@@ -10,8 +10,8 @@ Progress legend:
 
 Status: `[x]`
 
-- `[x]` Create `/Users/adamallcock/Documents/Coding/goodboy`.
-- `[x]` Copy legacy hatch-pet, Millie, and Napoleon scripts as references.
+- `[x]` Create `/path/to/goodboy`.
+- `[x]` Copy legacy hatch-pet and prior pet-generation scripts as references.
 - `[x]` Add master plan, tracking, decision, and risk documents.
 - `[x]` Decide initial implementation language packaging details.
 - `[x]` Create first typed schema files.
@@ -122,14 +122,14 @@ Status: `[x]`
 
 Exit criteria:
 
-- Existing Millie/Napoleon row strips can be rebuilt through Goodboy with matching or better QA metrics.
+- Existing legacy row strips can be rebuilt through Goodboy with matching or better QA metrics.
 
 ## M7: QA Engine
 
 Status: `[x]`
 
 - `[x]` Transparent RGB residue check.
-- `[x]` Green-edge metric.
+- `[x]` Chroma-edge metric.
 - `[x]` Edge clipping check.
 - `[x]` Horizontal and vertical drift measurement.
 - `[x]` State-specific vertical drift thresholds.
@@ -168,7 +168,7 @@ Exit criteria:
 Status: `[x]`
 
 - `[x]` Create Goodboy Codex skill wrapper draft under `codex-skill/goodboy`.
-- `[x]` Install Goodboy Codex skill wrapper to `/Users/adamallcock/.codex/skills/goodboy`.
+- `[x]` Install Goodboy Codex skill wrapper to `$CODEX_HOME/skills/goodboy`.
 - `[x]` Validate repo and installed skill wrappers with the official skill validator.
 - `[x]` Define Codex commands and prompts.
 - `[x]` Support Codex built-in image generation handoff through existing manifests.
@@ -200,26 +200,27 @@ Status: `[~]`
 - `[x]` Choose Review Room as the primary M10 design direction.
 - `[x]` Create complete Review Room implementation plan.
 - `[x]` Add FastAPI backend foundation with project state, artifact indexing, path-safe artifact serving, and workflow action routes.
-- `[x]` Add Review Room frontend shell with stage rail, gate banner, artifact canvas, contextual inspector, command palette, and activity drawer.
+- `[x]` Add Review Room frontend shell with top workflow navigation, decision surface, details drawer, command palette, and activity drawer.
 - `[x]` Add onboarding paths for Create with Codex, Open project, and Explore demo.
 - `[x]` Replace the ambiguous gate label with a readable current-step header and current/next decision summary.
 - `[x]` Add persistent Home navigation back to onboarding from the Review Room.
 - `[x]` Add demo fixture row-strip materials so the Generation walkthrough is not blank.
-- `[x]` Reframe the inspector around user decisions and approval/change requests.
-- `[x]` Add visual inspector interactions: zoom, fit, filmstrip selection, playback-speed control, draggable compare mode, inspector collapse, keyboard shortcuts, and safe demo refresh.
-- `[x]` Add demo fixture suitable for visual walkthroughs.
-- `[x]` Add frontend typecheck/build and Playwright coverage for inspector controls, accessibility basics, approval gating, and refresh behavior.
+- `[x]` Reframe the default view around user decisions and approval/change requests.
+- `[x]` Add focused preview interactions: zoom, fit, playback-speed control, compare mode, keyboard reachability, details drawer, and safe demo refresh.
+- `[x]` Add Petdex-style animated state viewer for completed pet QA.
+- `[x]` Add generic optimized companion demo fixture suitable for visual walkthroughs.
+- `[x]` Add frontend typecheck/build and Playwright coverage for state viewer, details drawer, accessibility basics, approval gating, and refresh behavior.
 - `[~]` Candidate browser.
 - `[~]` Source-image comparison view.
 - `[~]` Baseline selection view.
 - `[x]` Row and contact-sheet review view.
-- `[~]` Animation preview view.
+- `[x]` Animation preview view.
 - `[~]` QA report view.
 - `[~]` Feedback/fork controls.
 - `[ ]` One-command local launch that serves backend and built frontend together.
 - `[ ]` Live frontend wiring for every backend mutating action.
 - `[ ]` Visual snapshots for every primary screen.
-- `[ ]` Final UI install/launch/troubleshooting docs.
+- `[x]` Final UI install/launch/troubleshooting docs for the current alpha slice.
 
 Exit criteria:
 
@@ -242,7 +243,7 @@ Status: `[x]`
 - `[x]` Create architecture docs.
 - `[x]` Create adapter docs.
 - `[x]` Create QA docs.
-- `[x]` Create portable synthetic fixture and keep Millie/Napoleon references.
+- `[x]` Create portable synthetic fixture and keep public-safe legacy references.
 - `[x]` Create troubleshooting guide.
 
 Exit criteria:

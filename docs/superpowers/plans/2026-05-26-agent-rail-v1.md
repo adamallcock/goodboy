@@ -76,7 +76,7 @@ Note: Agent Rail v1 is implemented and has since been extended by Agent Rail v2 
 - Modify: `docs/2026-05-26-goodboy-user-guide.md`
 - Modify: `docs/002-implementation-notes.md`
 - Modify: `codex-skill/goodboy/SKILL.md`
-- Modify: `/Users/adamallcock/.codex/skills/goodboy/SKILL.md`
+- Modify: `$CODEX_HOME/skills/goodboy/SKILL.md`
 
 - [x] Document the simple agent path. Agent Rail v3 now documents the preferred path as `start`, `advance --agent-mode`, provider generation, generated-output map import through `advance`, and approval/install through `advance`.
 - [x] Update the installed skill to prefer the simple commands.

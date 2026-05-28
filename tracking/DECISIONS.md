@@ -6,7 +6,7 @@
 
 Every run must be driven by structured manifests rather than loose filenames and implicit prompts.
 
-Reason: Millie and Napoleon were successful, but one-off state lived in chat, file timestamps, copied paths, and local judgment. Goodboy needs repeatability.
+Reason: prior one-off pet runs were successful, but one-off state lived in chat, file timestamps, copied paths, and local judgment. Goodboy needs repeatability.
 
 ### D002: Copy Reference Assets, Do Not Move Them
 
@@ -33,7 +33,7 @@ Reason: exact regeneration is not guaranteed across providers, especially when s
 
 ### D005: QA Gates Are Product Features
 
-Centering, clipping, duplicate detection, transparent RGB residue, green-edge detection, and visual previews are not optional polish. They are core output correctness.
+Centering, clipping, duplicate detection, transparent RGB residue, chroma-edge detection, and visual previews are not optional polish. They are core output correctness.
 
 ### D006: Plan Candidate Intent Before Image Generation
 
@@ -45,7 +45,7 @@ Reason: the user should be able to choose a character direction, regenerate it, 
 
 Human and AI feedback must be written to `feedback/events.json`; branch-worthy feedback also writes `branches/<branch-id>/branch.json`.
 
-Reason: repeated pet iteration phrases such as "happier", "trim green closer", and "center Napoleon" are product decisions and should not live only in chat or folder names.
+Reason: repeated pet iteration phrases such as "happier", "trim chroma edges closer", and "center subject" are product decisions and should not live only in chat or folder names.
 
 ### D008: Install Requires QA Policy Approval
 

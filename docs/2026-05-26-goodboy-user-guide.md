@@ -13,24 +13,23 @@ Use this guide for day-to-day operation. Use `docs/000-goodboy-master-plan.md` f
 
 ## Where Things Live
 
-- Goodboy repository: `/Users/adamallcock/Documents/Coding/goodboy`
-- Installed Goodboy Codex skill: `/Users/adamallcock/.codex/skills/goodboy`
-- Goodboy Codex plugin package: `/Users/adamallcock/Documents/Coding/goodboy/plugins/goodboy`
-- Goodboy repo marketplace: `/Users/adamallcock/Documents/Coding/goodboy/.agents/plugins/marketplace.json`
+- Goodboy repository: `/path/to/goodboy`
+- Installed Goodboy Codex skill: `$CODEX_HOME/skills/goodboy`
+- Goodboy Codex plugin package: `/path/to/goodboy/plugins/goodboy`
+- Goodboy repo marketplace: `/path/to/goodboy/.agents/plugins/marketplace.json`
 - Legacy reference scripts: `references/legacy-pipeline/`
 - Portable test fixture: `tests/fixtures/synthetic-row-strips/`
 
 Run CLI commands from the repository:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy
-export GOODBOY_PY=/Applications/Xcode.app/Contents/Developer/usr/bin/python3
+cd /path/to/goodboy
 ```
 
 Then use:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli <command>
+goodboy <command>
 ```
 
 ## Use From Codex
@@ -52,7 +51,7 @@ Important guardrail: Goodboy agents should not write one-off renderer scripts or
 Prefer this when asking Codex agents to start a new pet project:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli start /tmp/goodboy-demo \
+goodboy start /tmp/goodboy-demo \
   --pet-id demo \
   --display-name Demo \
   --species dog \
@@ -64,32 +63,32 @@ This creates the project, ingests sources, drafts `sources/source-card.json`, pl
 Then use `advance` as the fast pass:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mode
+goodboy advance /tmp/goodboy-demo --agent-mode
 ```
 
 `advance` runs every safe deterministic step it can, then stops only at a real gate: provider generation, baseline choice, visual approval, or QA/user override. It reports `gate`, `actions`, `next_human_action`, `artifacts_to_show_user`, and optional API accelerators. Use `doctor --agent-mode` for diagnostics when the state looks surprising.
 
-OpenAI and Gemini API keys are optional accelerators. Without keys, Goodboy uses Codex built-in handoff. With `OPENAI_API_KEY` or `GEMINI_API_KEY`, direct provider execution can be faster.
+OpenAI and Gemini API keys are optional accelerators. Without keys, Goodboy uses Codex built-in handoff. With `OPENAI_API_KEY` or `GEMINI_API_KEY`, direct provider execution can be faster, but missing keys are not a setup failure.
 
 ## Style And Subject Customization
 
-Goodboy style sheets preserve style as a durable artifact rather than only a prompt phrase. Use `style-default` with options to create realistic, anime, storybook, pixel, sticker, or soft-lifelike directions, including mascot-style inanimate objects.
+Goodboy style sheets preserve style as a durable artifact rather than only a prompt phrase. Use `style-default` with options to create realistic, anime, storybook, pixel, sticker, plush, clay, flat-vector, 3D toy, painterly, brand-inspired, or soft-lifelike directions, including mascot-style inanimate objects.
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli style-default /tmp/goodboy-demo \
+goodboy style-default /tmp/goodboy-demo \
   --preset anime \
   --subject-kind inanimate_object \
   --user-style "make the lamp look cozy and magical"
 ```
 
-Supported preset IDs include `soft-lifelike`, `realistic`, `anime`, `storybook`, `pixel`, and `sticker`.
+Supported preset IDs include `auto`, `soft-lifelike`, `realistic`, `anime`, `storybook`, `pixel`, `sticker`, `plush`, `clay`, `flat-vector`, `3d-toy`, `painterly`, and `brand-inspired`.
 
 Useful subject kinds include `pet`, `animal`, `person`, `object`, `inanimate_object`, and `fantasy_creature`.
 
 For AI or human critique, write a structured critique report. If the recommendation should affect later row prompts, pass `--apply-to-style`.
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli critique /tmp/goodboy-demo \
+goodboy critique /tmp/goodboy-demo \
   --critique-id vision-001 \
   --target style \
   --finding "object reads too flat" \
@@ -100,7 +99,7 @@ PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli critique /tmp/goodboy-demo \
 For source provenance and EXIF:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli provenance /tmp/goodboy-demo
+goodboy provenance /tmp/goodboy-demo
 ```
 
 ## Codex Plugin
@@ -118,19 +117,19 @@ plugins/goodboy/skills/goodboy/SKILL.md
 To add this marketplace from the local checkout:
 
 ```bash
-codex plugin marketplace add /Users/adamallcock/Documents/Coding/goodboy
+codex plugin marketplace add /path/to/goodboy
 ```
 
-The current plugin does not replace visual QA artifacts. Continue reviewing `qa/contact-sheet.png`, `qa/previews/*.gif`, `qa/edge-preview-white.png`, and `qa/centering-overlay.png` before approval.
+The current plugin does not replace visual QA artifacts. Continue reviewing the Review Room state preview or `qa/contact-sheet.png`, plus `qa/previews/*.gif`, `qa/edge-preview-white.png`, and `qa/centering-overlay.png` before approval.
 
 Typical loop:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli start /tmp/goodboy-demo --pet-id demo --display-name Demo --species dog --source /absolute/path/to/source.png
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mode
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mode --candidate-id baseline-001 --baseline-image /absolute/path/to/generated-baseline.png --run-id planned-row-generation --selection-notes "selected by the user"
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mode --run-id planned-row-generation --generated-map /absolute/path/to/generated-output-map.json --row-provenance provider_generated
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo --agent-mode --run-id planned-row-generation --row-provenance provider_generated --approval-notes "User approved contact sheet and previews"
+goodboy start /tmp/goodboy-demo --pet-id demo --display-name Demo --species dog --source /absolute/path/to/source.png
+goodboy advance /tmp/goodboy-demo --agent-mode
+goodboy advance /tmp/goodboy-demo --agent-mode --candidate-id baseline-001 --baseline-image /absolute/path/to/generated-baseline.png --run-id planned-row-generation --selection-notes "selected by the user"
+goodboy advance /tmp/goodboy-demo --agent-mode --run-id planned-row-generation --generated-map /absolute/path/to/generated-output-map.json --row-provenance provider_generated
+goodboy advance /tmp/goodboy-demo --agent-mode --run-id planned-row-generation --row-provenance provider_generated --approval-notes "User approved contact sheet and previews"
 ```
 
 ## Local Review Room UI
@@ -139,24 +138,24 @@ Goodboy also has a first M10 local UI slice called Review Room. Use it when you 
 
 Current capabilities:
 
-- Demo Review Room shell with top workflow navigation, gate banner, artifact canvas, contextual inspector, activity drawer, walkthrough guide, and command palette.
-- Onboarding paths for agent-led creation, opening an existing Goodboy folder, and exploring a safe Millie demo.
+- Demo Review Room shell with top workflow navigation, gate banner, simplified decision surface, Petdex-style animated state preview, details drawer, walkthrough guide, and command palette.
+- Onboarding paths for agent-led creation, opening an existing Goodboy folder, and exploring a generic companion demo.
 - Readable current-step header that shows the previous step, current step, next step, and next user decision.
 - Persistent Home navigation in the header for returning to the onboarding screen.
-- Decision panel that explains whether to approve, request changes, or continue reviewing.
-- Zoom, fit, playback-speed, and draggable compare controls.
-- Labeled per-step artifact filmstrip that explains the files Goodboy created for the current stage.
-- Real Millie demo materials for source, baseline, row-strip, QA, and export review stages.
+- Decision surface that explains whether to approve, request changes, or continue reviewing.
+- Zoom, fit, playback-speed, and compare controls only in focused preview/detail views.
+- Details drawer for generated files, QA reports, install policy, provenance, and raw artifacts.
+- Generic companion demo materials for source, baseline, row-strip, QA, and export review stages.
 - Walkthrough guide with step-by-step stage navigation and a copyable starter prompt for creating your own pet.
 - Source, baseline, style, generation, QA, approval/export, and demo panels.
 - Guided project-open card for pasting a local Goodboy folder path and connecting to the FastAPI backend when it is running.
 - Visual approval demo flow that updates the gate and activity drawer.
-- Playwright coverage for inspector controls, keyboard reachability, safe demo refresh, and approval gating.
+- Playwright coverage for the state viewer, details drawer, keyboard reachability, safe demo refresh, and approval gating.
 
 Install and run the frontend demo:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy/ui
+cd /path/to/goodboy/ui
 npm install
 npm run dev
 ```
@@ -170,7 +169,7 @@ http://127.0.0.1:5173/
 Run UI validation:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy/ui
+cd /path/to/goodboy/ui
 npm run typecheck
 npm run build
 npm run test:e2e
@@ -179,8 +178,8 @@ npm run test:e2e
 Run the backend/Python validation from the repo root:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy
-PYTHONPATH=src "$GOODBOY_PY" -m unittest discover -s tests -v
+cd /path/to/goodboy
+python -m unittest discover -s tests -v
 ```
 
 The backend foundation lives in `src/goodboy/web/`, and `goodboy ui --help` is available. Full one-command backend-plus-frontend launch and full live mutating UI actions are still M10 follow-up work.
@@ -188,7 +187,7 @@ The backend foundation lives in `src/goodboy/web/`, and `goodboy ui --help` is a
 ### 1. Create A Project
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli init /tmp/goodboy-demo \
+goodboy init /tmp/goodboy-demo \
   --pet-id demo \
   --display-name Demo \
   --species dog
@@ -199,7 +198,7 @@ This creates `goodboy.json` and the standard folders.
 ### 2. Ingest Source Images
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli ingest /tmp/goodboy-demo \
+goodboy ingest /tmp/goodboy-demo \
   /absolute/path/to/source.png \
   --role primary_reference \
   --notes "clear front-facing reference"
@@ -210,7 +209,7 @@ Goodboy copies the image into `sources/originals/`, hashes it, deduplicates by h
 ### 3. Create The Source Card
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli source-card /tmp/goodboy-demo \
+goodboy source-card /tmp/goodboy-demo \
   --notes "friendly, fluffy, keep the red bandana"
 ```
 
@@ -219,7 +218,7 @@ Edit `sources/source-card.json` manually if needed before planning candidates.
 ### 4. Plan Baseline Candidates
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli plan-candidates /tmp/goodboy-demo \
+goodboy plan-candidates /tmp/goodboy-demo \
   --provider codex_builtin \
   --model-alias codex-imagegen \
   --count 6
@@ -230,7 +229,7 @@ This writes candidate prompts and metadata under `candidates/` and renders `cand
 ### 5. Select The Canonical Baseline
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli select-candidate /tmp/goodboy-demo \
+goodboy select-candidate /tmp/goodboy-demo \
   --candidate-id baseline-001 \
   --image-path /absolute/path/to/generated-baseline.png \
   --notes "best likeness and warmest expression"
@@ -247,9 +246,9 @@ This writes:
 Do this whenever a user or vision critic asks for a change:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli feedback /tmp/goodboy-demo \
+goodboy feedback /tmp/goodboy-demo \
   --target baseline-001 \
-  --text "make him happier and trim green closer"
+  --text "make him happier and trim chroma edges closer"
 ```
 
 This writes:
@@ -261,34 +260,40 @@ Examples of good feedback targets:
 
 - `baseline-001`
 - `row:running-left`
-- `qa:green-edge`
+- `qa:chroma-edge` or legacy `qa:chroma-edge`
 - `qa:centering`
 
 ### 7. Plan Rows
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli style-default /tmp/goodboy-demo
+goodboy style-default /tmp/goodboy-demo
 
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli plan-rows /tmp/goodboy-demo \
+goodboy plan-rows /tmp/goodboy-demo \
   --run-id planned-row-generation \
   --provider codex_builtin \
   --model-alias codex-imagegen \
   --character-reference character/selected-baseline.png
 ```
 
-This writes one generation job per Codex state. `style-default` and `plan-rows` are idempotent by default; pass `--refresh` only when you intentionally want to rewrite existing plans.
+This writes one generation job per Codex state, run-local layout guides under `runs/<run-id>/layout-guides/`, and `runs/<run-id>/run-metadata.json` with the selected chroma key. Each row job includes the canonical selected baseline plus its layout guide. The guide is only for invisible equal-width slots, safe margins, center lines, and stable scale/baseline; production output must not copy guide marks.
+
+The idle row is intentionally the quietest state because it plays continuously. Goodboy prompts for an almost-still loop with only a tiny blink or barely perceptible breathing cue, and explicitly avoids tail wagging, bouncing, vertical bobbing, and other attention-seeking motion.
+
+`style-default` and `plan-rows` are idempotent by default; pass `--refresh` only when you intentionally want to rewrite existing plans.
 
 ### 8. Generate Or Handoff Provider Jobs
 
 For Codex built-in generation:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli generate-handoff /tmp/goodboy-demo \
+goodboy generate-handoff /tmp/goodboy-demo \
   --run-id planned-row-generation \
   --all
 ```
 
 This writes all row handoff manifests under `runs/<run-id>/provider-invocations/`. Use the handoff manifests to generate the row strips in Codex, then create a generated-output map rather than copying files by hand:
+
+When generating rows, attach the canonical baseline and the state layout guide from the handoff. The prompt will name the selected chroma-key color. Do not add white borders or white backgrounds; white is used later only for QA previews.
 
 ```json
 {
@@ -307,7 +312,7 @@ This writes all row handoff manifests under `runs/<run-id>/provider-invocations/
 Import those generated outputs:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli import-generated /tmp/goodboy-demo \
+goodboy import-generated /tmp/goodboy-demo \
   --run-id planned-row-generation \
   --map /absolute/path/to/generated-output-map.json
 ```
@@ -317,7 +322,7 @@ PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli import-generated /tmp/goodboy-demo \
 For OpenAI Images API:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli execute-openai /tmp/goodboy-demo \
+goodboy execute-openai /tmp/goodboy-demo \
   --run-id planned-row-generation \
   --job-id row-idle \
   --dry-run
@@ -328,7 +333,7 @@ Remove `--dry-run` only when `OPENAI_API_KEY` is set in the environment.
 For Gemini/Nano Banana:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli execute-gemini /tmp/goodboy-demo \
+goodboy execute-gemini /tmp/goodboy-demo \
   --run-id planned-row-generation \
   --job-id row-idle \
   --dry-run
@@ -343,9 +348,18 @@ Goodboy records provider invocations under `runs/<run-id>/provider-invocations/`
 When all generated rows are imported, build the pet for review:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli build-review /tmp/goodboy-demo \
+goodboy build-review /tmp/goodboy-demo \
   --run-id planned-row-generation \
   --row-provenance provider_generated
+```
+
+For recovery when generated art is visually good but deterministic extraction causes apparent size popping or idle drift, rebuild with:
+
+```bash
+goodboy build-review /tmp/goodboy-demo \
+  --run-id planned-row-generation \
+  --row-provenance provider_generated \
+  --extraction-method stable-slots
 ```
 
 The build writes:
@@ -370,9 +384,15 @@ The build writes:
 This build step is intentionally allowed before final approval so you can inspect the contact sheet, GIF previews, edge preview, centering overlay, and QA reports. Installing is stricter. If you want a read-only review summary after building, run:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli review-status /tmp/goodboy-demo \
+goodboy review-status /tmp/goodboy-demo \
   --run-id planned-row-generation \
   --agent-mode
+```
+
+Compact visual QA prompt for agents:
+
+```text
+Inspect the contact sheet, GIF previews, white edge preview, and centering overlay. Return row-specific repair notes only: state name, issue type, visible evidence, and exact regeneration instruction. Check identity, clipping, drift, duplicated/static frames, copied guide marks, white/nontransparent backgrounds, and chroma-colored residue.
 ```
 
 ### 10. Finish After Visual Approval
@@ -380,7 +400,7 @@ PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli review-status /tmp/goodboy-demo \
 After the user approves the contact sheet and previews:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli finish /tmp/goodboy-demo \
+goodboy finish /tmp/goodboy-demo \
   --run-id planned-row-generation \
   --row-provenance provider_generated \
   --approval-notes "User approved contact sheet and previews on 2026-05-26"
@@ -391,7 +411,7 @@ PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli finish /tmp/goodboy-demo \
 ### 11. Validate The Project
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli validate /tmp/goodboy-demo
+goodboy validate /tmp/goodboy-demo
 ```
 
 This validates manifests and referenced artifact paths. It writes:
@@ -423,14 +443,14 @@ Renderer/mock provenance values such as `mock_renderer`, `local_renderer`, `prog
 Export a full Goodboy project bundle:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli export project /tmp/goodboy-demo \
+goodboy export project /tmp/goodboy-demo \
   --run-id planned-row-generation
 ```
 
 Export a Petdex-ready folder and zip:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli export petdex /tmp/goodboy-demo \
+goodboy export petdex /tmp/goodboy-demo \
   --run-id planned-row-generation
 ```
 
@@ -439,7 +459,7 @@ Goodboy writes exports under `exports/<run-id>/` by default.
 Normal command after visual review:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo \
+goodboy advance /tmp/goodboy-demo \
   --agent-mode \
   --run-id planned-row-generation \
   --row-provenance provider_generated \
@@ -449,7 +469,7 @@ PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo \
 Use a QA override only when the user has explicitly accepted a remaining technical issue:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli advance /tmp/goodboy-demo \
+goodboy advance /tmp/goodboy-demo \
   --agent-mode \
   --run-id planned-row-generation \
   --row-provenance provider_generated \
@@ -466,7 +486,7 @@ Previous installed packages are archived before overwrite.
 Run the full suite:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```
 
 Run a portable fixture smoke:
@@ -474,13 +494,13 @@ Run a portable fixture smoke:
 ```bash
 rm -rf /tmp/goodboy-smoke
 
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli build-from-rows /tmp/goodboy-smoke \
+goodboy build-from-rows /tmp/goodboy-smoke \
   --run-id smoke \
   --rows-dir tests/fixtures/synthetic-row-strips \
   --pet-id smoke \
   --display-name Smoke
 
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli validate /tmp/goodboy-smoke
+goodboy validate /tmp/goodboy-smoke
 ```
 
 The fixture smoke intentionally uses the lower-level `build-from-rows` command because it starts from preexisting row strips. Normal generated projects should use `advance`.
@@ -496,14 +516,14 @@ Open `validation/manifest-validation.json`, find the first error path, and eithe
 Record feedback rather than overwriting:
 
 ```bash
-PYTHONPATH=src "$GOODBOY_PY" -m goodboy.cli feedback /tmp/goodboy-demo \
+goodboy feedback /tmp/goodboy-demo \
   --target baseline-001 \
   --text "make the expression happier but keep the face shape"
 ```
 
 Then generate a new branch/candidate from that recorded intent.
 
-### Green Halo Or Edge Clipping
+### Chroma Halo Or Edge Clipping
 
 Inspect:
 

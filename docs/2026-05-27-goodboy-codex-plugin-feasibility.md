@@ -24,7 +24,7 @@ The docs also define repo marketplaces at `$REPO_ROOT/.agents/plugins/marketplac
 Sources:
 
 - OpenAI Codex build plugins documentation: `https://developers.openai.com/codex/plugins/build`
-- Local plugin creator validator: `/Users/adamallcock/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py`
+- Local plugin creator validator: `$CODEX_HOME/skills/.system/plugin-creator/scripts/validate_plugin.py`
 
 ## Requirements Checked
 

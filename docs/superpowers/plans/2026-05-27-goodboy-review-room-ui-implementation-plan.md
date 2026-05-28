@@ -20,7 +20,7 @@ status: active
 Updated 2026-05-28:
 
 - Backend foundation is implemented under `src/goodboy/web/` with typed view models, artifact indexing, path-safe artifact serving, project registry, action wrappers, FastAPI routes, and `goodboy ui --help`.
-- Frontend first slice is implemented under `ui/` with the Review Room shell, top workflow navigation, artifact canvas, labeled per-step artifact filmstrip, zoom controls, draggable compare mode, contextual inspector, command palette, walkthrough guide, activity drawer, source/baseline/style/generation/QA/approval/demo panels, and a real Millie-asset demo mode. The original left stage rail component has been retired from the active shell to avoid duplicate navigation.
+- Frontend first slice is implemented under `ui/` with the Review Room shell, top workflow navigation, artifact canvas, labeled per-step artifact filmstrip, zoom controls, draggable compare mode, contextual inspector, command palette, walkthrough guide, activity drawer, source/baseline/style/generation/QA/approval/demo panels, and a real companion-asset demo mode. The original left stage rail component has been retired from the active shell to avoid duplicate navigation.
 - Tests exist for backend models/artifacts/actions/API and frontend inspector interactions/accessibility gates.
 - Current smoke screenshot: `docs/assets/review-room-ui-smoke-2026-05-28.png`.
 - M10 is still in progress because live frontend actions, one-command launch, real artifact rendering coverage across all stages, and full documentation/troubleshooting are not complete.
@@ -164,7 +164,7 @@ M10 is complete when all of the following are true:
 - Modify: `tracking/MILESTONES.md`
 - Modify: `tracking/STATUS.md`
 - Modify: `codex-skill/goodboy/SKILL.md`
-- Modify: `/Users/adamallcock/.codex/skills/goodboy/SKILL.md`
+- Modify: `$CODEX_HOME/skills/goodboy/SKILL.md`
 - Modify: `plugins/goodboy/skills/goodboy/SKILL.md`
 
 ## 5. Data Contracts
@@ -348,7 +348,7 @@ class GoodboyWebCliTests(unittest.TestCase):
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_api.GoodboyWebCliTests.test_ui_help_command_is_registered -v
+python -m unittest tests.test_web_api.GoodboyWebCliTests.test_ui_help_command_is_registered -v
 ```
 
 Expected: failure because `ui` is not registered.
@@ -431,7 +431,7 @@ return 0
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_api.GoodboyWebCliTests.test_ui_help_command_is_registered -v
+python -m unittest tests.test_web_api.GoodboyWebCliTests.test_ui_help_command_is_registered -v
 ```
 
 Expected: pass.
@@ -480,7 +480,7 @@ class WebModelTests(unittest.TestCase):
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_models -v
+python -m unittest tests.test_web_models -v
 ```
 
 Expected: failure because `goodboy.web.models` is missing helpers.
@@ -568,7 +568,7 @@ def severity_for_stage(stage: str) -> Severity:
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_models -v
+python -m unittest tests.test_web_models -v
 ```
 
 Expected: pass.
@@ -619,7 +619,7 @@ class ProjectRegistryTests(unittest.TestCase):
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_api.ProjectRegistryTests -v
+python -m unittest tests.test_web_api.ProjectRegistryTests -v
 ```
 
 Expected: failure because `ProjectRegistry` is missing.
@@ -665,7 +665,7 @@ class ProjectRegistry:
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_api.ProjectRegistryTests -v
+python -m unittest tests.test_web_api.ProjectRegistryTests -v
 ```
 
 Expected: pass.
@@ -727,7 +727,7 @@ class ArtifactIndexTests(unittest.TestCase):
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_artifacts -v
+python -m unittest tests.test_web_artifacts -v
 ```
 
 Expected: failure because artifact indexing does not exist.
@@ -865,7 +865,7 @@ def build_artifact_index(project_dir: Path, project_id: str) -> ArtifactIndex:
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_artifacts -v
+python -m unittest tests.test_web_artifacts -v
 ```
 
 Expected: pass.
@@ -920,7 +920,7 @@ class ProjectStateApiTests(unittest.TestCase):
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_api.ProjectStateApiTests.test_open_project_and_read_state -v
+python -m unittest tests.test_web_api.ProjectStateApiTests.test_open_project_and_read_state -v
 ```
 
 Expected: failure because `create_app` is missing.
@@ -1074,7 +1074,7 @@ def create_app(registry: ProjectRegistry | None = None) -> FastAPI:
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_api.ProjectStateApiTests.test_open_project_and_read_state -v
+python -m unittest tests.test_web_api.ProjectStateApiTests.test_open_project_and_read_state -v
 ```
 
 Expected: pass.
@@ -1144,7 +1144,7 @@ class WebActionTests(unittest.TestCase):
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_actions -v
+python -m unittest tests.test_web_actions -v
 ```
 
 Expected: failure because action wrappers are missing.
@@ -1194,7 +1194,7 @@ Add routes in `src/goodboy/web/server.py` that resolve project ID, call action w
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_actions -v
+python -m unittest tests.test_web_actions -v
 ```
 
 Expected: pass.
@@ -1204,7 +1204,7 @@ Expected: pass.
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest tests.test_web_models tests.test_web_artifacts tests.test_web_api tests.test_web_actions -v
+python -m unittest tests.test_web_models tests.test_web_artifacts tests.test_web_api tests.test_web_actions -v
 ```
 
 Expected: pass.
@@ -1659,7 +1659,7 @@ Support toggling edge preview and centering overlay into the canvas.
 
 - [ ] **Step 4: Add QA metrics**
 
-Display validation, duplicate audit, centering report, install policy, component warnings, green-edge residue, clipping, drift, and static-frame status.
+Display validation, duplicate audit, centering report, install policy, component warnings, chroma-edge residue, clipping, drift, and static-frame status.
 
 - [ ] **Step 5: Add human review checklist**
 
@@ -1797,7 +1797,7 @@ When `ui/dist` exists, FastAPI should serve built frontend assets.
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli ui /tmp/goodboy-demo --no-open
+goodboy ui /tmp/goodboy-demo --no-open
 cd ui && npm run dev -- --port 5173
 ```
 
@@ -1880,7 +1880,7 @@ Ensure API responses never include raw values for `OPENAI_API_KEY` or `GEMINI_AP
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```
 
 Expected: pass.
@@ -1903,7 +1903,7 @@ git commit -m "Harden Review Room backend safety"
 - Modify: `tracking/MILESTONES.md`
 - Modify: `tracking/STATUS.md`
 - Modify: `codex-skill/goodboy/SKILL.md`
-- Modify: `/Users/adamallcock/.codex/skills/goodboy/SKILL.md`
+- Modify: `$CODEX_HOME/skills/goodboy/SKILL.md`
 - Modify: `plugins/goodboy/skills/goodboy/SKILL.md`
 
 - [ ] **Step 1: Document install**
@@ -1911,8 +1911,8 @@ git commit -m "Harden Review Room backend safety"
 Add:
 
 ```bash
-cd /Users/adamallcock/Documents/Coding/goodboy
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m pip install -e ".[ui]"
+cd /path/to/goodboy
+PYTHONPATH=src python -m pip install -e ".[ui]"
 cd ui && npm install
 ```
 
@@ -1921,7 +1921,7 @@ cd ui && npm install
 Add:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli ui /absolute/path/to/project
+goodboy ui /absolute/path/to/project
 cd ui && npm run dev -- --port 5173
 ```
 
@@ -1938,7 +1938,7 @@ Add guidance that agents should use Review Room for image-heavy inspection when 
 Run:
 
 ```bash
-rg -n "Review Room|goodboy ui|optional accelerator|visual approval" README.md docs codex-skill plugins/goodboy/skills /Users/adamallcock/.codex/skills/goodboy/SKILL.md
+rg -n "Review Room|goodboy ui|optional accelerator|visual approval" README.md docs codex-skill plugins/goodboy/skills $CODEX_HOME/skills/goodboy/SKILL.md
 git diff --check
 ```
 
@@ -1956,7 +1956,7 @@ git commit -m "Document Review Room UI workflow"
 Then copy the updated repo skill to the installed skill location:
 
 ```bash
-cp codex-skill/goodboy/SKILL.md /Users/adamallcock/.codex/skills/goodboy/SKILL.md
+cp codex-skill/goodboy/SKILL.md $CODEX_HOME/skills/goodboy/SKILL.md
 ```
 
 ### Task 22: Final Verification And Release Commit
@@ -1969,7 +1969,7 @@ cp codex-skill/goodboy/SKILL.md /Users/adamallcock/.codex/skills/goodboy/SKILL.m
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```
 
 Expected: all tests pass.
@@ -1989,7 +1989,7 @@ Expected: all checks pass.
 Run:
 
 ```bash
-PYTHONPATH=src /Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m goodboy.cli ui /tmp/goodboy-demo --no-open
+goodboy ui /tmp/goodboy-demo --no-open
 cd ui && npm run dev -- --port 5173
 ```
 
@@ -2050,7 +2050,7 @@ Use frequent commits matching the task boundaries:
 | Artifact serving leaks local files | Privacy/security failure | Serve only indexed artifacts from registered project roots; test traversal attempts. |
 | Missing optional provider keys look like failures | User confusion | Label API keys as optional accelerators and keep Codex handoff path primary. |
 | Frontend becomes generic shadcn dashboard | Weak hiring-manager impression | Use custom tokens, artifact-first layout, and Review Room-specific components. |
-| Demo mode uses fake artifacts | Product feels shallow | Use the bundled Millie demo assets and real Goodboy artifact shapes. |
+| Demo mode uses fake artifacts | Product feels shallow | Use the bundled companion demo assets and real Goodboy artifact shapes. |
 | Playwright setup becomes brittle | Slow verification | Keep e2e flows focused on core gates and visual surfaces. |
 
 ## 11. Self-Review

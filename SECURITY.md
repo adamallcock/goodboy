@@ -15,4 +15,3 @@ Do not include raw API keys, private source images, generated provider payloads,
 Goodboy reads provider credentials from environment variables such as `OPENAI_API_KEY` and `GEMINI_API_KEY`. The project is designed not to write raw keys into manifests, logs, docs, or generated packages.
 
 Local Goodboy project folders can contain private source images, generated character art, approvals, provider metadata, and install packages. The repository ignores `projects/**` by default; keep private projects outside commits unless they are deliberate synthetic fixtures.
-

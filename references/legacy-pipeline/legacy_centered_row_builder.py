@@ -386,7 +386,7 @@ def build_row(strip: Image.Image, state: str, count: int) -> list[Image.Image]:
 
 def main() -> None:
     run_dir = Path(__file__).resolve().parents[1]
-    version = os.environ.get("NAPOLEON_ROW_STRIP_VERSION", "v5")
+    version = os.environ.get("LEGACY_ROW_STRIP_VERSION", "v5")
     strips_dir = run_dir / "generated" / f"{version}-transparent-strips"
     source_dir = run_dir / "generated" / f"{version}-row-strips"
     frames_root = run_dir / "frames"

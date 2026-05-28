@@ -16,9 +16,9 @@ Recommended setup:
   python3 -m pip install "goodboy @ git+https://github.com/adamallcock/goodboy.git"
 
 Then run:
-  npx goodboy --help
-  npx goodboy start <project-dir> --pet-id <id> --display-name <name> --species dog --source <image>
-  npx goodboy advance <project-dir> --agent-mode
+  npx @adamallcock/goodboy --help
+  npx @adamallcock/goodboy start <project-dir> --pet-id <id> --display-name <name> --species dog --source <image>
+  npx @adamallcock/goodboy advance <project-dir> --agent-mode
 
 Environment:
   GOODBOY_PYTHON=/path/to/python  Choose the Python interpreter used to run Goodboy.

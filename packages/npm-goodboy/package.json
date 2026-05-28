@@ -1,5 +1,5 @@
 {
-  "name": "goodboy",
+  "name": "@adamallcock/goodboy",
   "version": "0.1.0",
   "description": "npm launcher for Goodboy, a Codex pet generation pipeline.",
   "license": "MIT",

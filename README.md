@@ -54,10 +54,10 @@ After installing dependencies, source-checkout development can also use the modu
 PYTHONPATH=src python -m goodboy.cli --help
 ```
 
-For npm users, `goodboy` is also available as a small launcher package:
+For npm users, `@adamallcock/goodboy` is also available as a small launcher package:
 
 ```bash
-npx goodboy --help
+npx @adamallcock/goodboy --help
 ```
 
 The npm package delegates to the Python Goodboy CLI. Install Goodboy into your Python environment first:

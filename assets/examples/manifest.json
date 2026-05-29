@@ -1,10 +1,10 @@
 {
-  "description": "README examples synced from completed Goodboy QA output folders. These files are copied from qa/previews and qa/contact-sheet.png; they are not re-rendered by this script.",
+  "description": "README examples synced from completed Goodboy QA output folders. GIFs and contact sheets are copied from qa outputs; display WebPs are generated from the completed spritesheet atlas with Goodboy's core preview exporter to preserve alpha quality.",
   "examples": [
     {
       "slug": "napoleon",
       "source_kind": "goodboy_qa_output",
-      "display_preview": "previews/idle.gif",
+      "display_preview": "previews-webp/idle.webp",
       "contact_sheet": "contact-sheet.png",
       "states": [
         {
@@ -125,6 +125,137 @@
         {
           "state": "review",
           "file": "previews/review.gif",
+          "frames": 6,
+          "durations_ms": [
+            150,
+            150,
+            150,
+            150,
+            150,
+            280
+          ],
+          "total_duration_ms": 1030
+        }
+      ],
+      "display_states": [
+        {
+          "state": "idle",
+          "file": "previews-webp/idle.webp",
+          "frames": 6,
+          "durations_ms": [
+            280,
+            110,
+            110,
+            140,
+            140,
+            320
+          ],
+          "total_duration_ms": 1100
+        },
+        {
+          "state": "running-right",
+          "file": "previews-webp/running-right.webp",
+          "frames": 8,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 1060
+        },
+        {
+          "state": "running-left",
+          "file": "previews-webp/running-left.webp",
+          "frames": 8,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 1060
+        },
+        {
+          "state": "waving",
+          "file": "previews-webp/waving.webp",
+          "frames": 4,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            280
+          ],
+          "total_duration_ms": 700
+        },
+        {
+          "state": "jumping",
+          "file": "previews-webp/jumping.webp",
+          "frames": 5,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140,
+            280
+          ],
+          "total_duration_ms": 840
+        },
+        {
+          "state": "failed",
+          "file": "previews-webp/failed.webp",
+          "frames": 8,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140,
+            140,
+            140,
+            140,
+            240
+          ],
+          "total_duration_ms": 1220
+        },
+        {
+          "state": "waiting",
+          "file": "previews-webp/waiting.webp",
+          "frames": 6,
+          "durations_ms": [
+            150,
+            150,
+            150,
+            150,
+            150,
+            260
+          ],
+          "total_duration_ms": 1010
+        },
+        {
+          "state": "running",
+          "file": "previews-webp/running.webp",
+          "frames": 6,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 820
+        },
+        {
+          "state": "review",
+          "file": "previews-webp/review.webp",
           "frames": 6,
           "durations_ms": [
             150,
@@ -141,7 +272,7 @@
     {
       "slug": "millie",
       "source_kind": "goodboy_qa_output",
-      "display_preview": "previews/idle.gif",
+      "display_preview": "previews-webp/idle.webp",
       "contact_sheet": "contact-sheet.png",
       "states": [
         {
@@ -273,12 +404,143 @@
           ],
           "total_duration_ms": 1030
         }
+      ],
+      "display_states": [
+        {
+          "state": "idle",
+          "file": "previews-webp/idle.webp",
+          "frames": 6,
+          "durations_ms": [
+            280,
+            110,
+            110,
+            140,
+            140,
+            320
+          ],
+          "total_duration_ms": 1100
+        },
+        {
+          "state": "running-right",
+          "file": "previews-webp/running-right.webp",
+          "frames": 8,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 1060
+        },
+        {
+          "state": "running-left",
+          "file": "previews-webp/running-left.webp",
+          "frames": 8,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 1060
+        },
+        {
+          "state": "waving",
+          "file": "previews-webp/waving.webp",
+          "frames": 4,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            280
+          ],
+          "total_duration_ms": 700
+        },
+        {
+          "state": "jumping",
+          "file": "previews-webp/jumping.webp",
+          "frames": 5,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140,
+            280
+          ],
+          "total_duration_ms": 840
+        },
+        {
+          "state": "failed",
+          "file": "previews-webp/failed.webp",
+          "frames": 8,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140,
+            140,
+            140,
+            140,
+            240
+          ],
+          "total_duration_ms": 1220
+        },
+        {
+          "state": "waiting",
+          "file": "previews-webp/waiting.webp",
+          "frames": 6,
+          "durations_ms": [
+            150,
+            150,
+            150,
+            150,
+            150,
+            260
+          ],
+          "total_duration_ms": 1010
+        },
+        {
+          "state": "running",
+          "file": "previews-webp/running.webp",
+          "frames": 6,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 820
+        },
+        {
+          "state": "review",
+          "file": "previews-webp/review.webp",
+          "frames": 6,
+          "durations_ms": [
+            150,
+            150,
+            150,
+            150,
+            150,
+            280
+          ],
+          "total_duration_ms": 1030
+        }
       ]
     },
     {
       "slug": "shoulder-cat",
       "source_kind": "goodboy_qa_output",
-      "display_preview": "previews/idle.gif",
+      "display_preview": "previews-webp/idle.webp",
       "contact_sheet": "contact-sheet.png",
       "states": [
         {
@@ -399,6 +661,137 @@
         {
           "state": "review",
           "file": "previews/review.gif",
+          "frames": 6,
+          "durations_ms": [
+            150,
+            150,
+            150,
+            150,
+            150,
+            280
+          ],
+          "total_duration_ms": 1030
+        }
+      ],
+      "display_states": [
+        {
+          "state": "idle",
+          "file": "previews-webp/idle.webp",
+          "frames": 6,
+          "durations_ms": [
+            280,
+            110,
+            110,
+            140,
+            140,
+            320
+          ],
+          "total_duration_ms": 1100
+        },
+        {
+          "state": "running-right",
+          "file": "previews-webp/running-right.webp",
+          "frames": 8,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 1060
+        },
+        {
+          "state": "running-left",
+          "file": "previews-webp/running-left.webp",
+          "frames": 8,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 1060
+        },
+        {
+          "state": "waving",
+          "file": "previews-webp/waving.webp",
+          "frames": 4,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            280
+          ],
+          "total_duration_ms": 700
+        },
+        {
+          "state": "jumping",
+          "file": "previews-webp/jumping.webp",
+          "frames": 5,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140,
+            280
+          ],
+          "total_duration_ms": 840
+        },
+        {
+          "state": "failed",
+          "file": "previews-webp/failed.webp",
+          "frames": 8,
+          "durations_ms": [
+            140,
+            140,
+            140,
+            140,
+            140,
+            140,
+            140,
+            240
+          ],
+          "total_duration_ms": 1220
+        },
+        {
+          "state": "waiting",
+          "file": "previews-webp/waiting.webp",
+          "frames": 6,
+          "durations_ms": [
+            150,
+            150,
+            150,
+            150,
+            150,
+            260
+          ],
+          "total_duration_ms": 1010
+        },
+        {
+          "state": "running",
+          "file": "previews-webp/running.webp",
+          "frames": 6,
+          "durations_ms": [
+            120,
+            120,
+            120,
+            120,
+            120,
+            220
+          ],
+          "total_duration_ms": 820
+        },
+        {
+          "state": "review",
+          "file": "previews-webp/review.webp",
           "frames": 6,
           "durations_ms": [
             150,

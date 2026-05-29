@@ -12,7 +12,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageSequence
 
 from goodboy.adapters import execute_gemini_image_job, execute_openai_image_job, get_capabilities, prepare_handoff
-from goodboy.atlas import compose_atlas, render_animation_previews, validate_atlas
+from goodboy.atlas import compose_atlas, render_animation_previews, render_atlas_animation_previews, validate_atlas
 from goodboy.candidates import build_candidate_contact_sheet, plan_baseline_candidates, select_baseline_candidate, store_candidate_image
 from goodboy.cli import main as cli_main
 from goodboy.contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, ROW_FRAME_DURATIONS_MS, STATE_ORDER
@@ -70,6 +70,10 @@ class GoodboyCoreTests(unittest.TestCase):
             report = validate_atlas(root / "spritesheet.webp")
             self.assertTrue(report.ok, report.errors)
             self.assertEqual(report.transparent_rgb_residue_pixels, 0)
+            previews_dir = root / "atlas-previews"
+            render_atlas_animation_previews(root / "spritesheet.webp", previews_dir)
+            with Image.open(previews_dir / "idle.webp") as image:
+                self.assertEqual(getattr(image, "n_frames", 1), ROW_FRAME_COUNTS["idle"])
 
     def test_animation_previews_use_pipeline_state_timing(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -90,6 +94,8 @@ class GoodboyCoreTests(unittest.TestCase):
                 with Image.open(output_dir / f"{state}.gif") as image:
                     durations = [int(frame.info.get("duration", 0)) for frame in ImageSequence.Iterator(image)]
                 self.assertEqual(durations, ROW_FRAME_DURATIONS_MS[state])
+                with Image.open(output_dir / f"{state}.webp") as image:
+                    self.assertEqual(getattr(image, "n_frames", 1), ROW_FRAME_COUNTS[state])
 
     def test_ingest_source_card_style_and_handoff_flow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

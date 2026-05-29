@@ -14,7 +14,8 @@ from PIL import Image, ImageSequence
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from goodboy.contracts import ROW_FRAME_DURATIONS_MS, STATE_ORDER  # noqa: E402
+from goodboy.atlas import render_atlas_animation_previews  # noqa: E402
+from goodboy.contracts import ROW_FRAME_COUNTS, ROW_FRAME_DURATIONS_MS, STATE_ORDER  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,13 @@ class ExampleSource:
     @property
     def contact_sheet(self) -> Path:
         return self.root / "qa" / "contact-sheet.png"
+
+    @property
+    def atlas(self) -> Path:
+        final_atlas = self.root / "final" / "spritesheet.webp"
+        if final_atlas.is_file():
+            return final_atlas
+        return self.root / "package" / "spritesheet.webp"
 
 
 def parse_example(value: str) -> ExampleSource:
@@ -63,31 +71,56 @@ def validate_preview(path: Path, state: str) -> dict[str, object]:
     }
 
 
+def validate_webp_preview(path: Path, state: str) -> dict[str, object]:
+    if not path.is_file():
+        raise SystemExit(f"missing generated WebP preview: {path}")
+    with Image.open(path) as image:
+        frame_count = getattr(image, "n_frames", 1)
+    expected_count = ROW_FRAME_COUNTS[state]
+    if frame_count != expected_count:
+        raise SystemExit(f"{path} frame count {frame_count} != expected {expected_count}")
+    return {
+        "state": state,
+        "file": f"previews-webp/{state}.webp",
+        "frames": frame_count,
+        "durations_ms": ROW_FRAME_DURATIONS_MS[state],
+        "total_duration_ms": sum(ROW_FRAME_DURATIONS_MS[state]),
+    }
+
+
 def sync_example(source: ExampleSource, output_dir: Path) -> dict[str, object]:
     if not source.previews_dir.is_dir():
         raise SystemExit(f"missing pipeline previews directory: {source.previews_dir}")
     if not source.contact_sheet.is_file():
         raise SystemExit(f"missing pipeline contact sheet: {source.contact_sheet}")
+    if not source.atlas.is_file():
+        raise SystemExit(f"missing pipeline spritesheet atlas: {source.atlas}")
 
     destination = output_dir / source.slug
     previews_destination = destination / "previews"
+    webp_destination = destination / "previews-webp"
     if destination.exists():
         shutil.rmtree(destination)
     previews_destination.mkdir(parents=True)
+    webp_destination.mkdir(parents=True)
+    render_atlas_animation_previews(source.atlas, webp_destination)
 
     states = []
+    webp_states = []
     for state in STATE_ORDER:
         source_preview = source.previews_dir / f"{state}.gif"
         states.append(validate_preview(source_preview, state))
         shutil.copy2(source_preview, previews_destination / source_preview.name)
+        webp_states.append(validate_webp_preview(webp_destination / f"{state}.webp", state))
     shutil.copy2(source.contact_sheet, destination / "contact-sheet.png")
 
     return {
         "slug": source.slug,
         "source_kind": "goodboy_qa_output",
-        "display_preview": "previews/idle.gif",
+        "display_preview": "previews-webp/idle.webp",
         "contact_sheet": "contact-sheet.png",
         "states": states,
+        "display_states": webp_states,
     }
 
 
@@ -106,7 +139,7 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest = {
-        "description": "README examples synced from completed Goodboy QA output folders. These files are copied from qa/previews and qa/contact-sheet.png; they are not re-rendered by this script.",
+        "description": "README examples synced from completed Goodboy QA output folders. GIFs and contact sheets are copied from qa outputs; display WebPs are generated from the completed spritesheet atlas with Goodboy's core preview exporter to preserve alpha quality.",
         "examples": [sync_example(source, output_dir) for source in args.example],
     }
     manifest_path = output_dir / "manifest.json"

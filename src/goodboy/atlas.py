@@ -19,6 +19,43 @@ from .raster import clear_transparent_rgb
 from .schemas import ValidationReport
 
 
+def state_frames_from_atlas(atlas_path: Path, state: str) -> list[Image.Image]:
+    atlas = Image.open(atlas_path).convert("RGBA")
+    row = STATE_ORDER.index(state)
+    frames = []
+    for column in range(ROW_FRAME_COUNTS[state]):
+        frames.append(
+            atlas.crop(
+                (
+                    column * CELL_WIDTH,
+                    row * CELL_HEIGHT,
+                    (column + 1) * CELL_WIDTH,
+                    (row + 1) * CELL_HEIGHT,
+                )
+            )
+        )
+    return frames
+
+
+def save_animated_webp(frames: list[Image.Image], output_path: Path, durations: list[int]) -> None:
+    if not frames:
+        return
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    rgba_frames = [clear_transparent_rgb(frame.convert("RGBA")) for frame in frames]
+    rgba_frames[0].save(
+        output_path,
+        format="WEBP",
+        save_all=True,
+        append_images=rgba_frames[1:],
+        duration=durations,
+        loop=0,
+        lossless=True,
+        quality=100,
+        method=0,
+        exact=True,
+    )
+
+
 def compose_atlas(frames_root: Path, *, output_png: Path, output_webp: Path | None = None) -> None:
     atlas = Image.new("RGBA", (ATLAS_WIDTH, ATLAS_HEIGHT), (0, 0, 0, 0))
     for row, state in enumerate(STATE_ORDER):
@@ -140,18 +177,29 @@ def checkerboard(size: tuple[int, int], block: int = 16) -> Image.Image:
 def render_animation_previews(frames_root: Path, output_dir: Path, duration_ms: int | None = None) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     for state in STATE_ORDER:
-        frames = []
+        transparent_frames = []
+        gif_frames = []
         for path in sorted((frames_root / state).glob("*.png")):
+            transparent_frame = Image.open(path).convert("RGBA")
+            transparent_frames.append(transparent_frame)
             frame = checkerboard((CELL_WIDTH, CELL_HEIGHT))
-            frame.alpha_composite(Image.open(path).convert("RGBA"))
-            frames.append(frame.convert("P", palette=Image.Palette.ADAPTIVE))
-        if frames:
+            frame.alpha_composite(transparent_frame)
+            gif_frames.append(frame.convert("P", palette=Image.Palette.ADAPTIVE))
+        if gif_frames:
             durations = duration_ms if duration_ms is not None else ROW_FRAME_DURATIONS_MS[state]
-            frames[0].save(
+            gif_frames[0].save(
                 output_dir / f"{state}.gif",
                 save_all=True,
-                append_images=frames[1:],
+                append_images=gif_frames[1:],
                 duration=durations,
                 loop=0,
                 disposal=2,
             )
+            if duration_ms is None:
+                save_animated_webp(transparent_frames, output_dir / f"{state}.webp", durations)
+
+
+def render_atlas_animation_previews(atlas_path: Path, output_dir: Path) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for state in STATE_ORDER:
+        save_animated_webp(state_frames_from_atlas(atlas_path, state), output_dir / f"{state}.webp", ROW_FRAME_DURATIONS_MS[state])

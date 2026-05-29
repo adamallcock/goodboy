@@ -18,12 +18,12 @@ A finished Codex pet package contains a `pet.json` manifest and `spritesheet.web
 
 ## Examples
 
-These are pipeline-generated idle previews copied from completed Goodboy
-`qa/previews` folders:
+These are pipeline-generated idle previews exported from completed Goodboy
+spritesheet atlases:
 
 | Napoleon | Millie | Shoulder Cat |
 | --- | --- | --- |
-| <img src="assets/examples/napoleon/previews/idle.gif" alt="Napoleon idle preview" width="180"> | <img src="assets/examples/millie/previews/idle.gif" alt="Millie idle preview" width="180"> | <img src="assets/examples/shoulder-cat/previews/idle.gif" alt="Shoulder Cat idle preview" width="180"> |
+| <img src="assets/examples/napoleon/previews-webp/idle.webp" alt="Napoleon idle preview" width="180"> | <img src="assets/examples/millie/previews-webp/idle.webp" alt="Millie idle preview" width="180"> | <img src="assets/examples/shoulder-cat/previews-webp/idle.webp" alt="Shoulder Cat idle preview" width="180"> |
 
 ## What Goodboy Does
 
@@ -266,9 +266,10 @@ python scripts/sync_readme_examples.py \
 ```
 
 The sync script copies existing `qa/previews/*.gif` and
-`qa/contact-sheet.png` files produced by the Goodboy pipeline. It does not crop
-spritesheets, change timing, select custom frames, or render alternate preview
-assets.
+`qa/contact-sheet.png` files produced by the Goodboy pipeline. It also generates
+lossless animated WebP display previews from the completed `final/spritesheet.webp`
+atlas using Goodboy's core preview exporter, so README animations preserve the
+same alpha edges as the real sprites instead of GIF color/alpha artifacts.
 
 ## License
 

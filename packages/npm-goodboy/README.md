@@ -5,7 +5,7 @@ npm launcher for [Goodboy](https://github.com/adamallcock/goodboy), a Python-fir
 This package intentionally does not auto-install Python dependencies. Install Goodboy first:
 
 ```bash
-python3 -m pip install "goodboy @ git+https://github.com/adamallcock/goodboy.git"
+python3 -m pip install goodboy-codex
 ```
 
 Then run:

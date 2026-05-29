@@ -19,7 +19,7 @@ class PetProject:
     id: str
     display_name: str
     species: str = "pet"
-    workspace_version: str = "0.1.1"
+    workspace_version: str = "0.1.2"
     created_at: str = field(default_factory=utc_now)
     updated_at: str = field(default_factory=utc_now)
     active_run_id: str | None = None

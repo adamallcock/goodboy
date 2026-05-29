@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 - 2026-05-28
+
+- Publish the Python CLI distribution as `goodboy-codex` on PyPI.
+- Update install docs and npm launcher guidance to prefer `python3 -m pip install goodboy-codex`.
+- Align project, UI, npm launcher, and workspace manifest versions to `0.1.2`.
+
 ## 0.1.1 - 2026-05-28
 
 - Publish the scoped npm launcher as `@adamallcock/goodboy`.

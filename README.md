@@ -3,6 +3,7 @@
 [![CI](https://github.com/adamallcock/goodboy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/adamallcock/goodboy/actions/workflows/ci.yml)
 [![GitHub release](https://img.shields.io/github/v/release/adamallcock/goodboy?include_prereleases)](https://github.com/adamallcock/goodboy/releases)
 [![npm](https://img.shields.io/npm/v/%40adamallcock%2Fgoodboy)](https://www.npmjs.com/package/@adamallcock/goodboy)
+[![PyPI](https://img.shields.io/pypi/v/goodboy-codex)](https://pypi.org/project/goodboy-codex/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
 [![Node 24+](https://img.shields.io/badge/Node-24%2B-5FA04E.svg)](ui/package.json)
@@ -11,7 +12,7 @@ Goodboy helps you turn a few reference images into a polished animated Codex pet
 
 It combines a manifest-first CLI, image-generation handoffs, deterministic sprite processing, QA gates, install/export tooling, a Codex skill/plugin wrapper, and a local Review Room UI for visual decisions.
 
-Goodboy is currently an early `0.1.1` developer tool. The CLI pipeline is the reliable workflow, the Review Room is a strong local demo/review surface, and direct provider execution is optional. Expect the image-generation provider names and UI integration surface to continue evolving.
+Goodboy is currently an early `0.1.2` developer tool. The CLI pipeline is the reliable workflow, the Review Room is a strong local demo/review surface, and direct provider execution is optional. Expect the image-generation provider names and UI integration surface to continue evolving.
 
 A finished Codex pet package contains a `pet.json` manifest and `spritesheet.webp` atlas that can be installed into Codex or exported for compatible pet viewers.
 
@@ -63,6 +64,13 @@ python -m pip install -e ".[ui,dev]"
 goodboy --help
 ```
 
+Or install the Python CLI from PyPI:
+
+```bash
+python3 -m pip install goodboy-codex
+goodboy --help
+```
+
 After installing dependencies, source-checkout development can also use the module entrypoint without installing console scripts:
 
 ```bash
@@ -78,7 +86,7 @@ npx @adamallcock/goodboy --help
 The npm package delegates to the Python Goodboy CLI. Install Goodboy into your Python environment first:
 
 ```bash
-python3 -m pip install "goodboy @ git+https://github.com/adamallcock/goodboy.git"
+python3 -m pip install goodboy-codex
 ```
 
 ## Quick Start

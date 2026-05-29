@@ -3,8 +3,8 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "goodboy"
-version = "0.1.1"
+name = "goodboy-codex"
+version = "0.1.2"
 description = "Repeatable pipeline for turning pet references into Codex pet spritesheets."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -33,6 +33,7 @@ Homepage = "https://github.com/adamallcock/goodboy"
 Repository = "https://github.com/adamallcock/goodboy"
 Issues = "https://github.com/adamallcock/goodboy/issues"
 NPM = "https://www.npmjs.com/package/@adamallcock/goodboy"
+PyPI = "https://pypi.org/project/goodboy-codex/"
 
 [project.optional-dependencies]
 ui = [

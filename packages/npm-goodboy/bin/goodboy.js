@@ -2,7 +2,7 @@
 
 import { spawnSync } from "node:child_process";
 
-const VERSION = "0.1.1";
+const VERSION = "0.1.2";
 const args = process.argv.slice(2);
 
 function printHelp() {
@@ -13,7 +13,7 @@ This npm package gives Node/npm users a friendly entrypoint without auto-install
 Python dependencies behind their back.
 
 Recommended setup:
-  python3 -m pip install "goodboy @ git+https://github.com/adamallcock/goodboy.git"
+  python3 -m pip install goodboy-codex
 
 Then run:
   npx @adamallcock/goodboy --help
@@ -57,7 +57,7 @@ for (const python of pythonCandidates()) {
 console.error(`Goodboy could not start Python Goodboy CLI.
 
 Install Goodboy first:
-  python3 -m pip install "goodboy @ git+https://github.com/adamallcock/goodboy.git"
+  python3 -m pip install goodboy-codex
 
 Then retry:
   npx goodboy ${args.join(" ")}

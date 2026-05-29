@@ -22,7 +22,7 @@ These are small Goodboy-generated state previews from real Codex pet packages:
 
 | Napoleon | Millie | Shoulder Cat |
 | --- | --- | --- |
-| <img src="assets/examples/napoleon-running-right.gif" alt="Napoleon running right preview" width="180"> | <img src="assets/examples/millie-waving.gif" alt="Millie waving preview" width="180"> | <img src="assets/examples/shoulder-cat-running-right.gif" alt="Shoulder Cat running right preview" width="180"> |
+| <img src="assets/examples/napoleon-running-right.gif" alt="Napoleon running right preview" width="180"> | <img src="assets/examples/millie-waving.gif" alt="Millie waving preview" width="180"> | <img src="assets/examples/shoulder-cat-running-right.webp" alt="Shoulder Cat running right preview" width="180"> |
 
 ## What Goodboy Does
 

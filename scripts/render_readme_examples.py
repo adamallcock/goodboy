@@ -44,7 +44,6 @@ class Example:
     spritesheet: Path
     state: str
     output: Path
-    format: str
 
 
 def scaled_durations(state: str, speed_scale: float) -> list[int]:
@@ -65,29 +64,23 @@ def extract_state_frames(spritesheet: Path, state: str) -> list[Image.Image]:
     return frames
 
 
+def flatten_on_white(frame: Image.Image) -> Image.Image:
+    background = Image.new("RGBA", frame.size, (255, 255, 255, 255))
+    background.alpha_composite(frame)
+    return background
+
+
 def save_gif(frames: list[Image.Image], durations: list[int], output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     prepared = []
     for frame in frames:
-        rgba = frame.copy()
-        rgba.putdata([(255, 0, 255, 0) if a < 128 else (r, g, b, 255) for r, g, b, a in rgba.getdata()])
-        paletted = rgba.convert(
+        rgb = flatten_on_white(frame).convert("RGB")
+        paletted = rgb.convert(
             "P",
             palette=Image.Palette.ADAPTIVE,
             colors=255,
             dither=Image.Dither.NONE,
         )
-        palette = paletted.getpalette()[:]
-        palette += [0] * (768 - len(palette))
-        palette[255 * 3 : 255 * 3 + 3] = [255, 0, 255]
-        paletted.putpalette(palette)
-        alpha = rgba.getchannel("A")
-        pixels = paletted.load()
-        for y in range(paletted.height):
-            for x in range(paletted.width):
-                if alpha.getpixel((x, y)) < 128:
-                    pixels[x, y] = 255
-        paletted.info["transparency"] = 255
         paletted.info["disposal"] = 2
         prepared.append(paletted)
     prepared[0].save(
@@ -96,33 +89,15 @@ def save_gif(frames: list[Image.Image], durations: list[int], output: Path) -> N
         append_images=prepared[1:],
         duration=durations,
         loop=0,
-        transparency=255,
         disposal=2,
         optimize=False,
-    )
-
-
-def save_apng(frames: list[Image.Image], durations: list[int], output: Path) -> None:
-    output.parent.mkdir(parents=True, exist_ok=True)
-    frames[0].save(
-        output,
-        save_all=True,
-        append_images=frames[1:],
-        duration=durations,
-        loop=0,
-        disposal=2,
     )
 
 
 def render(example: Example, speed_scale: float) -> None:
     frames = extract_state_frames(example.spritesheet, example.state)
     durations = scaled_durations(example.state, speed_scale)
-    if example.format == "gif":
-        save_gif(frames, durations, example.output)
-    elif example.format == "apng":
-        save_apng(frames, durations, example.output)
-    else:
-        raise SystemExit(f"Unsupported output format: {example.format}")
+    save_gif(frames, durations, example.output)
     written = Image.open(example.output)
     actual_frames = getattr(written, "n_frames", 1)
     if actual_frames != len(frames):
@@ -149,23 +124,20 @@ def main() -> None:
         Example(
             name="Napoleon",
             spritesheet=Path(args.napoleon_spritesheet).expanduser(),
-            state="running-right",
-            output=output_dir / "napoleon-running-right.gif",
-            format="gif",
+            state="running-left",
+            output=output_dir / "napoleon-running-left.gif",
         ),
         Example(
             name="Millie",
             spritesheet=Path(args.millie_spritesheet).expanduser(),
-            state="waving",
-            output=output_dir / "millie-waving.gif",
-            format="gif",
+            state="jumping",
+            output=output_dir / "millie-jumping.gif",
         ),
         Example(
             name="Shoulder Cat",
             spritesheet=Path(args.shoulder_cat_spritesheet).expanduser(),
-            state="running-right",
-            output=output_dir / "shoulder-cat-running-right.png",
-            format="apng",
+            state="waiting",
+            output=output_dir / "shoulder-cat-waiting.gif",
         ),
     ]
     for example in examples:

@@ -22,7 +22,7 @@ These are small Goodboy-generated state previews from real Codex pet packages:
 
 | Napoleon | Millie | Shoulder Cat |
 | --- | --- | --- |
-| <img src="assets/examples/napoleon-running-right.gif" alt="Napoleon running right preview" width="180"> | <img src="assets/examples/millie-waving.gif" alt="Millie waving preview" width="180"> | <img src="assets/examples/shoulder-cat-running-right.png" alt="Shoulder Cat running right preview" width="180"> |
+| <img src="assets/examples/napoleon-running-left.gif" alt="Napoleon running left preview" width="180"> | <img src="assets/examples/millie-jumping.gif" alt="Millie jumping preview" width="180"> | <img src="assets/examples/shoulder-cat-waiting.gif" alt="Shoulder Cat waiting preview" width="180"> |
 
 ## What Goodboy Does
 
@@ -263,6 +263,9 @@ python scripts/render_readme_examples.py \
   --millie-spritesheet /path/to/millie/package/spritesheet.webp \
   --shoulder-cat-spritesheet /path/to/shoulder-kitten/spritesheet.webp
 ```
+
+The default README examples intentionally use reliable white-matte GIFs:
+Napoleon running left, Millie jumping, and Shoulder Cat waiting.
 
 ## License
 

@@ -11,6 +11,7 @@ from .contracts import (
     ATLAS_WIDTH,
     CELL_HEIGHT,
     CELL_WIDTH,
+    ROW_FRAME_DURATIONS_MS,
     ROW_FRAME_COUNTS,
     STATE_ORDER,
 )
@@ -136,7 +137,7 @@ def checkerboard(size: tuple[int, int], block: int = 16) -> Image.Image:
     return image
 
 
-def render_animation_previews(frames_root: Path, output_dir: Path, duration_ms: int = 130) -> None:
+def render_animation_previews(frames_root: Path, output_dir: Path, duration_ms: int | None = None) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     for state in STATE_ORDER:
         frames = []
@@ -145,11 +146,12 @@ def render_animation_previews(frames_root: Path, output_dir: Path, duration_ms: 
             frame.alpha_composite(Image.open(path).convert("RGBA"))
             frames.append(frame.convert("P", palette=Image.Palette.ADAPTIVE))
         if frames:
+            durations = duration_ms if duration_ms is not None else ROW_FRAME_DURATIONS_MS[state]
             frames[0].save(
                 output_dir / f"{state}.gif",
                 save_all=True,
                 append_images=frames[1:],
-                duration=duration_ms,
+                duration=durations,
                 loop=0,
                 disposal=2,
             )

@@ -9,13 +9,13 @@ from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageSequence
 
 from goodboy.adapters import execute_gemini_image_job, execute_openai_image_job, get_capabilities, prepare_handoff
-from goodboy.atlas import compose_atlas, validate_atlas
+from goodboy.atlas import compose_atlas, render_animation_previews, validate_atlas
 from goodboy.candidates import build_candidate_contact_sheet, plan_baseline_candidates, select_baseline_candidate, store_candidate_image
 from goodboy.cli import main as cli_main
-from goodboy.contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, STATE_ORDER
+from goodboy.contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, ROW_FRAME_DURATIONS_MS, STATE_ORDER
 from goodboy.exports import export_petdex_package, export_project_bundle
 from goodboy.feedback import create_feedback_event
 from goodboy.ingest import draft_source_card, ingest_images, load_source_images, write_provenance_report
@@ -70,6 +70,26 @@ class GoodboyCoreTests(unittest.TestCase):
             report = validate_atlas(root / "spritesheet.webp")
             self.assertTrue(report.ok, report.errors)
             self.assertEqual(report.transparent_rgb_residue_pixels, 0)
+
+    def test_animation_previews_use_pipeline_state_timing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            frames_root = root / "frames"
+            for state in STATE_ORDER:
+                state_dir = frames_root / state
+                state_dir.mkdir(parents=True)
+                for index in range(ROW_FRAME_COUNTS[state]):
+                    frame = Image.new("RGBA", (CELL_WIDTH, CELL_HEIGHT), (0, 0, 0, 0))
+                    draw = ImageDraw.Draw(frame)
+                    draw.rectangle((40 + index, 50, 140 + index, 150), fill=(240, 235, 220, 255))
+                    frame.save(state_dir / f"{index:02d}.png")
+            output_dir = root / "previews"
+            render_animation_previews(frames_root, output_dir)
+
+            for state in STATE_ORDER:
+                with Image.open(output_dir / f"{state}.gif") as image:
+                    durations = [int(frame.info.get("duration", 0)) for frame in ImageSequence.Iterator(image)]
+                self.assertEqual(durations, ROW_FRAME_DURATIONS_MS[state])
 
     def test_ingest_source_card_style_and_handoff_flow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

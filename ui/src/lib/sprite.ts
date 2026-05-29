@@ -18,12 +18,12 @@ export const defaultSpriteStates: SpriteStateSpec[] = [
   { id: "idle", label: "Idle", row: 0, frameCount: 6, durationMs: 1100, description: "Neutral breathing and blinking loop." },
   { id: "running-right", label: "Run Right", row: 1, frameCount: 8, durationMs: 1060, description: "Directional movement toward the right." },
   { id: "running-left", label: "Run Left", row: 2, frameCount: 8, durationMs: 1060, description: "Directional movement toward the left." },
-  { id: "waving", label: "Waving", row: 3, frameCount: 4, durationMs: 1000, description: "Friendly greeting animation." },
-  { id: "jumping", label: "Jumping", row: 4, frameCount: 5, durationMs: 980, description: "Compact playful hop." },
-  { id: "failed", label: "Failed", row: 5, frameCount: 8, durationMs: 1160, description: "Gentle disappointment and recovery." },
-  { id: "waiting", label: "Waiting", row: 6, frameCount: 6, durationMs: 1100, description: "Expectant pause while waiting for input." },
-  { id: "running", label: "Running", row: 7, frameCount: 6, durationMs: 1100, description: "Focused active-work loop." },
-  { id: "review", label: "Review", row: 8, frameCount: 6, durationMs: 1100, description: "Focused inspection and review loop." }
+  { id: "waving", label: "Waving", row: 3, frameCount: 4, durationMs: 700, description: "Friendly greeting animation." },
+  { id: "jumping", label: "Jumping", row: 4, frameCount: 5, durationMs: 840, description: "Compact playful hop." },
+  { id: "failed", label: "Failed", row: 5, frameCount: 8, durationMs: 1220, description: "Gentle disappointment and recovery." },
+  { id: "waiting", label: "Waiting", row: 6, frameCount: 6, durationMs: 1010, description: "Expectant pause while waiting for input." },
+  { id: "running", label: "Running", row: 7, frameCount: 6, durationMs: 820, description: "Focused active-work loop." },
+  { id: "review", label: "Review", row: 8, frameCount: 6, durationMs: 1030, description: "Focused inspection and review loop." }
 ];
 
 export function findSpritesheetArtifact(state: ProjectState): ArtifactRef | null {

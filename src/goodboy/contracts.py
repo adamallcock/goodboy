@@ -36,6 +36,18 @@ ROW_FRAME_COUNTS = {
     "review": 6,
 }
 
+ROW_FRAME_DURATIONS_MS = {
+    "idle": [280, 110, 110, 140, 140, 320],
+    "running-right": [120, 120, 120, 120, 120, 120, 120, 220],
+    "running-left": [120, 120, 120, 120, 120, 120, 120, 220],
+    "waving": [140, 140, 140, 280],
+    "jumping": [140, 140, 140, 140, 280],
+    "failed": [140, 140, 140, 140, 140, 140, 140, 240],
+    "waiting": [150, 150, 150, 150, 150, 260],
+    "running": [120, 120, 120, 120, 120, 220],
+    "review": [150, 150, 150, 150, 150, 280],
+}
+
 
 @dataclass(frozen=True)
 class OutputContract:
@@ -57,3 +69,9 @@ def expected_frame_count(state: str) -> int:
     except KeyError as exc:
         raise ValueError(f"unknown Codex pet state: {state}") from exc
 
+
+def expected_frame_durations_ms(state: str) -> list[int]:
+    try:
+        return list(ROW_FRAME_DURATIONS_MS[state])
+    except KeyError as exc:
+        raise ValueError(f"unknown Codex pet state: {state}") from exc

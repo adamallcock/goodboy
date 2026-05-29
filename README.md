@@ -18,11 +18,12 @@ A finished Codex pet package contains a `pet.json` manifest and `spritesheet.web
 
 ## Examples
 
-These are small Goodboy-generated state previews from real Codex pet packages:
+These are pipeline-generated idle previews copied from completed Goodboy
+`qa/previews` folders:
 
 | Napoleon | Millie | Shoulder Cat |
 | --- | --- | --- |
-| <img src="assets/examples/napoleon-running-left.gif" alt="Napoleon running left preview" width="180"> | <img src="assets/examples/millie-jumping.gif" alt="Millie jumping preview" width="180"> | <img src="assets/examples/shoulder-cat-waiting.gif" alt="Shoulder Cat waiting preview" width="180"> |
+| <img src="assets/examples/napoleon/previews/idle.gif" alt="Napoleon idle preview" width="180"> | <img src="assets/examples/millie/previews/idle.gif" alt="Millie idle preview" width="180"> | <img src="assets/examples/shoulder-cat/previews/idle.gif" alt="Shoulder Cat idle preview" width="180"> |
 
 ## What Goodboy Does
 
@@ -255,17 +256,19 @@ git diff --check
 
 The Review Room demo uses a generic companion fixture under `ui/public/assets/demo/companion/`. These optimized WebP assets are included so the UI can be explored without private source photos, provider credentials, generated images, or a local Goodboy project. See `ui/public/assets/demo/README.md` for asset notes.
 
-Regenerate the public README examples from local pet package spritesheets with:
+Sync the public README examples from completed Goodboy output roots with:
 
 ```bash
-python scripts/render_readme_examples.py \
-  --napoleon-spritesheet /path/to/napoleon/package/spritesheet.webp \
-  --millie-spritesheet /path/to/millie/package/spritesheet.webp \
-  --shoulder-cat-spritesheet /path/to/shoulder-kitten/spritesheet.webp
+python scripts/sync_readme_examples.py \
+  --example napoleon=/path/to/napoleon-output-root \
+  --example millie=/path/to/millie-output-root \
+  --example shoulder-cat=/path/to/shoulder-cat-output-root
 ```
 
-The default README examples intentionally use reliable white-matte GIFs:
-Napoleon running left, Millie jumping, and Shoulder Cat waiting.
+The sync script copies existing `qa/previews/*.gif` and
+`qa/contact-sheet.png` files produced by the Goodboy pipeline. It does not crop
+spritesheets, change timing, select custom frames, or render alternate preview
+assets.
 
 ## License
 

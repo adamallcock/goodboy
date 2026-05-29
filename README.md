@@ -22,7 +22,7 @@ These are small Goodboy-generated state previews from real Codex pet packages:
 
 | Napoleon | Millie | Shoulder Cat |
 | --- | --- | --- |
-| <img src="assets/examples/napoleon-running-right.gif" alt="Napoleon running right preview" width="180"> | <img src="assets/examples/millie-waving.gif" alt="Millie waving preview" width="180"> | <img src="assets/examples/shoulder-cat-running-right.webp" alt="Shoulder Cat running right preview" width="180"> |
+| <img src="assets/examples/napoleon-running-right.gif" alt="Napoleon running right preview" width="180"> | <img src="assets/examples/millie-waving.gif" alt="Millie waving preview" width="180"> | <img src="assets/examples/shoulder-cat-running-right.png" alt="Shoulder Cat running right preview" width="180"> |
 
 ## What Goodboy Does
 
@@ -254,6 +254,15 @@ git diff --check
 ## Demo Assets
 
 The Review Room demo uses a generic companion fixture under `ui/public/assets/demo/companion/`. These optimized WebP assets are included so the UI can be explored without private source photos, provider credentials, generated images, or a local Goodboy project. See `ui/public/assets/demo/README.md` for asset notes.
+
+Regenerate the public README examples from local pet package spritesheets with:
+
+```bash
+python scripts/render_readme_examples.py \
+  --napoleon-spritesheet /path/to/napoleon/package/spritesheet.webp \
+  --millie-spritesheet /path/to/millie/package/spritesheet.webp \
+  --shoulder-cat-spritesheet /path/to/shoulder-kitten/spritesheet.webp
+```
 
 ## License
 

@@ -296,9 +296,15 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertEqual(job["retry_policy"]["attempts"], 1)
             self.assertIn("OPENAI_API_KEY", job["retry_policy"]["last_error"])
 
-            capabilities = get_capabilities("gemini_nano_banana_pro")
-            self.assertTrue(capabilities.image_to_image)
-            self.assertEqual(capabilities.default_model_alias, "gemini-3-pro-image-preview")
+            openai_capabilities = get_capabilities("openai_images")
+            self.assertEqual(openai_capabilities.default_model_alias, "gpt-image-2")
+
+            gemini_flash_capabilities = get_capabilities("gemini_nano_banana_2")
+            self.assertEqual(gemini_flash_capabilities.default_model_alias, "gemini-3.1-flash-image")
+
+            gemini_pro_capabilities = get_capabilities("gemini_nano_banana_pro")
+            self.assertTrue(gemini_pro_capabilities.image_to_image)
+            self.assertEqual(gemini_pro_capabilities.default_model_alias, "gemini-3-pro-image-preview")
 
     def test_agent_make_next_and_agent_mode_flow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -633,7 +639,7 @@ class GoodboyCoreTests(unittest.TestCase):
                 project_dir=root,
                 run_id="gemini-plan",
                 provider="gemini_nano_banana_2",
-                model_alias="gemini-3.1-flash-image-preview",
+                model_alias="gemini-3.1-flash-image",
             )
             invocation = execute_gemini_image_job(
                 root,

@@ -92,7 +92,7 @@ CAPABILITY_REGISTRY = {
         batch_support=False,
         standalone_api=True,
         codex_context_required=False,
-        default_model_alias="gemini-3.1-flash-image-preview",
+        default_model_alias="gemini-3.1-flash-image",
         notes="Configurable alias for Gemini native image generation, treated as the high-efficiency Nano Banana 2 adapter.",
     ),
     "gemini_nano_banana_pro": AdapterCapabilities(

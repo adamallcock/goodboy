@@ -8,13 +8,17 @@ on:
 
 jobs:
   python:
-    name: Python
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       - name: Install
         run: |
           python -m pip install --upgrade pip
@@ -23,6 +27,9 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Validate skill folders
         run: python scripts/validate_skills.py codex-skill/goodboy plugins/goodboy/skills/goodboy
+      - name: Build release distributions
+        if: matrix.python-version == '3.12'
+        run: python -m build
       - name: Diff whitespace check
         run: git diff --check
 
@@ -47,6 +54,8 @@ jobs:
         run: npm run typecheck
       - name: Build
         run: npm run build
+      - name: Verify packaged UI is current
+        run: npm run check:package
       - name: E2E tests
         run: npm run test:e2e
       - name: Upload Playwright report
@@ -55,3 +64,16 @@ jobs:
         with:
           name: playwright-report
           path: ui/playwright-report/
+
+  plugin-runtime:
+    name: Plugin runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Test consent-gated runtime bootstrap
+        run: node --test plugins/goodboy/tests/goodboy-runtime.test.mjs
+      - name: Test npm runtime discovery
+        run: node --test packages/npm-goodboy/tests/launcher.test.mjs

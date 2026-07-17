@@ -4,12 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "goodboy-codex"
-version = "0.1.2"
+version = "0.2.0"
 description = "Repeatable pipeline for turning pet references into Codex pet spritesheets."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-license-files = ["LICENSE"]
+license-files = [
+  "LICENSE",
+  "THIRD_PARTY_NOTICES.md",
+  "src/goodboy/vendor/hatch_pet/LICENSE.txt",
+]
 authors = [
   { name = "Adam Allcock" },
 ]
@@ -38,13 +42,13 @@ PyPI = "https://pypi.org/project/goodboy-codex/"
 [project.optional-dependencies]
 ui = [
   "fastapi>=0.115.0",
-  "httpx>=0.27.0",
+  "httpx2>=2.0.0",
   "python-multipart>=0.0.9",
   "uvicorn[standard]>=0.30.0",
 ]
 dev = [
   "fastapi>=0.115.0",
-  "httpx>=0.27.0",
+  "httpx2>=2.0.0",
   "python-multipart>=0.0.9",
   "uvicorn[standard]>=0.30.0",
   "pytest>=8.0.0",
@@ -56,6 +60,20 @@ goodboy = "goodboy.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"goodboy.vendor.hatch_pet" = [
+  "LICENSE.txt",
+  "SNAPSHOT.json",
+  "references/*.md",
+  "scripts/*.py",
+]
+"goodboy.web" = [
+  "static/index.html",
+  "static/assets/*",
+  "static/assets/demo/*",
+  "static/assets/demo/companion/*",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

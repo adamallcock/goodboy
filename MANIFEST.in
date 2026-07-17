@@ -1,0 +1,12 @@
+include LICENSE
+include README.md
+include THIRD_PARTY_NOTICES.md
+include 2026-07-16-goodboy-v2-next-level-plan.md
+include 2026-07-16-goodboy-vs-hatch-pet-validation.md
+include .agents/plugins/marketplace.json
+recursive-include codex-skill *.md *.yaml
+recursive-include docs *.md
+recursive-include packages/npm-goodboy *.js *.json *.md *.mjs
+recursive-include plugins/goodboy *.json *.md *.mjs
+recursive-include scripts *.py
+recursive-include tests *.py *.md *.png

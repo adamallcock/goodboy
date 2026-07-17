@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 import re
 from pathlib import Path
 
@@ -91,10 +92,8 @@ def next_event_id(events: list[FeedbackEvent]) -> str:
     seen = []
     for event in events:
         if event.id.startswith("feedback-"):
-            try:
+            with suppress(ValueError):
                 seen.append(int(event.id.split("-", 1)[1]))
-            except ValueError:
-                pass
     return f"feedback-{max(seen, default=0) + 1:03d}"
 
 

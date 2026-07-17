@@ -2,10 +2,13 @@
 
 from .contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, ROW_FRAME_DURATIONS_MS, STATE_ORDER
 
+__version__ = "0.2.0"
+
 __all__ = [
     "CELL_HEIGHT",
     "CELL_WIDTH",
     "ROW_FRAME_COUNTS",
     "ROW_FRAME_DURATIONS_MS",
     "STATE_ORDER",
+    "__version__",
 ]

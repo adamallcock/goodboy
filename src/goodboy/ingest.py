@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 import hashlib
 import mimetypes
 import shutil
@@ -43,10 +44,8 @@ def next_source_id(images: list[SourceImage]) -> str:
     seen = []
     for image in images:
         if image.id.startswith("source-"):
-            try:
+            with suppress(ValueError):
                 seen.append(int(image.id.split("-", 1)[1]))
-            except ValueError:
-                pass
     return f"source-{max(seen, default=0) + 1:03d}"
 
 

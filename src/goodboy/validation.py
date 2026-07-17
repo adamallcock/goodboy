@@ -7,9 +7,18 @@ from pathlib import Path
 from typing import Any
 
 from .adapters import CAPABILITY_REGISTRY
-from .contracts import ROW_FRAME_COUNTS, STATE_ORDER
+from .contracts import (
+    ROW_FRAME_COUNTS,
+    STATE_ORDER,
+    V2_OUTPUT_CONTRACT,
+    V2_STATE_ORDER,
+    contract_from_dict,
+    get_output_contract,
+)
+from .identity import IDENTITY_PROFILE, REFERENCE_COVERAGE
 from .ingest import SOURCE_CARD, SOURCE_MANIFEST
-from .jsonio import read_json, write_json
+from .jobs import JOB_STATUSES
+from .jsonio import read_json, read_jsonl, write_json
 from .schemas import (
     BranchManifest,
     CharacterCard,
@@ -17,11 +26,15 @@ from .schemas import (
     EmotionStyleSheet,
     FeedbackEvent,
     GenerationJob,
+    IdentityProfile,
+    JobEvent,
+    LikenessReport,
     ManifestValidationIssue,
     ManifestValidationReport,
     PetProject,
     ProviderInvocation,
     RunSummary,
+    ReferenceCoverage,
     SourceCard,
     SourceImage,
     StyleCandidate,
@@ -32,9 +45,10 @@ from .style import STYLE_PATH
 def validate_project(project_dir: Path, *, write_report: bool = True) -> ManifestValidationReport:
     issues: list[ManifestValidationIssue] = []
     checked_files: list[str] = []
-    validate_json_dataclass(project_dir, Path("goodboy.json"), PetProject, issues, checked_files)
+    validate_project_manifest(project_dir, issues, checked_files)
     validate_source_images(project_dir, issues, checked_files)
     validate_source_card(project_dir, issues, checked_files)
+    validate_identity(project_dir, issues, checked_files)
     validate_candidates(project_dir, issues, checked_files)
     validate_character(project_dir, issues, checked_files)
     validate_style_sheet(project_dir, issues, checked_files)
@@ -50,6 +64,58 @@ def validate_project(project_dir: Path, *, write_report: bool = True) -> Manifes
     if write_report:
         write_json(project_dir / "validation" / "manifest-validation.json", report.to_dict())
     return report
+
+
+def validate_project_manifest(
+    project_dir: Path,
+    issues: list[ManifestValidationIssue],
+    checked_files: list[str],
+) -> None:
+    rel = Path("goodboy.json")
+    raw = validate_json_dataclass(project_dir, rel, PetProject, issues, checked_files)
+    if raw is None:
+        return
+    try:
+        declared = get_output_contract(str(raw.get("contract_id", "")))
+    except ValueError as exc:
+        add_error(issues, rel, str(exc))
+        return
+    embedded = contract_from_dict(
+        raw.get("output_contract") if isinstance(raw.get("output_contract"), dict) else None
+    )
+    if embedded.contract_id != declared.contract_id:
+        add_error(
+            issues,
+            rel,
+            f"output_contract `{embedded.contract_id}` disagrees with contract_id `{declared.contract_id}`",
+        )
+    if raw.get("contract_version") != declared.contract_version:
+        add_error(issues, rel, f"contract_version must be `{declared.contract_version}`")
+    embedded_raw = raw.get("output_contract", {})
+    for key, expected in (
+        ("rows", declared.rows),
+        ("columns", declared.columns),
+        ("atlas_width", declared.atlas_width),
+        ("atlas_height", declared.atlas_height),
+        ("sprite_version_number", declared.sprite_version_number),
+    ):
+        if embedded_raw.get(key) != expected:
+            add_error(issues, rel, f"output_contract.{key} must be {expected}")
+    privacy = raw.get("privacy_policy")
+    if not isinstance(privacy, dict):
+        add_error(issues, rel, "privacy_policy must be an object")
+    else:
+        for key in (
+            "sources_local_by_default",
+            "strip_exif_for_provider",
+            "include_sources_in_exports",
+            "provider_consent_required",
+        ):
+            if not isinstance(privacy.get(key), bool):
+                add_error(issues, rel, f"privacy_policy.{key} must be boolean")
+    active_run = raw.get("active_run_id")
+    if active_run and not (project_dir / "runs" / str(active_run)).is_dir():
+        add_error(issues, rel, f"active_run_id does not exist: {active_run}")
 
 
 def validate_json_dataclass(
@@ -138,6 +204,25 @@ def validate_source_images(
         require_relative_existing(project_dir, image.path, item_path, issues, "source image")
         if image.thumbnail_path:
             require_relative_existing(project_dir, image.thumbnail_path, item_path, issues, "thumbnail")
+        if image.provider_derivative_path:
+            if not image.provider_derivative_path.startswith("sources/provider-derivatives/"):
+                add_error(issues, item_path, "provider derivative must live under sources/provider-derivatives")
+            require_relative_existing(
+                project_dir,
+                image.provider_derivative_path,
+                item_path,
+                issues,
+                "provider derivative",
+            )
+        for provider, permitted in image.provider_permissions.items():
+            if provider not in CAPABILITY_REGISTRY:
+                add_error(issues, item_path, f"unknown provider permission `{provider}`")
+            if not isinstance(permitted, bool):
+                add_error(issues, item_path, f"provider permission `{provider}` must be boolean")
+            if permitted:
+                receipt = project_dir / "decisions" / "provider-consent" / f"{provider}.json"
+                if not receipt.is_file():
+                    add_error(issues, item_path, f"provider `{provider}` permission has no consent receipt")
         if image.width <= 0 or image.height <= 0:
             add_error(issues, item_path, "width and height must be positive")
 
@@ -159,6 +244,65 @@ def validate_source_card(
         require_relative_existing(project_dir, source_path, Path(SOURCE_CARD), issues, "source image path")
 
 
+def validate_identity(
+    project_dir: Path,
+    issues: list[ManifestValidationIssue],
+    checked_files: list[str],
+) -> None:
+    profile_path = project_dir / IDENTITY_PROFILE
+    if profile_path.is_file():
+        rel = Path(IDENTITY_PROFILE)
+        checked_files.append(str(rel))
+        raw = read_json(profile_path)
+        if not isinstance(raw, dict):
+            add_error(issues, rel, "identity profile must be an object")
+        else:
+            check_unknown_and_required(raw, IdentityProfile, rel, issues)
+            try:
+                profile = IdentityProfile.from_dict(raw)
+            except Exception as exc:
+                add_error(issues, rel, f"cannot load IdentityProfile: {exc}")
+            else:
+                seen: set[str] = set()
+                source_ids = {image.id for image in load_source_image_objects(project_dir)}
+                for trait in profile.traits:
+                    if trait.id in seen:
+                        add_error(issues, rel, f"duplicate identity trait id `{trait.id}`")
+                    seen.add(trait.id)
+                    if trait.importance not in {"signature", "important", "supporting", "uncertain", "ignore"}:
+                        add_error(issues, rel, f"invalid importance `{trait.importance}` for `{trait.id}`")
+                    if not 0 <= trait.confidence <= 1:
+                        add_error(issues, rel, f"confidence for `{trait.id}` must be between 0 and 1")
+                    for evidence in trait.evidence:
+                        if evidence.source_id not in source_ids:
+                            add_error(issues, rel, f"trait `{trait.id}` cites unknown source `{evidence.source_id}`")
+                if profile.status == "confirmed":
+                    unlocked = [
+                        trait.id
+                        for trait in profile.traits
+                        if trait.importance == "signature" and (not trait.locked or not trait.user_confirmed)
+                    ]
+                    if unlocked:
+                        add_error(issues, rel, f"confirmed profile has unlocked signature traits: {unlocked}")
+    coverage_path = project_dir / REFERENCE_COVERAGE
+    if coverage_path.is_file():
+        validate_json_dataclass(
+            project_dir,
+            Path(REFERENCE_COVERAGE),
+            ReferenceCoverage,
+            issues,
+            checked_files,
+        )
+
+
+def load_source_image_objects(project_dir: Path) -> list[SourceImage]:
+    path = project_dir / SOURCE_MANIFEST
+    if not path.is_file():
+        return []
+    raw = read_json(path)
+    return [SourceImage.from_dict(item) for item in raw.get("images", []) if isinstance(item, dict)]
+
+
 def validate_candidates(
     project_dir: Path,
     issues: list[ManifestValidationIssue],
@@ -174,15 +318,21 @@ def validate_candidates(
     if not isinstance(candidates, list):
         add_error(issues, rel, "`candidates` must be a list")
         return
-    selected = 0
+    selected_by_dimension: dict[str, int] = {}
     for index, item in enumerate(candidates):
         item_path = Path(f"candidates/baseline-candidates.json:candidates[{index}]")
         validate_candidate_object(project_dir, item, item_path, issues)
         if isinstance(item, dict) and item.get("selected"):
-            selected += 1
-    if selected > 1:
-        add_error(issues, rel, "only one baseline candidate may be selected")
-    for candidate_file in sorted((project_dir / "candidates").glob("baseline-*/candidate.json")):
+            dimension = str(item.get("evaluation_dimension", "likeness"))
+            selected_by_dimension[dimension] = selected_by_dimension.get(dimension, 0) + 1
+    for dimension, selected in selected_by_dimension.items():
+        if selected > 1:
+            add_error(
+                issues,
+                rel,
+                f"only one baseline candidate may be selected for evaluation dimension `{dimension}`",
+            )
+    for candidate_file in sorted((project_dir / "candidates").glob("*/candidate.json")):
         rel_candidate = candidate_file.relative_to(project_dir)
         checked_files.append(str(rel_candidate))
         validate_candidate_object(project_dir, read_json(candidate_file), rel_candidate, issues)
@@ -206,8 +356,27 @@ def validate_candidate_object(
     require_relative_existing(project_dir, candidate.prompt_path, path, issues, "candidate prompt")
     if candidate.image_path:
         require_relative_existing(project_dir, candidate.image_path, path, issues, "candidate image")
+    if candidate.review_image_path:
+        require_relative_existing(
+            project_dir,
+            candidate.review_image_path,
+            path,
+            issues,
+            "normalized candidate review image",
+        )
+    for label in (
+        "holistic_gestalt_score",
+        "signature_trait_score",
+        "small_size_readability_score",
+        "overall_identity_score",
+    ):
+        score = getattr(candidate, label)
+        if score is not None and not 1.0 <= float(score) <= 5.0:
+            add_error(issues, path, f"{label} must be between 1 and 5")
     for source_path in candidate.source_images:
         require_relative_existing(project_dir, source_path, path, issues, "candidate source image")
+        if Path(source_path).as_posix().startswith("sources/originals/"):
+            add_error(issues, path, "candidate provider inputs must not reference original source photos")
     if candidate.provider not in CAPABILITY_REGISTRY:
         add_error(issues, path, f"unknown provider `{candidate.provider}`")
 
@@ -218,6 +387,8 @@ def validate_character(project_dir: Path, issues: list[ManifestValidationIssue],
     raw = validate_json_dataclass(project_dir, Path("character/character-card.json"), CharacterCard, issues, checked_files)
     if raw and raw.get("selected_baseline_image"):
         require_relative_existing(project_dir, raw["selected_baseline_image"], Path("character/character-card.json"), issues, "selected baseline image")
+    if raw and raw.get("identity_anchor_image"):
+        require_relative_existing(project_dir, raw["identity_anchor_image"], Path("character/character-card.json"), issues, "identity anchor image")
 
 
 def validate_style_sheet(project_dir: Path, issues: list[ManifestValidationIssue], checked_files: list[str]) -> None:
@@ -327,8 +498,11 @@ def validate_runs(project_dir: Path, issues: list[ManifestValidationIssue], chec
         if not run_dir.is_dir():
             continue
         validate_generation_jobs(project_dir, run_dir, issues, checked_files)
+        validate_job_events(project_dir, run_dir, issues, checked_files)
         validate_provider_invocations(project_dir, run_dir, issues, checked_files)
         validate_run_summary(project_dir, run_dir, issues, checked_files)
+        validate_likeness_report(project_dir, run_dir, issues, checked_files)
+        validate_v2_package_artifacts(project_dir, run_dir, issues, checked_files)
 
 
 def validate_generation_jobs(
@@ -348,6 +522,20 @@ def validate_generation_jobs(
         add_error(issues, rel, "`jobs` must be a list")
         return
     seen: set[str] = set()
+    expected_outputs = {
+        str(item.get("expected_output"))
+        for item in jobs
+        if isinstance(item, dict) and item.get("expected_output")
+    }
+    if len(expected_outputs) != len(
+        [item for item in jobs if isinstance(item, dict) and item.get("expected_output")]
+    ):
+        add_error(issues, rel, "generation jobs must have unique expected_output paths")
+    job_statuses = {
+        str(item.get("id")): str(item.get("status"))
+        for item in jobs
+        if isinstance(item, dict)
+    }
     for index, item in enumerate(jobs):
         item_path = Path(f"{rel}:jobs[{index}]")
         if not isinstance(item, dict):
@@ -364,16 +552,121 @@ def validate_generation_jobs(
         seen.add(job.id)
         if job.provider not in CAPABILITY_REGISTRY:
             add_error(issues, item_path, f"unknown provider `{job.provider}`")
-        if job.status not in {"planned", "prepared", "running", "complete", "failed", "skipped"}:
+        if job.status not in JOB_STATUSES:
             add_error(issues, item_path, f"invalid job status `{job.status}`")
         require_relative_existing(project_dir, job.prompt_path, item_path, issues, "job prompt")
         for input_image in job.input_images:
+            if Path(input_image).as_posix().startswith("sources/originals/"):
+                add_error(issues, item_path, "provider job input must not reference original source photos")
+            if job.status in {"planned", "blocked"} and input_image in expected_outputs:
+                continue
+            if job.status in {"planned", "blocked"} and (
+                "look-anchors-" in input_image or "look-row-9.png" in input_image
+            ):
+                continue
             require_relative_existing(project_dir, input_image, item_path, issues, "job input image")
-        if job.state and job.state not in STATE_ORDER:
+        if job.state and job.state not in {*V2_STATE_ORDER, "look-cardinals"}:
             add_error(issues, item_path, f"unknown state `{job.state}`")
         for dep in job.depends_on:
             if dep not in seen and not any(isinstance(other, dict) and other.get("id") == dep for other in jobs):
                 add_error(issues, item_path, f"unknown dependency `{dep}`")
+        unresolved = [
+            dep
+            for dep in job.depends_on
+            if job_statuses.get(dep) not in {"complete", "approved"}
+        ]
+        if job.status == "ready" and unresolved:
+            add_error(issues, item_path, f"ready job has unresolved dependencies: {unresolved}")
+        if job.status == "blocked" and not unresolved:
+            add_error(issues, item_path, "blocked job has no unresolved dependency")
+        if job.status in {"complete", "approved"}:
+            require_relative_existing(
+                project_dir,
+                job.selected_output_path or job.expected_output,
+                item_path,
+                issues,
+                "completed job output",
+            )
+    validate_job_dag(jobs, rel, issues)
+
+
+def validate_job_dag(
+    jobs: list[Any],
+    path: Path,
+    issues: list[ManifestValidationIssue],
+) -> None:
+    graph = {
+        str(item.get("id")): [str(dep) for dep in item.get("depends_on", [])]
+        for item in jobs
+        if isinstance(item, dict)
+    }
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(node: str) -> None:
+        if node in visited:
+            return
+        if node in visiting:
+            add_error(issues, path, f"generation job dependency cycle includes `{node}`")
+            return
+        visiting.add(node)
+        for dependency in graph.get(node, []):
+            visit(dependency)
+        visiting.remove(node)
+        visited.add(node)
+
+    for node in graph:
+        visit(node)
+
+
+def validate_job_events(
+    project_dir: Path,
+    run_dir: Path,
+    issues: list[ManifestValidationIssue],
+    checked_files: list[str],
+) -> None:
+    path = run_dir / "events.jsonl"
+    if not path.is_file():
+        return
+    rel = path.relative_to(project_dir)
+    checked_files.append(str(rel))
+    try:
+        events = read_jsonl(path)
+    except ValueError as exc:
+        add_error(issues, rel, str(exc))
+        return
+    jobs_path = run_dir / "generation-jobs.json"
+    known_jobs = {
+        str(item.get("id"))
+        for item in read_json(jobs_path).get("jobs", [])
+        if isinstance(item, dict)
+    } if jobs_path.is_file() else set()
+    seen: set[str] = set()
+    previous_at = ""
+    for index, raw in enumerate(events):
+        item_path = Path(f"{rel}:line[{index + 1}]")
+        if not isinstance(raw, dict):
+            add_error(issues, item_path, "job event must be an object")
+            continue
+        check_unknown_and_required(raw, JobEvent, item_path, issues)
+        try:
+            event = JobEvent(**raw)
+        except Exception as exc:
+            add_error(issues, item_path, f"cannot load JobEvent: {exc}")
+            continue
+        if event.id in seen:
+            add_error(issues, item_path, f"duplicate event id `{event.id}`")
+        seen.add(event.id)
+        if event.run_id != run_dir.name:
+            add_error(issues, item_path, f"event run_id `{event.run_id}` must match `{run_dir.name}`")
+        if event.job_id not in known_jobs:
+            add_error(issues, item_path, f"event cites unknown job `{event.job_id}`")
+        for status in (event.from_status, event.to_status):
+            if status is not None and status not in JOB_STATUSES:
+                add_error(issues, item_path, f"event has invalid status `{status}`")
+        if previous_at and event.created_at < previous_at:
+            add_warning(issues, item_path, "event timestamp is earlier than the previous event")
+        previous_at = event.created_at
 
 
 def validate_provider_invocations(
@@ -415,6 +708,72 @@ def validate_run_summary(project_dir: Path, run_dir: Path, issues: list[Manifest
         require_existing_any_path(project_dir, raw.get(key), rel, issues, key)
     if raw.get("package_dir"):
         require_existing_any_path(project_dir, raw.get("package_dir"), rel, issues, "package_dir")
+    if raw.get("sprite_version_number") == 2 and raw.get("contract_id") != V2_OUTPUT_CONTRACT.contract_id:
+        add_error(issues, rel, "v2 run summary must declare contract_id codex-pet-v2")
+
+
+def validate_likeness_report(
+    project_dir: Path,
+    run_dir: Path,
+    issues: list[ManifestValidationIssue],
+    checked_files: list[str],
+) -> None:
+    path = run_dir / "qa" / "likeness-report.json"
+    if not path.is_file():
+        return
+    rel = path.relative_to(project_dir)
+    checked_files.append(str(rel))
+    raw = read_json(path)
+    if not isinstance(raw, dict):
+        add_error(issues, rel, "likeness report must be an object")
+        return
+    check_unknown_and_required(raw, LikenessReport, rel, issues)
+    try:
+        report = LikenessReport.from_dict(raw)
+    except Exception as exc:
+        add_error(issues, rel, f"cannot load LikenessReport: {exc}")
+        return
+    if report.run_id != run_dir.name:
+        add_error(issues, rel, "likeness report run_id must match its run folder")
+    if report.status == "approved" and report.signature_failures:
+        add_error(issues, rel, "approved likeness report cannot contain signature failures")
+    if report.status == "approved" and (not report.reviewed_by or not report.reviewed_at):
+        add_error(issues, rel, "approved likeness report requires reviewer and timestamp")
+    if report.advisory_metrics and not report.advisory_metrics.get("advisory_only", False):
+        add_error(issues, rel, "automated identity metrics must be explicitly marked advisory_only")
+
+
+def validate_v2_package_artifacts(
+    project_dir: Path,
+    run_dir: Path,
+    issues: list[ManifestValidationIssue],
+    checked_files: list[str],
+) -> None:
+    package_dir = run_dir / "package"
+    if not package_dir.is_dir():
+        return
+    manifest_path = package_dir / "pet.json"
+    if not manifest_path.is_file() or read_json(manifest_path).get("spriteVersionNumber") != 2:
+        return
+    from .v2_backend import validate_v2_package
+
+    result = validate_v2_package(package_dir)
+    rel = package_dir.relative_to(project_dir)
+    checked_files.extend(
+        str(path.relative_to(project_dir))
+        for path in (package_dir / "pet.json", package_dir / "spritesheet.webp")
+        if path.is_file()
+    )
+    if not result["ok"]:
+        for message in result["errors"]:
+            add_error(issues, rel, str(message))
+    unexpected = [
+        path.name
+        for path in package_dir.iterdir()
+        if path.name not in {"pet.json", "spritesheet.webp", "validation.json"}
+    ]
+    if unexpected:
+        add_error(issues, rel, f"install package contains unexpected files: {sorted(unexpected)}")
 
 
 def require_relative_existing(

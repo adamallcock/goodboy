@@ -1,7 +1,7 @@
 {
   "name": "goodboy-review-room-ui",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.2.0",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
+    "build:package": "npm run build && node scripts/sync-package.mjs",
+    "check:package": "node scripts/sync-package.mjs --check",
     "preview": "vite preview --host 127.0.0.1",
     "test:e2e": "playwright test",
     "typecheck": "tsc -b"

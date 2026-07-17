@@ -21,6 +21,8 @@ ui/node_modules/
 ui/test-results/
 ui/playwright-report/
 playwright-report/
+.playwright-cli/
+output/
 ui/*.tsbuildinfo
 *.tsbuildinfo
 ui/*.js
@@ -35,6 +37,9 @@ ui/*.d.ts
 
 # Goodboy local pet projects and generated outputs
 projects/**
+benchmark-workspaces/**
+benchmarks/private/**
+benchmarks/blinded/**
 *.tmp
 *.bak
 

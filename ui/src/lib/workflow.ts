@@ -9,6 +9,7 @@ export interface WorkflowStep {
 export const workflowSteps: WorkflowStep[] = [
   { id: "start", label: "Start", stage: null },
   { id: "sources", label: "Sources", stage: "sources" },
+  { id: "identity", label: "Identity", stage: "identity" },
   { id: "baselines", label: "Baselines", stage: "baselines" },
   { id: "style", label: "Style", stage: "style" },
   { id: "generation", label: "Generate", stage: "generation" },
@@ -44,7 +45,15 @@ export function currentDecisionFor(state: ProjectState, selectedStage: ReviewSta
       title: "Confirm the source identity",
       detail: "Check that the source references and identity notes describe the right subject before baseline generation.",
       severity: "info",
-      next: "Choose baseline"
+      next: "Confirm identity"
+    };
+  }
+  if (selectedStage === "identity") {
+    return {
+      title: state.identity_profile?.status === "confirmed" ? "Identity confirmed" : "Decision needed: identity",
+      detail: "Confirm the evidence-linked traits that must remain recognizable across every pose and direction.",
+      severity: state.identity_profile?.status === "confirmed" ? "success" : "warning",
+      next: "Generate likeness candidates"
     };
   }
   if (selectedStage === "baselines") {

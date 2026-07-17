@@ -13,15 +13,34 @@ from .models import ArtifactRef, artifact_id_for, artifact_url_for, severity_for
 KNOWN_ARTIFACT_PATTERNS = [
     "sources/originals/*",
     "sources/thumbnails/*",
+    "identity/source-contact-sheet.png",
+    "identity/small-size-preview.png",
     "candidates/contact-sheet.png",
     "candidates/baseline-*/generated/*",
+    "candidates/style-*/generated/*",
+    "character/identity-anchor.png",
     "character/selected-baseline.png",
     "runs/*/row-strips/*",
     "runs/*/qa/contact-sheet.png",
+    "runs/*/qa/contact-sheet-v2.png",
+    "runs/*/qa/look-directions.png",
+    "runs/*/qa/direction-blind-pairs.png",
+    "runs/*/qa/look-continuity.json",
+    "runs/*/qa/direction-semantics.json",
+    "runs/*/qa/direction-blind-validation.json",
+    "runs/*/qa/likeness-report.json",
+    "runs/*/qa/likeness-receipt.json",
+    "runs/*/qa/likeness-receipt.md",
+    "runs/*/qa/likeness-qa-sheet.png",
+    "runs/*/qa/identity-drift.json",
+    "runs/*/qa/animation-correctness.json",
+    "runs/*/qa/animation-review.json",
     "runs/*/qa/edge-preview-white.png",
     "runs/*/qa/centering-overlay.png",
+    "runs/*/qa/centering-report.json",
     "runs/*/qa/previews/*",
     "runs/*/final/spritesheet.webp",
+    "runs/*/final/spritesheet-v2.webp",
     "runs/*/package/pet.json",
     "runs/*/package/spritesheet.webp",
     "exports/**/*",
@@ -55,6 +74,8 @@ def kind_for(relative_path: str) -> str:
         return "source"
     if relative_path.startswith("candidates/"):
         return "candidate"
+    if relative_path.startswith("identity/"):
+        return "identity"
     if relative_path.startswith("character/"):
         return "character"
     if "/qa/" in relative_path:
@@ -75,6 +96,8 @@ def stage_for(relative_path: str) -> str:
         return "sources"
     if relative_path.startswith("candidates/"):
         return "baselines"
+    if relative_path.startswith("identity/"):
+        return "identity"
     if relative_path.startswith("character/"):
         return "baselines"
     if "/row-strips/" in relative_path:

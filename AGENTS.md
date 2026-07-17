@@ -23,4 +23,7 @@ python -m unittest discover -s tests -v
 ```
 
 - Validate the Codex skill after editing `codex-skill/goodboy/SKILL.md`.
+- For UI release changes, run `cd ui && npm run build:package`,
+  `npm run check:package`, `npm run typecheck`, and `npm run test:e2e` so the
+  compiled loopback Review Room under `src/goodboy/web/static/` stays current.
 - Keep user-facing docs aligned with the current happy path: `start`, `advance`, provider generation, generated-output map import, visual approval, and install.

@@ -12,6 +12,11 @@ export function BaselineReview({ state }: { state: ProjectState }) {
           <div className="data-row" key={String(candidate.id)}>
             <span>
               {candidate.selected ? <Check size={14} /> : <Image size={14} />} {String(candidate.id)}
+              {candidate.holistic_gestalt_score != null ? (
+                <small>
+                  Gestalt {String(candidate.holistic_gestalt_score)} · traits {String(candidate.signature_trait_score)} · small-size {String(candidate.small_size_readability_score)}
+                </small>
+              ) : null}
             </span>
             <StatusBadge severity={candidate.selected ? "success" : "info"}>{candidate.selected ? "Selected" : String(candidate.provider ?? "planned")}</StatusBadge>
           </div>

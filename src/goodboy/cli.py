@@ -6,16 +6,40 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
+from . import __version__
 from .adapters import execute_gemini_image_job, execute_openai_image_job, list_capabilities, prepare_handoff
-from .candidates import CANDIDATE_INDEX, build_candidate_contact_sheet, plan_baseline_candidates, select_baseline_candidate, store_candidate_image
+from .benchmark import analyze_benchmark, import_ratings, initialize_benchmark, prepare_trials
+from .candidates import (
+    CANDIDATE_INDEX,
+    build_candidate_contact_sheet,
+    plan_baseline_candidates,
+    record_candidate_review,
+    select_baseline_candidate,
+    store_candidate_image,
+)
 from .critique import record_critique
-from .exports import export_petdex_package, export_project_bundle
+from .exports import export_diagnostic_bundle, export_petdex_package, export_project_bundle
 from .feedback import create_feedback_event
-from .ingest import draft_source_card, ingest_images, load_source_images, write_provenance_report
+from .identity import (
+    apply_identity_trait_patch,
+    assign_source_roles,
+    confirm_identity_profile,
+    draft_identity_profile,
+    import_identity_analysis,
+    load_identity_profile,
+    prepare_identity_analysis_handoff,
+    record_likeness_review,
+    source_contact_sheet,
+)
+from .ingest import draft_source_card, ingest_images, write_provenance_report
+from .jobs import create_repair_attempt, job_graph
 from .jsonio import read_json
+from .migrations import upgrade_project_manifest
 from .pipeline import build_from_row_strips
 from .project import init_project, load_project
+from .qa import record_animation_review
 from .style import STYLE_PATH, plan_row_generation_jobs, save_default_style_sheet
 from .validation import validate_project
 from .workflow import (
@@ -30,12 +54,15 @@ from .workflow import (
     latest_run_id,
     make_project,
     next_status,
+    recover_project_run,
     review_status,
 )
+from .v2_backend import combine_and_validate_blind_reviews, record_direction_semantics
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="goodboy", description="Create and validate Codex pet spritesheets.")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     init_cmd = sub.add_parser("init", help="Create a Goodboy project workspace.")
@@ -55,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     make_cmd.add_argument("--source", action="append", required=True)
     make_cmd.add_argument("--provider", default="codex_builtin")
     make_cmd.add_argument("--model-alias", default="codex-imagegen")
-    make_cmd.add_argument("--count", type=int, default=6)
+    make_cmd.add_argument("--count", type=int, default=3)
     make_cmd.add_argument("--notes", default="")
 
     start_cmd = sub.add_parser("start", help="Start a Goodboy project and stop at the first provider/user gate.")
@@ -66,7 +93,7 @@ def main(argv: list[str] | None = None) -> int:
     start_cmd.add_argument("--source", action="append", required=True)
     start_cmd.add_argument("--provider", default="codex_builtin")
     start_cmd.add_argument("--model-alias", default="codex-imagegen")
-    start_cmd.add_argument("--count", type=int, default=6)
+    start_cmd.add_argument("--count", type=int, default=3)
     start_cmd.add_argument("--notes", default="")
 
     advance_cmd = sub.add_parser("advance", help="Run safe deterministic workflow steps until the next provider/user gate.")
@@ -78,6 +105,21 @@ def main(argv: list[str] | None = None) -> int:
     advance_cmd.add_argument("--candidate-id")
     advance_cmd.add_argument("--baseline-image")
     advance_cmd.add_argument("--selection-notes", default="")
+    advance_cmd.add_argument("--holistic-gestalt-score", type=float)
+    advance_cmd.add_argument("--signature-trait-score", type=float)
+    advance_cmd.add_argument("--small-size-readability-score", type=float)
+    advance_cmd.add_argument("--candidate-review-notes", default="")
+    advance_cmd.add_argument("--candidate-reviewed-by", default="human")
+    advance_cmd.add_argument(
+        "--confirm-identity",
+        action="store_true",
+        help="Confirm the current evidence-linked identity profile and continue.",
+    )
+    advance_cmd.add_argument(
+        "--provider-consent",
+        action="store_true",
+        help="Allow EXIF-stripped source derivatives to be sent to the selected image provider.",
+    )
     advance_cmd.add_argument("--generated-map")
     advance_cmd.add_argument("--state", action="append", help="Generated row mapping in the form state=/absolute/path.png")
     advance_cmd.add_argument("--row-provenance", choices=["provider_generated", "user_supplied", "test_fixture"], default="provider_generated")
@@ -92,6 +134,92 @@ def main(argv: list[str] | None = None) -> int:
     doctor_cmd = sub.add_parser("doctor", help="Report validation, workflow, provider, and artifact readiness.")
     doctor_cmd.add_argument("project_dir")
     doctor_cmd.add_argument("--agent-mode", action="store_true")
+
+    upgrade_cmd = sub.add_parser("upgrade", help="Archive and upgrade a legacy Goodboy project to the v2 contract.")
+    upgrade_cmd.add_argument("project_dir")
+    upgrade_cmd.add_argument("--target-contract", default="codex-pet-v2")
+    upgrade_cmd.add_argument("--provider", default="codex_builtin")
+    upgrade_cmd.add_argument("--model-alias", default="codex-imagegen")
+    upgrade_cmd.add_argument("--run-id")
+
+    identity_show_cmd = sub.add_parser("identity-show", help="Show reference coverage and the current identity profile.")
+    identity_show_cmd.add_argument("project_dir")
+
+    identity_draft_cmd = sub.add_parser("identity-draft", help="Draft an evidence-linked identity profile from source metadata.")
+    identity_draft_cmd.add_argument("project_dir")
+    identity_draft_cmd.add_argument("--replace", action="store_true")
+
+    identity_handoff_cmd = sub.add_parser("identity-handoff", help="Prepare a source-analysis handoff for identity extraction.")
+    identity_handoff_cmd.add_argument("project_dir")
+    identity_handoff_cmd.add_argument("--provider", default="codex_builtin")
+    identity_handoff_cmd.add_argument("--provider-consent", action="store_true")
+
+    identity_import_cmd = sub.add_parser("identity-import", help="Import structured identity-analysis JSON.")
+    identity_import_cmd.add_argument("project_dir")
+    identity_import_cmd.add_argument("--analysis", required=True)
+
+    identity_confirm_cmd = sub.add_parser("identity-confirm", help="Confirm and lock important identity traits.")
+    identity_confirm_cmd.add_argument("project_dir")
+    identity_confirm_cmd.add_argument("--author", default="human")
+
+    identity_patch_cmd = sub.add_parser("identity-patch", help="Correct one identity trait and version the profile.")
+    identity_patch_cmd.add_argument("project_dir")
+    identity_patch_cmd.add_argument("--trait-id", required=True)
+    identity_patch_cmd.add_argument("--value", required=True)
+    identity_patch_cmd.add_argument("--reason", required=True)
+    identity_patch_cmd.add_argument("--author", default="human")
+    identity_patch_cmd.add_argument("--run-id")
+
+    source_role_cmd = sub.add_parser("source-role", help="Assign identity/reference roles to an ingested source image.")
+    source_role_cmd.add_argument("project_dir")
+    source_role_cmd.add_argument("--source-id", required=True)
+    source_role_cmd.add_argument("--role", action="append", required=True)
+    source_role_cmd.add_argument(
+        "--provider-permission",
+        action="append",
+        help="Provider permission in the form provider=true|false.",
+    )
+
+    graph_cmd = sub.add_parser("job-graph", help="Show the durable v2 generation dependency graph.")
+    graph_cmd.add_argument("project_dir")
+    graph_cmd.add_argument("--run-id", required=True)
+
+    recover_cmd = sub.add_parser("recover", help="Recover interrupted jobs and reconcile existing provider outputs.")
+    recover_cmd.add_argument("project_dir")
+    recover_cmd.add_argument("--run-id", required=True)
+
+    repair_cmd = sub.add_parser("repair", help="Archive and invalidate targeted jobs plus their dependent outputs.")
+    repair_cmd.add_argument("project_dir")
+    repair_cmd.add_argument("--run-id", required=True)
+    repair_cmd.add_argument("--job-id", action="append", required=True)
+    repair_cmd.add_argument("--reason", required=True)
+    repair_cmd.add_argument("--author", default="human")
+
+    direction_cmd = sub.add_parser("direction-review", help="Record semantic verdicts for all 16 v2 look directions.")
+    direction_cmd.add_argument("project_dir")
+    direction_cmd.add_argument("--run-id", required=True)
+    direction_cmd.add_argument("--verdicts", required=True)
+    direction_cmd.add_argument("--reviewer", default="human")
+
+    blind_cmd = sub.add_parser("direction-blind-import", help="Combine and validate three isolated blind-direction reviews.")
+    blind_cmd.add_argument("project_dir")
+    blind_cmd.add_argument("--run-id", required=True)
+    blind_cmd.add_argument("--verdict", action="append", required=True)
+
+    likeness_cmd = sub.add_parser("likeness-review", help="Record per-trait source-likeness verdicts.")
+    likeness_cmd.add_argument("project_dir")
+    likeness_cmd.add_argument("--run-id", required=True)
+    likeness_cmd.add_argument("--verdicts", required=True)
+    likeness_cmd.add_argument("--reviewer", default="human")
+
+    animation_cmd = sub.add_parser(
+        "animation-review",
+        help="Record state-by-state animation semantics, continuity, and identity verdicts.",
+    )
+    animation_cmd.add_argument("project_dir")
+    animation_cmd.add_argument("--run-id", required=True)
+    animation_cmd.add_argument("--verdicts", required=True)
+    animation_cmd.add_argument("--reviewer", default="human")
 
     ingest_cmd = sub.add_parser("ingest", help="Copy source images into the project and write source manifests.")
     ingest_cmd.add_argument("project_dir")
@@ -120,11 +248,17 @@ def main(argv: list[str] | None = None) -> int:
     plan_rows_cmd.add_argument("--character-reference")
     plan_rows_cmd.add_argument("--refresh", action="store_true")
 
-    candidates_cmd = sub.add_parser("plan-candidates", help="Plan baseline style candidates and prompts.")
+    candidates_cmd = sub.add_parser("plan-candidates", help="Plan controlled likeness or style candidates and prompts.")
     candidates_cmd.add_argument("project_dir")
     candidates_cmd.add_argument("--provider", required=True)
     candidates_cmd.add_argument("--model-alias", required=True)
-    candidates_cmd.add_argument("--count", type=int, default=6)
+    candidates_cmd.add_argument("--count", type=int, default=3)
+    candidates_cmd.add_argument(
+        "--evaluation-dimension",
+        choices=("likeness", "style"),
+        default="likeness",
+    )
+    candidates_cmd.add_argument("--provider-consent", action="store_true")
     candidates_cmd.add_argument("--refresh", action="store_true")
     candidates_cmd.add_argument("--no-sheet", action="store_true")
 
@@ -133,6 +267,23 @@ def main(argv: list[str] | None = None) -> int:
     select_candidate_cmd.add_argument("--candidate-id", required=True)
     select_candidate_cmd.add_argument("--image-path")
     select_candidate_cmd.add_argument("--notes", default="")
+    select_candidate_cmd.add_argument("--holistic-gestalt-score", type=float)
+    select_candidate_cmd.add_argument("--signature-trait-score", type=float)
+    select_candidate_cmd.add_argument("--small-size-readability-score", type=float)
+    select_candidate_cmd.add_argument("--review-notes", default="")
+    select_candidate_cmd.add_argument("--reviewed-by", default="human")
+
+    candidate_review_cmd = sub.add_parser(
+        "candidate-review",
+        help="Record gestalt, signature-trait, and small-size evidence for a candidate.",
+    )
+    candidate_review_cmd.add_argument("project_dir")
+    candidate_review_cmd.add_argument("--candidate-id", required=True)
+    candidate_review_cmd.add_argument("--holistic-gestalt-score", type=float, required=True)
+    candidate_review_cmd.add_argument("--signature-trait-score", type=float, required=True)
+    candidate_review_cmd.add_argument("--small-size-readability-score", type=float, required=True)
+    candidate_review_cmd.add_argument("--notes", required=True)
+    candidate_review_cmd.add_argument("--reviewed-by", default="human")
 
     candidate_image_cmd = sub.add_parser("candidate-image", help="Store a provider-generated image for a baseline candidate.")
     candidate_image_cmd.add_argument("project_dir")
@@ -186,6 +337,12 @@ def main(argv: list[str] | None = None) -> int:
     import_cmd.add_argument("--run-id", required=True)
     import_cmd.add_argument("--map")
     import_cmd.add_argument("--state", action="append", help="State mapping in the form state=/absolute/path.png")
+    import_cmd.add_argument(
+        "--extraction-method",
+        choices=["auto", "components", "slots", "stable-slots"],
+        default="auto",
+    )
+    import_cmd.add_argument("--chroma-key", help="Explicit generated-strip chroma key, for example #00FF00.")
 
     execute_openai_cmd = sub.add_parser("execute-openai", help="Execute a text-to-image OpenAI Images API job.")
     execute_openai_cmd.add_argument("project_dir")
@@ -256,11 +413,16 @@ def main(argv: list[str] | None = None) -> int:
     finish_cmd.add_argument("--install-override-reason")
 
     export_cmd = sub.add_parser("export", help="Export a Goodboy project bundle or Petdex-ready package.")
-    export_cmd.add_argument("kind", choices=["project", "petdex"])
+    export_cmd.add_argument("kind", choices=["project", "petdex", "diagnostic"])
     export_cmd.add_argument("project_dir")
     export_cmd.add_argument("--run-id", required=True)
     export_cmd.add_argument("--output-dir")
     export_cmd.add_argument("--no-zip", action="store_true")
+    export_cmd.add_argument(
+        "--include-sources",
+        action="store_true",
+        help="Explicitly include source images and source-bearing QA media in a project export.",
+    )
 
     ui_cmd = sub.add_parser("ui", help="Launch the local Goodboy Review Room web UI.")
     ui_cmd.add_argument("project_dir", nargs="?")
@@ -272,7 +434,55 @@ def main(argv: list[str] | None = None) -> int:
     validate_cmd.add_argument("project_dir")
     validate_cmd.add_argument("--no-write", action="store_true")
 
+    benchmark_cmd = sub.add_parser(
+        "benchmark",
+        help="Prepare and analyze blinded Goodboy-versus-Hatch source-likeness benchmarks.",
+    )
+    benchmark_sub = benchmark_cmd.add_subparsers(dest="benchmark_action", required=True)
+    benchmark_init = benchmark_sub.add_parser("init", help="Freeze a benchmark protocol before rating.")
+    benchmark_init.add_argument("benchmark_dir")
+    benchmark_init.add_argument("--benchmark-id", required=True)
+    benchmark_init.add_argument("--seed", required=True)
+    benchmark_init.add_argument("--release-min-identities", type=int, default=30)
+    benchmark_init.add_argument("--min-raters", type=int, default=3)
+    benchmark_prepare = benchmark_sub.add_parser("prepare", help="Randomize and copy blinded A/B trial outputs.")
+    benchmark_prepare.add_argument("benchmark_dir")
+    benchmark_prepare.add_argument("--comparisons", required=True)
+    benchmark_rate = benchmark_sub.add_parser("rate", help="Import one complete independent reviewer submission.")
+    benchmark_rate.add_argument("benchmark_dir")
+    benchmark_rate.add_argument("--ratings", required=True)
+    benchmark_analyze = benchmark_sub.add_parser("analyze", help="Analyze identity-clustered benchmark results.")
+    benchmark_analyze.add_argument("benchmark_dir")
+
     args = parser.parse_args(argv)
+    if args.command == "benchmark":
+        benchmark_dir = Path(args.benchmark_dir).expanduser().resolve()
+        try:
+            if args.benchmark_action == "init":
+                payload = initialize_benchmark(
+                    benchmark_dir,
+                    benchmark_id=args.benchmark_id,
+                    seed=args.seed,
+                    release_min_identities=args.release_min_identities,
+                    min_raters_per_identity=args.min_raters,
+                )
+            elif args.benchmark_action == "prepare":
+                payload = prepare_trials(
+                    benchmark_dir,
+                    Path(args.comparisons).expanduser().resolve(),
+                )
+            elif args.benchmark_action == "rate":
+                payload = import_ratings(
+                    benchmark_dir,
+                    Path(args.ratings).expanduser().resolve(),
+                )
+            else:
+                payload = analyze_benchmark(benchmark_dir)
+        except (ValueError, FileNotFoundError, FileExistsError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(payload, indent=2))
+        return 0
     if args.command == "init":
         project = init_project(
             Path(args.project_dir).expanduser().resolve(),
@@ -315,6 +525,13 @@ def main(argv: list[str] | None = None) -> int:
                 candidate_id=args.candidate_id,
                 baseline_image=Path(args.baseline_image).expanduser().resolve() if args.baseline_image else None,
                 selection_notes=args.selection_notes,
+                holistic_gestalt_score=args.holistic_gestalt_score,
+                signature_trait_score=args.signature_trait_score,
+                small_size_readability_score=args.small_size_readability_score,
+                candidate_review_notes=args.candidate_review_notes,
+                candidate_reviewed_by=args.candidate_reviewed_by,
+                confirm_identity=args.confirm_identity,
+                provider_consent=args.provider_consent,
                 generated_map=mapping,
                 row_provenance=args.row_provenance,
                 approval_notes=args.approval_notes,
@@ -370,6 +587,222 @@ def main(argv: list[str] | None = None) -> int:
             print(f"next_action: {payload['workflow']['next_action']}")
             print(f"missing_generated_outputs: {len(payload['missing_generated_outputs'])}")
         return 0
+    if args.command == "upgrade":
+        try:
+            receipt = upgrade_project_manifest(
+                Path(args.project_dir).expanduser().resolve(),
+                target_contract_id=args.target_contract,
+                provider=args.provider,
+                model_alias=args.model_alias,
+                run_id=args.run_id,
+            )
+        except (ValueError, FileNotFoundError, FileExistsError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(receipt, indent=2))
+        return 0
+    if args.command == "identity-show":
+        project_dir = Path(args.project_dir).expanduser().resolve()
+        profile = load_identity_profile(project_dir)
+        coverage_path = project_dir / "identity" / "reference-coverage.json"
+        payload = {
+            "profile": profile.to_dict() if profile else None,
+            "reference_coverage": read_json(coverage_path) if coverage_path.is_file() else None,
+            "source_contact_sheet": str(source_contact_sheet(project_dir)),
+        }
+        print(json.dumps(payload, indent=2))
+        return 0
+    if args.command == "identity-draft":
+        try:
+            profile = draft_identity_profile(
+                Path(args.project_dir).expanduser().resolve(),
+                replace=args.replace,
+            )
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(profile.to_dict(), indent=2))
+        return 0
+    if args.command == "identity-handoff":
+        try:
+            handoff = prepare_identity_analysis_handoff(
+                Path(args.project_dir).expanduser().resolve(),
+                provider=args.provider,
+                provider_consent=args.provider_consent,
+            )
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(handoff, indent=2))
+        return 0
+    if args.command == "identity-import":
+        try:
+            profile = import_identity_analysis(
+                Path(args.project_dir).expanduser().resolve(),
+                load_json_payload(Path(args.analysis).expanduser().resolve()),
+            )
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(profile.to_dict(), indent=2))
+        return 0
+    if args.command == "identity-confirm":
+        try:
+            project_dir = Path(args.project_dir).expanduser().resolve()
+            profile = confirm_identity_profile(project_dir, confirmed_by=args.author)
+            next_status(project_dir)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(profile.to_dict(), indent=2))
+        return 0
+    if args.command == "identity-patch":
+        try:
+            project_dir = Path(args.project_dir).expanduser().resolve()
+            profile = apply_identity_trait_patch(
+                project_dir,
+                trait_id=args.trait_id,
+                value=args.value,
+                reason=args.reason,
+                author=args.author,
+            )
+            run_id = args.run_id or latest_run_id(project_dir)
+            repair = None
+            if run_id and (project_dir / "runs" / run_id / "generation-jobs.json").is_file():
+                repair = create_repair_attempt(
+                    project_dir,
+                    run_id,
+                    job_ids=[],
+                    reason=f"identity {args.trait_id} changed: {args.reason}",
+                    author=args.author,
+                    identity_changed=True,
+                )
+            next_status(project_dir)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps({"identity_profile": profile.to_dict(), "repair": repair}, indent=2))
+        return 0
+    if args.command == "source-role":
+        try:
+            project_dir = Path(args.project_dir).expanduser().resolve()
+            permissions = parse_provider_permissions(args.provider_permission)
+            source = assign_source_roles(
+                project_dir,
+                source_id=args.source_id,
+                roles=args.role,
+                provider_permissions=permissions if args.provider_permission else None,
+            )
+            source_contact_sheet(project_dir)
+            next_status(project_dir)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(source.to_dict(), indent=2))
+        return 0
+    if args.command == "job-graph":
+        try:
+            graph = job_graph(Path(args.project_dir).expanduser().resolve(), args.run_id)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(graph, indent=2))
+        return 0
+    if args.command == "recover":
+        try:
+            result = recover_project_run(Path(args.project_dir).expanduser().resolve(), args.run_id)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, indent=2))
+        return 0
+    if args.command == "repair":
+        try:
+            project_dir = Path(args.project_dir).expanduser().resolve()
+            result = create_repair_attempt(
+                project_dir,
+                args.run_id,
+                job_ids=args.job_id,
+                reason=args.reason,
+                author=args.author,
+            )
+            next_status(project_dir)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, indent=2))
+        return 0
+    if args.command == "direction-review":
+        try:
+            project_dir = Path(args.project_dir).expanduser().resolve()
+            raw = load_json_payload(Path(args.verdicts).expanduser().resolve())
+            directions = raw.get("directions") if isinstance(raw, dict) else raw
+            if not isinstance(directions, list):
+                raise ValueError("direction verdict JSON must be a list or contain `directions`")
+            result = record_direction_semantics(
+                project_dir / "runs" / args.run_id,
+                directions,
+                reviewer=args.reviewer,
+            )
+            next_status(project_dir)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, indent=2))
+        return 0
+    if args.command == "direction-blind-import":
+        try:
+            project_dir = Path(args.project_dir).expanduser().resolve()
+            result = combine_and_validate_blind_reviews(
+                project_dir / "runs" / args.run_id,
+                [Path(item).expanduser().resolve() for item in args.verdict],
+            )
+            next_status(project_dir)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, indent=2))
+        return 0 if result.get("ok") else 1
+    if args.command == "likeness-review":
+        try:
+            project_dir = Path(args.project_dir).expanduser().resolve()
+            raw = load_json_payload(Path(args.verdicts).expanduser().resolve())
+            verdicts = raw.get("verdicts") if isinstance(raw, dict) else raw
+            metrics = raw.get("advisory_metrics", {}) if isinstance(raw, dict) else {}
+            if not isinstance(verdicts, list):
+                raise ValueError("likeness verdict JSON must be a list or contain `verdicts`")
+            report = record_likeness_review(
+                project_dir,
+                run_id=args.run_id,
+                verdicts=verdicts,
+                reviewed_by=args.reviewer,
+                advisory_metrics=metrics,
+            )
+            next_status(project_dir)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(report.to_dict(), indent=2))
+        return 0 if report.status == "approved" else 1
+    if args.command == "animation-review":
+        try:
+            project_dir = Path(args.project_dir).expanduser().resolve()
+            raw = load_json_payload(Path(args.verdicts).expanduser().resolve())
+            verdicts = raw.get("verdicts") if isinstance(raw, dict) else raw
+            if not isinstance(verdicts, list):
+                raise ValueError("animation verdict JSON must be a list or contain `verdicts`")
+            report = record_animation_review(
+                project_dir,
+                run_id=args.run_id,
+                verdicts=verdicts,
+                reviewed_by=args.reviewer,
+            )
+            next_status(project_dir)
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(report, indent=2))
+        return 0 if report.get("status") == "approved" else 1
     if args.command == "ingest":
         images = ingest_images(
             Path(args.project_dir).expanduser().resolve(),
@@ -417,11 +850,20 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "plan-candidates":
         project_dir = Path(args.project_dir).expanduser().resolve()
         index_path = project_dir / CANDIDATE_INDEX
-        if index_path.is_file() and not args.refresh:
+        existing_candidates = (
+            read_json(index_path).get("candidates", []) if index_path.is_file() else []
+        )
+        same_dimension = [
+            item
+            for item in existing_candidates
+            if isinstance(item, dict)
+            and item.get("evaluation_dimension", "likeness") == args.evaluation_dimension
+        ]
+        if same_dimension and not args.refresh:
             contact_sheet = None
             if not args.no_sheet:
                 contact_sheet = build_candidate_contact_sheet(project_dir=project_dir)
-            print(json.dumps({"already_exists": True, "candidates": read_json(index_path).get("candidates", []), "contact_sheet": str(contact_sheet) if contact_sheet else None}, indent=2))
+            print(json.dumps({"already_exists": True, "candidates": same_dimension, "contact_sheet": str(contact_sheet) if contact_sheet else None}, indent=2))
             return 0
         candidates = plan_baseline_candidates(
             project_dir=project_dir,
@@ -429,6 +871,8 @@ def main(argv: list[str] | None = None) -> int:
             model_alias=args.model_alias,
             count=args.count,
             render_sheet=not args.no_sheet,
+            evaluation_dimension=args.evaluation_dimension,
+            provider_consent=args.provider_consent,
         )
         contact_sheet = project_dir / "candidates" / "contact-sheet.png"
         print(json.dumps({"candidates": [candidate.to_dict() for candidate in candidates], "contact_sheet": str(contact_sheet) if contact_sheet.is_file() else None}, indent=2))
@@ -439,8 +883,29 @@ def main(argv: list[str] | None = None) -> int:
             candidate_id=args.candidate_id,
             image_path=Path(args.image_path) if args.image_path else None,
             notes=args.notes,
+            holistic_gestalt_score=args.holistic_gestalt_score,
+            signature_trait_score=args.signature_trait_score,
+            small_size_readability_score=args.small_size_readability_score,
+            review_notes=args.review_notes,
+            reviewed_by=args.reviewed_by,
         )
         print(json.dumps(character.to_dict(), indent=2))
+        return 0
+    if args.command == "candidate-review":
+        try:
+            review = record_candidate_review(
+                project_dir=Path(args.project_dir).expanduser().resolve(),
+                candidate_id=args.candidate_id,
+                holistic_gestalt_score=args.holistic_gestalt_score,
+                signature_trait_score=args.signature_trait_score,
+                small_size_readability_score=args.small_size_readability_score,
+                notes=args.notes,
+                reviewed_by=args.reviewed_by,
+            )
+        except (ValueError, FileNotFoundError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(review, indent=2))
         return 0
     if args.command == "candidate-image":
         try:
@@ -536,6 +1001,8 @@ def main(argv: list[str] | None = None) -> int:
                 Path(args.project_dir).expanduser().resolve(),
                 run_id=args.run_id,
                 mapping=mapping,
+                extraction_method=args.extraction_method,
+                chroma_key_hex=args.chroma_key,
             )
         except (ValueError, FileNotFoundError) as exc:
             print(f"error: {exc}", file=sys.stderr)
@@ -675,9 +1142,17 @@ def main(argv: list[str] | None = None) -> int:
                     run_id=args.run_id,
                     output_dir=Path(args.output_dir).expanduser().resolve() if args.output_dir else None,
                     zip_output=not args.no_zip,
+                    include_sources=args.include_sources,
+                )
+            elif args.kind == "petdex":
+                summary = export_petdex_package(
+                    Path(args.project_dir).expanduser().resolve(),
+                    run_id=args.run_id,
+                    output_dir=Path(args.output_dir).expanduser().resolve() if args.output_dir else None,
+                    zip_output=not args.no_zip,
                 )
             else:
-                summary = export_petdex_package(
+                summary = export_diagnostic_bundle(
                     Path(args.project_dir).expanduser().resolve(),
                     run_id=args.run_id,
                     output_dir=Path(args.output_dir).expanduser().resolve() if args.output_dir else None,
@@ -691,12 +1166,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "ui":
         from .web import launch_dev_server
 
-        payload = launch_dev_server(
-            project_dir=Path(args.project_dir).expanduser().resolve() if args.project_dir else None,
-            host=args.host,
-            port=args.port,
-            open_browser=not args.no_open,
-        )
+        try:
+            payload = launch_dev_server(
+                project_dir=Path(args.project_dir).expanduser().resolve() if args.project_dir else None,
+                host=args.host,
+                port=args.port,
+                open_browser=not args.no_open,
+            )
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
         print(json.dumps(payload, indent=2, sort_keys=True))
         return 0
     if args.command == "validate":
@@ -726,6 +1205,25 @@ def load_generated_mapping(map_path: str | None, state_items: list[str] | None) 
     if not mapping:
         raise ValueError("provide --map or at least one --state")
     return mapping
+
+
+def load_json_payload(path: Path) -> Any:
+    if not path.is_file():
+        raise FileNotFoundError(f"JSON input does not exist: {path}")
+    return read_json(path)
+
+
+def parse_provider_permissions(items: list[str] | None) -> dict[str, bool]:
+    permissions: dict[str, bool] = {}
+    for item in items or []:
+        if "=" not in item:
+            raise ValueError("--provider-permission must use provider=true|false")
+        provider, raw = item.split("=", 1)
+        normalized = raw.strip().lower()
+        if normalized not in {"true", "false", "yes", "no", "1", "0"}:
+            raise ValueError("--provider-permission value must be true or false")
+        permissions[provider.strip()] = normalized in {"true", "yes", "1"}
+    return permissions
 
 
 if __name__ == "__main__":

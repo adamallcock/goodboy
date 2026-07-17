@@ -37,7 +37,20 @@ export const demoProjectState: ProjectState = {
   manifest: {
     id: "companion-demo",
     display_name: "Companion Demo",
-    species: "dog"
+    species: "dog",
+    sprite_version_number: 1,
+    output_contract: { contract_id: "codex-pet-v1", rows: 9, columns: 8, cell_width: 192, cell_height: 208 }
+  },
+  animation_contract: {
+    idle: { frame_count: 6, frame_durations_ms: [280, 110, 110, 140, 140, 320], loop_duration_ms: 1100 },
+    "running-right": { frame_count: 8, frame_durations_ms: [120, 120, 120, 120, 120, 120, 120, 220], loop_duration_ms: 1060 },
+    "running-left": { frame_count: 8, frame_durations_ms: [120, 120, 120, 120, 120, 120, 120, 220], loop_duration_ms: 1060 },
+    waving: { frame_count: 4, frame_durations_ms: [140, 140, 140, 280], loop_duration_ms: 700 },
+    jumping: { frame_count: 5, frame_durations_ms: [140, 140, 140, 140, 280], loop_duration_ms: 840 },
+    failed: { frame_count: 8, frame_durations_ms: [140, 140, 140, 140, 140, 140, 140, 240], loop_duration_ms: 1220 },
+    waiting: { frame_count: 6, frame_durations_ms: [150, 150, 150, 150, 150, 260], loop_duration_ms: 1010 },
+    running: { frame_count: 6, frame_durations_ms: [120, 120, 120, 120, 120, 220], loop_duration_ms: 820 },
+    review: { frame_count: 6, frame_durations_ms: [150, 150, 150, 150, 150, 280], loop_duration_ms: 1030 }
   },
   gate: {
     stage: "built_for_review",
@@ -63,8 +76,26 @@ export const demoProjectState: ProjectState = {
     artifact("runs-demo-package-spritesheet-webp", "approval", "package", "spritesheet.webp", "runs/demo/package/spritesheet.webp", "success", null, "spritesheet.webp", 1536, 1872)
   ],
   sources: [
-    { id: "source-001", path: "sources/originals/source-reference.png", notes: "Demo companion reference", width: 960, height: 540 }
+    { id: "source-001", path: "sources/originals/source-reference.png", notes: "Demo companion reference", roles: ["identity_three_quarter", "body_proportions"], width: 960, height: 540 }
   ],
+  reference_coverage: {
+    source_count: 1,
+    missing_recommended_roles: ["side or marking detail"],
+    ready_for_identity: true
+  },
+  identity_profile: {
+    version: "1",
+    status: "confirmed",
+    identity_summary: "tiny white companion dog; rounded face; teal bandana",
+    traits: [
+      { id: "face.primary", category: "face", value: "tiny rounded white face", importance: "signature", locked: true },
+      { id: "accessories.primary", category: "accessories", value: "teal bandana", importance: "signature", locked: true }
+    ]
+  },
+  identity_pack: {
+    status: "ready-for-review",
+    canonical_base: "character/selected-baseline.png"
+  },
   candidates: [
     {
       id: "baseline-001",
@@ -99,6 +130,19 @@ export const demoProjectState: ProjectState = {
     global_avoid: ["text", "logos", "detached effects", "green chroma-key color in the pet"]
   },
   active_run_id: "demo",
+  jobs: [
+    { id: "row-idle", state: "idle", kind: "row-strip", provider: "codex_builtin", status: "complete" },
+    { id: "row-running-right", state: "running-right", kind: "row-strip", provider: "codex_builtin", status: "complete" },
+    { id: "row-running-left", state: "running-left", kind: "row-strip", provider: "codex_builtin", status: "complete" },
+    { id: "row-waving", state: "waving", kind: "row-strip", provider: "codex_builtin", status: "complete" },
+    { id: "row-jumping", state: "jumping", kind: "row-strip", provider: "codex_builtin", status: "complete" },
+    { id: "row-failed", state: "failed", kind: "row-strip", provider: "codex_builtin", status: "complete" },
+    { id: "row-waiting", state: "waiting", kind: "row-strip", provider: "codex_builtin", status: "complete" },
+    { id: "row-running", state: "running", kind: "row-strip", provider: "codex_builtin", status: "complete" },
+    { id: "row-review", state: "review", kind: "row-strip", provider: "codex_builtin", status: "complete" }
+  ],
+  job_graph: { ready: [], blocked: [], complete: ["row-idle", "row-running-right", "row-running-left"] },
+  events: [],
   qa: {
     run_id: "demo",
     stage: "built_for_review",
@@ -109,6 +153,17 @@ export const demoProjectState: ProjectState = {
       row_provenance: "provider_generated"
     }
   },
+  likeness: {
+    status: "approved",
+    verdicts: [
+      { trait_id: "face.primary", verdict: "pass", evidence: "The compact white face matches the source." },
+      { trait_id: "accessories.primary", verdict: "pass", evidence: "The teal bandana remains visible." }
+    ]
+  },
+  animation_review: null,
+  animation_correctness: null,
+  direction_review: null,
+  direction_blind: null,
   approvals: [],
   exports: [],
   validation: { ok: true, issues: [], checked_files: ["goodboy.json", "runs/demo/run-summary.json"] }

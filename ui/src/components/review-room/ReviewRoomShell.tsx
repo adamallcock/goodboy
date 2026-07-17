@@ -12,9 +12,14 @@ import { WalkthroughGuide } from "./WalkthroughGuide";
 
 export function ReviewRoomShell() {
   const store = useProjectStore();
+  const loadLaunchProject = useProjectStore((state) => state.loadLaunchProject);
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const currentArtifact = selectedArtifact(store.state, store.selectedArtifactId);
+
+  useEffect(() => {
+    void loadLaunchProject();
+  }, [loadLaunchProject]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -28,10 +33,11 @@ export function ReviewRoomShell() {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
       const key = event.key.toLowerCase();
       if (key === "1") store.setStage("sources");
-      if (key === "2") store.setStage("baselines");
-      if (key === "3") store.setStage("style");
-      if (key === "4") store.setStage("generation");
-      if (key === "5") store.setStage("qa");
+      if (key === "2") store.setStage("identity");
+      if (key === "3") store.setStage("baselines");
+      if (key === "4") store.setStage("style");
+      if (key === "5") store.setStage("generation");
+      if (key === "6") store.setStage("qa");
       if (key === "q") store.setStage("qa");
       if (key === "s") store.setStage("style");
       if (key === "b") store.setStage("baselines");
@@ -69,7 +75,7 @@ export function ReviewRoomShell() {
         onStageChange={store.setStage}
         onOpenDetails={store.toggleDetails}
         onOpenPreview={() => setPreviewOpen(true)}
-        onApproveDemo={store.approveDemo}
+        onApprove={(notes) => void store.approve(notes)}
       />
       <DetailsDrawer
         open={store.detailsOpen}
@@ -107,7 +113,7 @@ export function ReviewRoomShell() {
         onClose={store.toggleCommand}
         onStageChange={store.setStage}
         onRefresh={store.refresh}
-        onApprove={() => store.approveDemo("Approved through command palette after reviewing QA artifacts.")}
+        onApprove={() => void store.approve("Approved through command palette after reviewing identity, direction, and QA artifacts.")}
       />
     </div>
   );

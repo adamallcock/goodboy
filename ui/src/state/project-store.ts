@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 
-import { getProjectState, openProject, postProjectAction } from "../lib/api";
+import { createProject, getLaunchContext, getProjectState, openProject, postProjectAction, uploadProjectSources } from "../lib/api";
 import type { ActivityItem, ArtifactRef, ProjectState, ReviewStage } from "../lib/types";
 import { demoProjectState } from "../test/fixtures";
 
@@ -20,6 +20,7 @@ interface ProjectStore {
   playbackSpeed: number;
   loading: boolean;
   error: string | null;
+  launchContextChecked: boolean;
   activities: ActivityItem[];
   setStage: (stage: ReviewStage) => void;
   selectArtifact: (artifactId: string | null) => void;
@@ -33,10 +34,23 @@ interface ProjectStore {
   closeOnboarding: () => void;
   startDemo: () => void;
   loadDemo: () => void;
+  loadLaunchProject: () => Promise<void>;
   loadProject: (projectDir: string) => Promise<void>;
+  createProject: (projectDir: string, petId: string, displayName: string, species: string) => Promise<void>;
   refresh: () => Promise<void>;
   approveDemo: (notes: string) => void;
+  approve: (notes: string) => Promise<void>;
+  uploadSources: (files: File[], notes?: string) => Promise<void>;
   runAction: (path: string, body: unknown, label: string) => Promise<void>;
+}
+
+function stageForGate(stage: string): ReviewStage {
+  if (stage.includes("identity")) return "identity";
+  if (stage.includes("baseline")) return "baselines";
+  if (stage.includes("generation") || stage.includes("rows")) return "generation";
+  if (stage.includes("review") || stage.includes("quality")) return "qa";
+  if (stage.includes("approved") || stage.includes("installed")) return "approval";
+  return "sources";
 }
 
 function initialActivities(): ActivityItem[] {
@@ -59,6 +73,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   playbackSpeed: 1,
   loading: false,
   error: null,
+  launchContextChecked: false,
   activities: initialActivities(),
   setStage: (stage) => {
     const artifact = get().state.artifacts.find((item) => item.stage === stage);
@@ -97,6 +112,41 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       error: null,
       activities: initialActivities()
     }),
+  loadLaunchProject: async () => {
+    if (get().launchContextChecked) return;
+    set({ launchContextChecked: true });
+    try {
+      const context = await getLaunchContext();
+      if (!context.project_id || !context.project_dir) return;
+      const state = await getProjectState(context.project_id);
+      const stage = stageForGate(state.gate.stage);
+      set((current) => ({
+        onboardingOpen: false,
+        state,
+        selectedStage: stage,
+        selectedArtifactId: state.artifacts.find((item) => item.stage === stage)?.id ?? null,
+        detailsOpen: false,
+        error: null,
+        activities: [
+          {
+            id: `launch-${Date.now()}`,
+            kind: "system",
+            label: "Launch project opened",
+            detail: context.project_dir ?? "",
+            time: "now"
+          },
+          ...current.activities
+        ]
+      }));
+    } catch (error) {
+      // Vite-only development intentionally has no API unless the Python server is running.
+      if (!import.meta.env.DEV) {
+        const message = error instanceof Error ? error.message : String(error);
+        set({ error: message });
+        toast.error("Could not load the launch project", { description: message });
+      }
+    }
+  },
   loadProject: async (projectDir) => {
     set({ loading: true, error: null });
     try {
@@ -105,8 +155,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       set({
         onboardingOpen: false,
         state,
-        selectedStage: "sources",
-        selectedArtifactId: state.artifacts.find((item) => item.stage === "sources")?.id ?? null,
+        selectedStage: stageForGate(state.gate.stage),
+        selectedArtifactId: state.artifacts.find((item) => item.stage === stageForGate(state.gate.stage))?.id ?? null,
         detailsOpen: false,
         activities: [
           { id: `open-${Date.now()}`, kind: "action", label: "Project opened", detail: opened.project_dir, time: "now" },
@@ -118,6 +168,29 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const message = error instanceof Error ? error.message : String(error);
       set({ error: message });
       toast.error("Could not open project", { description: message });
+    } finally {
+      set({ loading: false });
+    }
+  },
+  createProject: async (projectDir, petId, displayName, species) => {
+    set({ loading: true, error: null });
+    try {
+      const state = await createProject(projectDir, petId, displayName, species);
+      set((current) => ({
+        onboardingOpen: false,
+        state,
+        selectedStage: "sources",
+        selectedArtifactId: null,
+        activities: [
+          { id: `create-${Date.now()}`, kind: "action", label: "V2 project created", detail: projectDir, time: "now" },
+          ...current.activities
+        ]
+      }));
+      toast.success("Goodboy v2 project created");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message });
+      toast.error("Could not create project", { description: message });
     } finally {
       set({ loading: false });
     }
@@ -162,6 +235,48 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       ]
     }));
     toast.success("Approval recorded");
+  },
+  approve: async (notes) => {
+    const state = get().state;
+    if (state.project_id === DEMO_PROJECT_ID) {
+      get().approveDemo(notes);
+      return;
+    }
+    if (!state.active_run_id) {
+      toast.error("No active run to approve");
+      return;
+    }
+    await get().runAction(
+      "/approval",
+      { run_id: state.active_run_id, artifact: "final-review", decision: "approved", notes },
+      "Visual approval recorded"
+    );
+  },
+  uploadSources: async (files, notes = "") => {
+    const projectId = get().state.project_id;
+    if (projectId === DEMO_PROJECT_ID) {
+      toast.info("The demo is read-only");
+      return;
+    }
+    set({ loading: true, error: null });
+    try {
+      const state = await uploadProjectSources(projectId, files, notes);
+      set((current) => ({
+        state,
+        selectedStage: "identity",
+        activities: [
+          { id: `upload-${Date.now()}`, kind: "action", label: "Source images added", detail: `${files.length} local file(s)`, time: "now" },
+          ...current.activities
+        ]
+      }));
+      toast.success("Source references added");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message });
+      toast.error("Could not add source references", { description: message });
+    } finally {
+      set({ loading: false });
+    }
   },
   runAction: async (path, body, label) => {
     const projectId = get().state.project_id;

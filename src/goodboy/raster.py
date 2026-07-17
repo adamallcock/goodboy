@@ -10,6 +10,7 @@ from PIL import Image
 
 from .contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, STATE_ORDER
 from .jsonio import write_json
+from .imageutil import pixel_data
 from .schemas import default_frame_manifest
 
 
@@ -92,7 +93,7 @@ def remove_chroma_background(image: Image.Image, chroma_key: tuple[int, int, int
     rgb = image.convert("RGB")
     key = chroma_key or border_key(rgb)
     data = bytearray()
-    for red, green, blue in rgb.getdata():
+    for red, green, blue in pixel_data(rgb):
         distance = ((red - key[0]) ** 2 + (green - key[1]) ** 2 + (blue - key[2]) ** 2) ** 0.5
         if distance <= 28:
             alpha = 0
@@ -286,7 +287,7 @@ def stable_slot_subjects(strip: Image.Image, count: int) -> list[tuple[Image.Ima
         viewport_width = max(bbox[2] - bbox[0] for bbox in bboxes) + padding * 2
         viewport_height = max(1, shared_bottom - shared_top)
         subjects = []
-        for group, bbox in zip(groups, bboxes):
+        for group, bbox in zip(groups, bboxes, strict=True):
             grouped = component_group_image(strip, group, padding=padding)
             grouped_top = max(0, bbox[1] - padding)
             viewport = Image.new("RGBA", (viewport_width, viewport_height), (0, 0, 0, 0))

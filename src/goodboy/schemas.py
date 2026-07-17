@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .contracts import DEFAULT_OUTPUT_CONTRACT, ROW_FRAME_COUNTS
+from .contracts import DEFAULT_OUTPUT_CONTRACT, ROW_FRAME_COUNTS, STATE_ORDER
 
 
 def utc_now() -> str:
@@ -19,11 +19,27 @@ class PetProject:
     id: str
     display_name: str
     species: str = "pet"
-    workspace_version: str = "0.1.2"
+    goodboy_version: str = "0.2.0"
+    workspace_version: str = "0.2.0"
+    workspace_schema_version: str = "0.2"
     created_at: str = field(default_factory=utc_now)
     updated_at: str = field(default_factory=utc_now)
     active_run_id: str | None = None
     output_contract: dict[str, Any] = field(default_factory=lambda: asdict(DEFAULT_OUTPUT_CONTRACT))
+    contract_id: str = DEFAULT_OUTPUT_CONTRACT.contract_id
+    contract_version: str = DEFAULT_OUTPUT_CONTRACT.contract_version
+    backend_name: str = "hatch-compatible"
+    backend_version: str = "codex-bundled-2026-07-16"
+    migration_state: str = "current"
+    privacy_policy: dict[str, Any] = field(
+        default_factory=lambda: {
+            "sources_local_by_default": True,
+            "strip_exif_for_provider": True,
+            "include_sources_in_exports": False,
+            "provider_consent_required": True,
+        }
+    )
+    legacy_compat: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -56,13 +72,24 @@ class SourceImage:
     notes: str = ""
     thumbnail_path: str | None = None
     exif: dict[str, Any] = field(default_factory=dict)
+    roles: list[str] = field(default_factory=list)
+    view: str | None = None
+    identity_weight: float = 1.0
+    quality: dict[str, Any] = field(default_factory=dict)
+    visible_regions: list[str] = field(default_factory=list)
+    provider_permissions: dict[str, bool] = field(default_factory=dict)
+    provider_derivative_path: str | None = None
+    added_at: str = field(default_factory=utc_now)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "SourceImage":
-        return cls(**raw)
+        migrated = dict(raw)
+        if "roles" not in migrated:
+            migrated["roles"] = [str(migrated.get("role", "primary_reference"))]
+        return cls(**migrated)
 
 
 @dataclass
@@ -87,6 +114,7 @@ class SourceCard:
     user_notes: str = ""
     source_image_ids: list[str] = field(default_factory=list)
     source_image_paths: list[str] = field(default_factory=list)
+    identity_profile_path: str | None = None
     created_at: str = field(default_factory=utc_now)
     updated_at: str = field(default_factory=utc_now)
 
@@ -113,6 +141,11 @@ class CharacterCard:
     do_not_change: list[str] = field(default_factory=list)
     provider_notes: dict[str, str] = field(default_factory=dict)
     selected_baseline_image: str | None = None
+    identity_anchor_image: str | None = None
+    identity_anchor_candidate_id: str | None = None
+    identity_profile_version: str | None = None
+    likeness_selection_notes: str = ""
+    style_selection_notes: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -138,6 +171,21 @@ class StyleCandidate:
     selected: bool = False
     selection_notes: str = ""
     selected_at: str | None = None
+    evaluation_dimension: str = "likeness"
+    identity_profile_version: str | None = None
+    likeness_score: float | None = None
+    style_score: float | None = None
+    variation_id: str = ""
+    likeness_mode: str = "legacy"
+    identity_role: str = "baseline"
+    review_image_path: str | None = None
+    holistic_gestalt_score: float | None = None
+    signature_trait_score: float | None = None
+    small_size_readability_score: float | None = None
+    overall_identity_score: float | None = None
+    review_notes: str = ""
+    reviewed_by: str | None = None
+    reviewed_at: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -206,6 +254,21 @@ class GenerationJob:
     provider_invocation_id: str | None = None
     qa_notes: str = ""
     depends_on: list[str] = field(default_factory=list)
+    attempt: int = 0
+    parent_job_id: str | None = None
+    input_artifacts: list[str] = field(default_factory=list)
+    expected_outputs: list[str] = field(default_factory=list)
+    required_gates: list[str] = field(default_factory=list)
+    invalidates: list[str] = field(default_factory=list)
+    ready_at: str | None = None
+    started_at: str | None = None
+    completed_at: str | None = None
+    blocked_reason: str | None = None
+    provider_snapshot: dict[str, Any] = field(default_factory=dict)
+    identity_profile_version: str | None = None
+    packaging_eligible: bool = True
+    created_at: str = field(default_factory=utc_now)
+    updated_at: str = field(default_factory=utc_now)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -226,6 +289,11 @@ class ProviderInvocation:
     error: str | None = None
     cost_estimate: str | None = None
     raw_response_path: str | None = None
+    provider_snapshot: dict[str, Any] = field(default_factory=dict)
+    request_id: str | None = None
+    latency_ms: int | None = None
+    usage: dict[str, Any] = field(default_factory=dict)
+    routing_profile: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -403,6 +471,164 @@ class RunSummary:
     review: str
     duplicate_audit: str
     package_dir: str | None = None
+    contract_id: str = DEFAULT_OUTPUT_CONTRACT.contract_id
+    sprite_version_number: int = DEFAULT_OUTPUT_CONTRACT.sprite_version_number
+    backend_version: str = "codex-bundled-2026-07-16"
+    likeness_receipt: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class ReferenceCoverage:
+    version: str
+    source_count: int
+    roles_present: list[str]
+    missing_recommended_roles: list[str]
+    issues: list[dict[str, Any]]
+    ready_for_identity: bool
+    generated_at: str = field(default_factory=utc_now)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "ReferenceCoverage":
+        return cls(**raw)
+
+
+@dataclass
+class IdentityEvidence:
+    source_id: str
+    note: str
+    region: str | None = None
+    direct_observation: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "IdentityEvidence":
+        return cls(**raw)
+
+
+@dataclass
+class IdentityTrait:
+    id: str
+    category: str
+    value: str
+    importance: str = "important"
+    symmetry: str = "symmetric"
+    confidence: float = 0.5
+    locked: bool = False
+    user_confirmed: bool = False
+    mirror_policy: str = "mirror-safe"
+    visibility_policy: str = "when-visible"
+    evidence: list[IdentityEvidence] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        data = asdict(self)
+        data["evidence"] = [item.to_dict() for item in self.evidence]
+        return data
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "IdentityTrait":
+        migrated = dict(raw)
+        migrated["evidence"] = [
+            item if isinstance(item, IdentityEvidence) else IdentityEvidence.from_dict(item)
+            for item in migrated.get("evidence", [])
+        ]
+        return cls(**migrated)
+
+
+@dataclass
+class IdentityProfile:
+    id: str
+    version: str
+    pet_id: str
+    traits: list[IdentityTrait]
+    status: str = "draft"
+    source_image_ids: list[str] = field(default_factory=list)
+    identity_summary: str = ""
+    uncertainties: list[str] = field(default_factory=list)
+    confirmed_by: str | None = None
+    confirmed_at: str | None = None
+    created_at: str = field(default_factory=utc_now)
+    updated_at: str = field(default_factory=utc_now)
+
+    def to_dict(self) -> dict[str, Any]:
+        data = asdict(self)
+        data["traits"] = [trait.to_dict() for trait in self.traits]
+        return data
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "IdentityProfile":
+        migrated = dict(raw)
+        migrated["traits"] = [
+            item if isinstance(item, IdentityTrait) else IdentityTrait.from_dict(item)
+            for item in migrated.get("traits", [])
+        ]
+        return cls(**migrated)
+
+
+@dataclass
+class LikenessVerdict:
+    trait_id: str
+    target: str
+    verdict: str
+    evidence: str
+    reviewer: str = "human"
+    state: str | None = None
+    score: float | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "LikenessVerdict":
+        return cls(**raw)
+
+
+@dataclass
+class LikenessReport:
+    id: str
+    run_id: str
+    identity_profile_version: str
+    status: str
+    verdicts: list[LikenessVerdict]
+    signature_failures: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    advisory_metrics: dict[str, Any] = field(default_factory=dict)
+    reviewed_by: str | None = None
+    reviewed_at: str | None = None
+    created_at: str = field(default_factory=utc_now)
+
+    def to_dict(self) -> dict[str, Any]:
+        data = asdict(self)
+        data["verdicts"] = [item.to_dict() for item in self.verdicts]
+        return data
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "LikenessReport":
+        migrated = dict(raw)
+        migrated["verdicts"] = [
+            item if isinstance(item, LikenessVerdict) else LikenessVerdict.from_dict(item)
+            for item in migrated.get("verdicts", [])
+        ]
+        return cls(**migrated)
+
+
+@dataclass
+class JobEvent:
+    id: str
+    run_id: str
+    job_id: str
+    event: str
+    from_status: str | None
+    to_status: str | None
+    details: dict[str, Any] = field(default_factory=dict)
+    created_at: str = field(default_factory=utc_now)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -420,8 +646,12 @@ def default_frame_manifest(
         chroma_key=chroma_key or {"hex": "#00ff00", "rgb": [0, 255, 0]},
         source=str(source),
         rows=[
-            FrameManifestRow(state=state, frames=count, method=(row_methods or {}).get(state, "components-centered"))
-            for state, count in ROW_FRAME_COUNTS.items()
+            FrameManifestRow(
+                state=state,
+                frames=ROW_FRAME_COUNTS[state],
+                method=(row_methods or {}).get(state, "components-centered"),
+            )
+            for state in STATE_ORDER
         ],
         centering_policy=centering_policy,
         cleanup_policy=cleanup_policy,

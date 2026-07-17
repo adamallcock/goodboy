@@ -122,6 +122,24 @@ export function DetailsDrawer({ open, state, selectedStage, selectedArtifact, on
             </div>
           </dl>
         </section>
+
+        <section className="details-section" aria-label="Durable job event history">
+          <h3>Recent durable events</h3>
+          <div className="row-list">
+            {state.events.slice(-8).reverse().map((event, index) => (
+              <div className="data-row details-file-row" key={String(event.id ?? index)}>
+                <span>
+                  {String(event.event ?? "event")}
+                  <em>{String(event.job_id ?? state.active_run_id ?? "project")}</em>
+                </span>
+                <StatusBadge severity={event.to_status === "failed" || event.to_status === "qa_failed" ? "danger" : "info"}>
+                  {String(event.to_status ?? event.from_status ?? "recorded")}
+                </StatusBadge>
+              </div>
+            ))}
+            {!state.events.length ? <p>No durable run events yet.</p> : null}
+          </div>
+        </section>
       </aside>
     </>
   );

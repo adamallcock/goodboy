@@ -15,10 +15,23 @@ from goodboy.adapters import execute_gemini_image_job, execute_openai_image_job,
 from goodboy.atlas import compose_atlas, render_animation_previews, render_atlas_animation_previews, validate_atlas
 from goodboy.candidates import build_candidate_contact_sheet, plan_baseline_candidates, select_baseline_candidate, store_candidate_image
 from goodboy.cli import main as cli_main
-from goodboy.contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, ROW_FRAME_DURATIONS_MS, STATE_ORDER
+from goodboy.contracts import (
+    CELL_HEIGHT,
+    CELL_WIDTH,
+    ROW_FRAME_COUNTS,
+    ROW_FRAME_DURATIONS_MS,
+    STATE_ORDER,
+    V1_OUTPUT_CONTRACT,
+)
 from goodboy.exports import export_petdex_package, export_project_bundle
 from goodboy.feedback import create_feedback_event
 from goodboy.ingest import draft_source_card, ingest_images, load_source_images, write_provenance_report
+from goodboy.identity import (
+    analyze_reference_coverage,
+    confirm_identity_profile,
+    draft_identity_profile,
+    record_likeness_review,
+)
 from goodboy.jsonio import read_json, write_json
 from goodboy.pipeline import build_from_row_strips
 from goodboy.project import init_project, load_project
@@ -39,6 +52,30 @@ class GoodboyCoreTests(unittest.TestCase):
                 code = int(exc.code) if isinstance(exc.code, int) else 1
         return code, stdout.getvalue(), stderr.getvalue()
 
+    def confirm_identity(self, project_dir: Path) -> None:
+        analyze_reference_coverage(project_dir)
+        draft_identity_profile(project_dir)
+        confirm_identity_profile(project_dir)
+
+    def approve_likeness(self, project_dir: Path, run_id: str) -> None:
+        profile = read_json(project_dir / "identity" / "identity-profile.json")
+        verdicts = [
+            {
+                "trait_id": trait["id"],
+                "target": "final-atlas",
+                "verdict": "pass",
+                "evidence": "Synthetic test reviewer compared the source, baseline, and final atlas.",
+            }
+            for trait in profile["traits"]
+            if trait["locked"] and trait["importance"] in {"signature", "important"}
+        ]
+        record_likeness_review(
+            project_dir,
+            run_id=run_id,
+            verdicts=verdicts,
+            reviewed_by="synthetic-test-reviewer",
+        )
+
     def test_project_init_roundtrip(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "pet"
@@ -46,6 +83,7 @@ class GoodboyCoreTests(unittest.TestCase):
             loaded = load_project(root)
             self.assertEqual(project.id, loaded.id)
             self.assertEqual(loaded.display_name, "Test Pet")
+            self.assertEqual(loaded.goodboy_version, "0.2.0")
             self.assertTrue((root / "sources" / "originals").is_dir())
             self.assertTrue((root / "runs").is_dir())
 
@@ -122,12 +160,14 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertEqual(card.species, "dog")
             self.assertEqual(card.source_image_ids, [added[0].id])
             self.assertIn("friendly", card.user_notes)
+            self.confirm_identity(root)
 
             candidates = plan_baseline_candidates(
                 project_dir=root,
                 provider="codex_builtin",
                 model_alias="codex-imagegen",
                 count=3,
+                provider_consent=True,
             )
             self.assertEqual(len(candidates), 3)
             self.assertTrue((root / candidates[0].prompt_path).is_file())
@@ -139,6 +179,11 @@ class GoodboyCoreTests(unittest.TestCase):
                 candidate_id="baseline-001",
                 image_path=source,
                 notes="best balance of faithful and friendly",
+                holistic_gestalt_score=4,
+                signature_trait_score=4,
+                small_size_readability_score=4,
+                review_notes="Synthetic review confirms balanced likeness.",
+                reviewed_by="test",
             )
             self.assertEqual(character.selected_baseline_image, "character/selected-baseline.png")
             self.assertTrue((root / "character" / "character-card.json").is_file())
@@ -154,10 +199,11 @@ class GoodboyCoreTests(unittest.TestCase):
                 run_id="planned",
                 provider="codex_builtin",
                 model_alias="codex-imagegen",
-                character_reference=added[0].path,
+                character_reference="character/selected-baseline.png",
             )
-            self.assertEqual(len(jobs), len(STATE_ORDER))
-            self.assertEqual(jobs[0].status, "planned")
+            self.assertEqual(len(jobs), len(STATE_ORDER) + 3)
+            self.assertEqual(jobs[0].status, "ready")
+            self.assertEqual(jobs[-3].status, "blocked")
             self.assertTrue((root / jobs[0].prompt_path).is_file())
             self.assertTrue((root / "runs" / "planned" / "layout-guides" / "idle.png").is_file())
             self.assertIn("runs/planned/layout-guides/idle.png", jobs[0].input_images)
@@ -172,6 +218,21 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertIn("Idle plays continuously", prompt_text)
             self.assertIn("near-still pose", prompt_text)
             self.assertIn("avoid vertical bobbing", prompt_text)
+            self.assertIn("FRAME-BY-FRAME STORYBOARD", prompt_text)
+            self.assertIn("one complete blink", prompt_text)
+            self.assertIn("LOOP-CLOSURE LOCK", prompt_text)
+            waving_prompt = (root / "runs" / "planned" / "prompts" / "rows" / "waving.md").read_text(encoding="utf-8")
+            self.assertIn("Never alternate sitting and standing", waving_prompt)
+            self.assertIn("paw must never cross the body centerline or switch sides", waving_prompt)
+            waiting_prompt = (root / "runs" / "planned" / "prompts" / "rows" / "waiting.md").read_text(encoding="utf-8")
+            self.assertIn("exact same paw stays on that exact same screen side", waiting_prompt)
+            self.assertIn("Never switch forepaws", waiting_prompt)
+            running_prompt = (root / "runs" / "planned" / "prompts" / "rows" / "running.md").read_text(encoding="utf-8")
+            self.assertIn("processing, not locomotion", running_prompt)
+            self.assertIn("perform exactly one action cycle", running_prompt)
+            self.assertIn("Never alternate paws", running_prompt)
+            failed_prompt = (root / "runs" / "planned" / "prompts" / "rows" / "failed.md").read_text(encoding="utf-8")
+            self.assertIn("Every recovery step must be similar in size", failed_prompt)
             metadata = read_json(root / "runs" / "planned" / "run-metadata.json")
             self.assertEqual(metadata["chroma_key"]["selection"], "auto")
             self.assertNotEqual(metadata["chroma_key"]["hex"].lower(), "#00ff00")
@@ -180,6 +241,10 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertEqual(invocation.adapter, "codex_builtin")
             self.assertEqual(invocation.status, "prepared")
             self.assertIn("input_image_roles", invocation.request_metadata)
+            self.assertEqual(
+                set(invocation.request_metadata["input_image_roles"]),
+                set(invocation.request_metadata["input_images"]),
+            )
             self.assertTrue((root / "runs" / "planned" / "provider-invocations" / f"{invocation.id}.json").is_file())
 
             event = create_feedback_event(
@@ -219,13 +284,29 @@ class GoodboyCoreTests(unittest.TestCase):
             init_project(root, pet_id="pet", display_name="Pet", species="dog")
             ingest_images(root, [source])
             draft_source_card(root)
-            plan_baseline_candidates(project_dir=root, provider="codex_builtin", model_alias="codex-imagegen", count=1)
+            self.confirm_identity(root)
+            plan_baseline_candidates(
+                project_dir=root,
+                provider="codex_builtin",
+                model_alias="codex-imagegen",
+                count=1,
+                provider_consent=True,
+            )
             generated = Path(tmp) / "generated.png"
             Image.new("RGBA", (80, 80), (255, 255, 255, 255)).save(generated)
 
             stored = store_candidate_image(project_dir=root, candidate_id="baseline-001", image_path=generated)
             self.assertEqual(stored, "candidates/baseline-001/generated/candidate.png")
-            selected = select_baseline_candidate(project_dir=root, candidate_id="baseline-001", image_path=generated)
+            selected = select_baseline_candidate(
+                project_dir=root,
+                candidate_id="baseline-001",
+                image_path=generated,
+                holistic_gestalt_score=4,
+                signature_trait_score=4,
+                small_size_readability_score=4,
+                review_notes="Synthetic review confirms fixture likeness.",
+                reviewed_by="test",
+            )
             self.assertEqual(selected.selected_baseline_image, "character/selected-baseline.png")
             candidate = read_json(root / "candidates" / "baseline-001" / "candidate.json")
             self.assertEqual(candidate["image_path"], "candidates/baseline-001/generated/candidate.png")
@@ -327,18 +408,18 @@ class GoodboyCoreTests(unittest.TestCase):
             )
             self.assertEqual(code, 0, stderr)
             result = read_json(root / "workflow-state.json")
-            self.assertEqual(result["stage"], "baselines_planned")
-            self.assertEqual(result["next_action"], "generate_baselines")
+            self.assertEqual(result["stage"], "identity_review")
+            self.assertEqual(result["next_action"], "confirm_identity")
             self.assertIn("do_not", result)
             self.assertIn("renderer", " ".join(result["do_not"]))
-            self.assertIn("generate_baselines", stdout)
+            self.assertIn("confirm_identity", stdout)
 
             code, stdout, stderr = self.run_cli(["next", str(root), "--agent-mode"])
             self.assertEqual(code, 0, stderr)
             next_payload = __import__("json").loads(stdout)
-            self.assertEqual(next_payload["stage"], "baselines_planned")
+            self.assertEqual(next_payload["stage"], "identity_review")
             self.assertIn("goodboy advance", " ".join(next_payload["allowed_commands"]))
-            self.assertIn("creating local renderer scripts", " ".join(next_payload["blocked_actions"]))
+            self.assertIn("baseline generation", " ".join(next_payload["blocked_actions"]))
 
     def test_start_and_plan_candidates_render_candidate_sheet_by_default(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -363,6 +444,19 @@ class GoodboyCoreTests(unittest.TestCase):
             )
             self.assertEqual(code, 0, stderr)
             payload = json.loads(stdout)
+            self.assertEqual(payload["stage"], "identity_review")
+            self.assertTrue((root / "identity" / "source-contact-sheet.png").is_file())
+            code, stdout, stderr = self.run_cli(
+                [
+                    "advance",
+                    str(root),
+                    "--agent-mode",
+                    "--confirm-identity",
+                    "--provider-consent",
+                ]
+            )
+            self.assertEqual(code, 0, stderr)
+            payload = json.loads(stdout)
             self.assertEqual(payload["stage"], "baselines_planned")
             self.assertTrue((root / "candidates" / "contact-sheet.png").is_file())
             self.assertIn("candidates/contact-sheet.png", payload["artifacts_to_show_user"])
@@ -371,6 +465,7 @@ class GoodboyCoreTests(unittest.TestCase):
             init_project(second, pet_id="second", display_name="Second", species="dog")
             ingest_images(second, [source])
             draft_source_card(second)
+            self.confirm_identity(second)
             code, stdout, stderr = self.run_cli(
                 [
                     "plan-candidates",
@@ -381,6 +476,7 @@ class GoodboyCoreTests(unittest.TestCase):
                     "codex-imagegen",
                     "--count",
                     "2",
+                    "--provider-consent",
                 ]
             )
             self.assertEqual(code, 0, stderr)
@@ -412,8 +508,8 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertEqual(code, 0, stderr)
             payload = json.loads(stdout)
             self.assertTrue(payload["validation"]["ok"])
-            self.assertEqual(payload["workflow"]["stage"], "baselines_planned")
-            self.assertEqual(payload["providers"], {"codex_builtin": {"required": "codex interactive image generation"}})
+            self.assertEqual(payload["workflow"]["stage"], "identity_review")
+            self.assertEqual(payload["providers"], {})
             self.assertFalse(payload["missing_generated_outputs"])
             self.assertFalse(payload["suspicious_renderer_scripts"])
             self.assertFalse(payload["tests_needed_for_project_artifacts_only"])
@@ -426,18 +522,32 @@ class GoodboyCoreTests(unittest.TestCase):
             source = Path(tmp) / "source.png"
             Image.new("RGB", (64, 48), (240, 236, 220)).save(source)
             self.run_cli(["make", str(root), "--pet-id", "pet", "--display-name", "Pet", "--source", str(source)])
+            self.run_cli(
+                [
+                    "advance",
+                    str(root),
+                    "--agent-mode",
+                    "--confirm-identity",
+                    "--provider-consent",
+                ]
+            )
             select_image = root / "candidate.png"
             Image.new("RGB", (64, 64), (255, 255, 255)).save(select_image)
-            self.run_cli(["select-candidate", str(root), "--candidate-id", "baseline-001", "--image-path", str(select_image)])
+            self.run_cli([
+                "select-candidate", str(root), "--candidate-id", "baseline-001", "--image-path", str(select_image),
+                "--holistic-gestalt-score", "4", "--signature-trait-score", "4",
+                "--small-size-readability-score", "4", "--review-notes", "Synthetic review passes.",
+                "--reviewed-by", "test",
+            ])
             self.run_cli(["plan-rows", str(root), "--run-id", "rows", "--provider", "codex_builtin", "--model-alias", "codex-imagegen", "--character-reference", "character/selected-baseline.png"])
             code, stdout, stderr = self.run_cli(["next", str(root), "--agent-mode"])
             self.assertEqual(code, 0, stderr)
             payload = json.loads(stdout)
-            self.assertEqual(payload["stage"], "rows_planned")
+            self.assertEqual(payload["stage"], "generation_in_progress")
             self.assertEqual(payload["recommended_command"], f"goodboy advance {root.resolve()} --agent-mode --run-id rows")
             self.assertIn("goodboy advance", payload["after_provider_generation"])
             self.assertIn("--generated-map", payload["after_provider_generation"])
-            self.assertIn("custom metadata python", payload["do_not_run"])
+            self.assertIn("renderer", " ".join(payload["do_not"]))
             self.assertNotIn("<project-dir>", payload["recommended_command"])
             self.assertIn("style-default", " ".join(payload["already_done"]))
 
@@ -447,6 +557,15 @@ class GoodboyCoreTests(unittest.TestCase):
             source = Path(tmp) / "source.png"
             Image.new("RGB", (64, 48), (240, 236, 220)).save(source)
             self.run_cli(["make", str(root), "--pet-id", "pet", "--display-name", "Pet", "--source", str(source)])
+            self.run_cli(
+                [
+                    "advance",
+                    str(root),
+                    "--agent-mode",
+                    "--confirm-identity",
+                    "--provider-consent",
+                ]
+            )
             prompt = root / "candidates" / "baseline-001" / "prompt.md"
             before = prompt.read_text(encoding="utf-8")
             code, stdout, stderr = self.run_cli(["plan-candidates", str(root), "--provider", "codex_builtin", "--model-alias", "codex-imagegen", "--count", "6"])
@@ -457,7 +576,12 @@ class GoodboyCoreTests(unittest.TestCase):
 
             selected = root / "selected.png"
             Image.new("RGB", (64, 64), (255, 255, 255)).save(selected)
-            self.run_cli(["select-candidate", str(root), "--candidate-id", "baseline-001", "--image-path", str(selected)])
+            self.run_cli([
+                "select-candidate", str(root), "--candidate-id", "baseline-001", "--image-path", str(selected),
+                "--holistic-gestalt-score", "4", "--signature-trait-score", "4",
+                "--small-size-readability-score", "4", "--review-notes", "Synthetic review passes.",
+                "--reviewed-by", "test",
+            ])
             self.run_cli(["style-default", str(root)])
             code, stdout, stderr = self.run_cli(["style-default", str(root)])
             self.assertEqual(code, 0, stderr)
@@ -475,25 +599,77 @@ class GoodboyCoreTests(unittest.TestCase):
             install_root = Path(tmp) / "pets"
             Image.new("RGB", (64, 48), (240, 236, 220)).save(source)
             self.run_cli(["make", str(root), "--pet-id", "pet", "--display-name", "Pet", "--source", str(source)])
-            self.run_cli(["select-candidate", str(root), "--candidate-id", "baseline-001", "--image-path", str(source)])
+            self.run_cli(
+                [
+                    "advance",
+                    str(root),
+                    "--agent-mode",
+                    "--confirm-identity",
+                    "--provider-consent",
+                ]
+            )
+            self.run_cli([
+                "select-candidate", str(root), "--candidate-id", "baseline-001", "--image-path", str(source),
+                "--holistic-gestalt-score", "4", "--signature-trait-score", "4",
+                "--small-size-readability-score", "4", "--review-notes", "Synthetic review passes.",
+                "--reviewed-by", "test",
+            ])
             self.run_cli(["style-default", str(root)])
             self.run_cli(["plan-rows", str(root), "--run-id", "rows", "--provider", "codex_builtin", "--model-alias", "codex-imagegen", "--character-reference", "character/selected-baseline.png"])
 
             code, stdout, stderr = self.run_cli(["generate-handoff", str(root), "--run-id", "rows", "--all"])
             self.assertEqual(code, 0, stderr)
             handoff = json.loads(stdout)
-            self.assertEqual(handoff["prepared_count"], len(STATE_ORDER))
+            self.assertEqual(handoff["prepared_count"], len(STATE_ORDER) - 1)
+            self.assertIn(
+                "row-running-left",
+                {item["job_id"] for item in handoff["dependency_blocked"]},
+            )
             self.assertEqual(handoff["next_action"], "await_provider_outputs")
             self.assertTrue((root / "runs" / "rows" / "handoff-summary.json").is_file())
+            for item in handoff["expected_outputs"]:
+                invocation = read_json(
+                    root
+                    / "runs"
+                    / "rows"
+                    / "provider-invocations"
+                    / f"handoff-{item['job_id']}.json"
+                )
+                self.assertEqual(
+                    item["input_images"],
+                    invocation["request_metadata"]["input_images"],
+                )
+                self.assertLessEqual(
+                    len(item["input_images"]),
+                    get_capabilities("codex_builtin").max_reference_images,
+                )
 
-            output_map = {state: str(rows / f"{state}.png") for state in STATE_ORDER}
+            output_map = {
+                **{state: str(rows / f"{state}.png") for state in STATE_ORDER},
+                "look-cardinals": str(rows / "look-cardinals.png"),
+                "look-row-9": str(rows / "look-row-9.png"),
+                "look-row-10": str(rows / "look-row-10.png"),
+            }
             map_path = Path(tmp) / "generated-map.json"
             map_path.write_text(json.dumps(output_map), encoding="utf-8")
-            code, stdout, stderr = self.run_cli(["import-generated", str(root), "--run-id", "rows", "--map", str(map_path)])
+            code, stdout, stderr = self.run_cli(
+                [
+                    "import-generated",
+                    str(root),
+                    "--run-id",
+                    "rows",
+                    "--map",
+                    str(map_path),
+                    "--extraction-method",
+                    "stable-slots",
+                    "--chroma-key",
+                    "#00FF00",
+                ]
+            )
             self.assertEqual(code, 0, stderr)
             imported = json.loads(stdout)
-            self.assertFalse(imported["missing_states"])
-            self.assertEqual(len(imported["imported"]), len(STATE_ORDER))
+            self.assertFalse(imported["remaining_jobs"])
+            self.assertEqual(len(imported["imported"]), len(STATE_ORDER) + 3)
             jobs = read_json(root / "runs" / "rows" / "generation-jobs.json")["jobs"]
             self.assertTrue(all(job["status"] == "complete" for job in jobs))
 
@@ -505,8 +681,9 @@ class GoodboyCoreTests(unittest.TestCase):
             self.assertIn("runs/rows/qa/centering-overlay.png", review["review_artifacts"])
             self.assertIn("runs/rows/qa/centering-report.json", review["review_artifacts"])
             self.assertTrue((root / "runs" / "rows" / "qa" / "review-summary.json").is_file())
-            manifest = read_json(root / "runs" / "rows" / "frames" / "frames-manifest.json")
-            self.assertEqual({row["method"] for row in manifest["rows"]}, {"stable-slots"})
+            self.assertTrue((root / "runs" / "rows" / "final" / "validation-v2.json").is_file())
+            self.assertTrue((root / "runs" / "rows" / "qa" / "likeness-qa-sheet.png").is_file())
+            self.approve_likeness(root, "rows")
 
             code, stdout, stderr = self.run_cli(["finish", str(root), "--run-id", "rows", "--row-provenance", "test_fixture", "--install-root", str(install_root), "--approval-notes", "Approved simplified flow"])
             self.assertEqual(code, 0, stderr)
@@ -529,6 +706,18 @@ class GoodboyCoreTests(unittest.TestCase):
                     "advance",
                     str(root),
                     "--agent-mode",
+                    "--confirm-identity",
+                    "--provider-consent",
+                ]
+            )
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(json.loads(stdout)["gate"], "baseline_generation_or_selection")
+
+            code, stdout, stderr = self.run_cli(
+                [
+                    "advance",
+                    str(root),
+                    "--agent-mode",
                     "--candidate-id",
                     "baseline-001",
                     "--baseline-image",
@@ -537,16 +726,31 @@ class GoodboyCoreTests(unittest.TestCase):
                     "rows",
                     "--selection-notes",
                     "fixture selected",
+                    "--holistic-gestalt-score",
+                    "4",
+                    "--signature-trait-score",
+                    "4",
+                    "--small-size-readability-score",
+                    "4",
+                    "--candidate-review-notes",
+                    "Synthetic fixture preserves identity.",
+                    "--candidate-reviewed-by",
+                    "test",
                 ]
             )
             self.assertEqual(code, 0, stderr)
             selected = json.loads(stdout)
-            self.assertEqual(selected["gate"], "row_generation")
+            self.assertEqual(selected["gate"], "provider_generation")
             self.assertIn("select-candidate", selected["actions"])
-            self.assertIn("generate-handoff", selected["actions"])
+            self.assertIn("generate-ready-handoffs", selected["actions"])
             self.assertTrue((root / "runs" / "rows" / "handoff-summary.json").is_file())
 
-            output_map = {state: str(rows / f"{state}.png") for state in STATE_ORDER}
+            output_map = {
+                **{state: str(rows / f"{state}.png") for state in STATE_ORDER},
+                "look-cardinals": str(rows / "look-cardinals.png"),
+                "look-row-9": str(rows / "look-row-9.png"),
+                "look-row-10": str(rows / "look-row-10.png"),
+            }
             map_path = Path(tmp) / "generated-map.json"
             map_path.write_text(json.dumps(output_map), encoding="utf-8")
             code, stdout, stderr = self.run_cli(
@@ -564,9 +768,10 @@ class GoodboyCoreTests(unittest.TestCase):
             )
             self.assertEqual(code, 0, stderr)
             built = json.loads(stdout)
-            self.assertEqual(built["gate"], "visual_approval")
-            self.assertIn("build-review", built["actions"])
+            self.assertEqual(built["gate"], "direction_and_likeness_review")
+            self.assertIn("build-v2-review", built["actions"])
             self.assertIn("runs/rows/qa/contact-sheet.png", built["artifacts_to_show_user"])
+            self.approve_likeness(root, "rows")
 
             code, stdout, stderr = self.run_cli(
                 [
@@ -1047,12 +1252,17 @@ class GoodboyCoreTests(unittest.TestCase):
                 draw.ellipse((cx - 45, bottom - height, cx + 45, bottom), fill=(245, 240, 225))
             strip.save(rows_copy / "idle.png")
             root = Path(tmp) / "pet"
+            init_project(root, pet_id="centered", display_name="Centered")
+            manifest = read_json(root / "goodboy.json")
+            manifest["contract_id"] = V1_OUTPUT_CONTRACT.contract_id
+            manifest["contract_version"] = V1_OUTPUT_CONTRACT.contract_version
+            manifest["output_contract"] = V1_OUTPUT_CONTRACT.to_dict()
+            manifest["migration_state"] = "legacy-v1"
+            write_json(root / "goodboy.json", manifest)
             summary = build_from_row_strips(
                 project_dir=root,
                 rows_dir=rows_copy,
                 run_id="centered",
-                pet_id="centered",
-                display_name="Centered",
             )
             self.assertTrue(summary.ok)
             audit = read_json(root / "runs" / "centered" / "qa" / "duplicate-audit.json")
@@ -1130,13 +1340,23 @@ class GoodboyCoreTests(unittest.TestCase):
         plugin_root = Path("plugins/goodboy")
         manifest = read_json(plugin_root / ".codex-plugin" / "plugin.json")
         self.assertEqual(manifest["name"], "goodboy")
+        self.assertEqual(manifest["version"], "0.2.0")
         self.assertEqual(manifest["skills"], "./skills/")
         self.assertEqual(manifest["interface"]["displayName"], "Goodboy")
-        self.assertIn("start a Codex pet", " ".join(manifest["interface"]["defaultPrompt"]))
+        self.assertIn("source-faithful Codex pet", " ".join(manifest["interface"]["defaultPrompt"]))
         self.assertTrue((plugin_root / "skills" / "goodboy" / "SKILL.md").is_file())
+        runtime = read_json(plugin_root / "runtime.json")
+        self.assertEqual(runtime["version"], manifest["version"])
+        self.assertEqual(runtime["distribution"], "goodboy-codex")
+        self.assertTrue((plugin_root / "scripts" / "goodboy-runtime.mjs").is_file())
+        self.assertEqual(
+            Path("codex-skill/goodboy/SKILL.md").read_bytes(),
+            (plugin_root / "skills" / "goodboy" / "SKILL.md").read_bytes(),
+        )
 
         marketplace = read_json(Path(".agents/plugins/marketplace.json"))
-        self.assertEqual(marketplace["name"], "goodboy-local")
+        self.assertEqual(marketplace["name"], "goodboy")
+        self.assertEqual(marketplace["interface"]["displayName"], "Goodboy")
         entries = {entry["name"]: entry for entry in marketplace["plugins"]}
         self.assertIn("goodboy", entries)
         entry = entries["goodboy"]
@@ -1161,8 +1381,8 @@ class GoodboyCoreTests(unittest.TestCase):
                 display_name="Legacy",
             )
             self.assertTrue(summary.ok)
-            validation = Path(summary.validation)
-            audit = Path(summary.duplicate_audit)
+            validation = (Path(tmp) / "legacy" / summary.validation)
+            audit = (Path(tmp) / "legacy" / summary.duplicate_audit)
             self.assertTrue(validation.is_file())
             self.assertTrue(audit.is_file())
 

@@ -1,7 +1,7 @@
 {
   "name": "@adamallcock/goodboy",
-  "version": "0.1.2",
-  "description": "npm launcher for Goodboy, a Codex pet generation pipeline.",
+  "version": "0.2.0",
+  "description": "npm launcher for Goodboy, a source-faithful Codex pet v2 studio.",
   "license": "MIT",
   "author": "Adam Allcock",
   "type": "module",

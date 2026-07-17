@@ -14,8 +14,8 @@ from PIL import Image, ImageSequence
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from goodboy.atlas import render_atlas_animation_previews  # noqa: E402
-from goodboy.contracts import ROW_FRAME_COUNTS, ROW_FRAME_DURATIONS_MS, STATE_ORDER  # noqa: E402
+from goodboy.atlas import render_atlas_animation_previews
+from goodboy.contracts import ROW_FRAME_COUNTS, ROW_FRAME_DURATIONS_MS, STATE_ORDER
 
 
 @dataclass(frozen=True)

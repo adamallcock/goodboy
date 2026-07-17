@@ -1,7 +1,7 @@
 {
-  "name": "goodboy-local",
+  "name": "goodboy",
   "interface": {
-    "displayName": "Goodboy Local"
+    "displayName": "Goodboy"
   },
   "plugins": [
     {

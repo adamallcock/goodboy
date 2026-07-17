@@ -13,14 +13,14 @@ interface WalkthroughGuideProps {
 }
 
 const walkthroughSteps: Array<{ stage: ReviewStage; label: string; detail: string; icon: typeof Images }> = [
-  { stage: "sources", label: "Start with sources", detail: "Confirm the subject identity and source references.", icon: Images },
+  { stage: "sources", label: "Start with sources", detail: "Review source coverage, privacy, and reference roles.", icon: Images },
   { stage: "baselines", label: "Pick the character", detail: "Choose the baseline that best preserves the pet.", icon: Sparkles },
   { stage: "style", label: "Tune the style", detail: "Record style, subject type, and critique notes.", icon: WandSparkles },
-  { stage: "generation", label: "Review rows", detail: "Inspect row strips before final QA is built.", icon: ArrowRight },
-  { stage: "qa", label: "Approve QA", detail: "Check centering, drift, clipping, and edge cleanup.", icon: CheckCircle2 }
+  { stage: "generation", label: "Follow the DAG", detail: "Generate only ready rows and repair the smallest failed scope.", icon: ArrowRight },
+  { stage: "qa", label: "Complete v2 review", detail: "Check animation, 16 directions, likeness, geometry, and edges.", icon: CheckCircle2 }
 ];
 
-const starterPrompt = "Use Goodboy to create a Codex pet from these source images. Start by planning baseline candidates, then pause for my visual choice before generating rows.";
+const starterPrompt = "Use Goodboy v2 in My Pet mode with these source images. Build an evidence-linked identity, ask before sending EXIF-stripped derivatives to a provider, pause for my likeness baseline choice, and require direction plus trait-level likeness review before installation.";
 
 export function WalkthroughGuide({ open, selectedStage, onStageChange, onClose, onOpenOnboarding }: WalkthroughGuideProps) {
   if (!open) return null;

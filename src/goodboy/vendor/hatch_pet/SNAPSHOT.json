@@ -1,0 +1,28 @@
+{
+  "backend_version": "codex-bundled-2026-07-16",
+  "license": "Apache-2.0",
+  "source": "Codex bundled hatch-pet skill snapshot",
+  "source_skill_sha256": "ccfabd5d761faa721586f8793dd93bdd735e2a2c07099a5d593a7e31286e58f3",
+  "files": {
+    "references/animation-rows.md": "d27b08d599e73cf6a65a03d2b8ad49e9ad408e18292636164e7b2d2f1815615f",
+    "references/codex-pet-contract.md": "8f9c271e0a8269e57cd27cedeff1317975ea5f772f2549572aeefa580d9d58d3",
+    "references/qa-rubric.md": "46bd447611d101cca0d89692ee566cfd58abfea30d4cfb7749b2c930e0b7deaf",
+    "scripts/assemble_extended_atlas.py": "ca50b13d62858a660e1ae2d15649a1ccb565d03ee185539d22df0e121075eadc",
+    "scripts/combine_direction_blind_verdicts.py": "4dad56adaad032a4e6d070494b0ab2ca316429cf69363450f9fbf7135d1c2d42",
+    "scripts/compose_atlas.py": "a76d7c8b81033353004f5cafab8fa174c314f1d79158b69bc83a2f0bd6047fdf",
+    "scripts/compose_cardinal_anchor_strip.py": "e67ac9816a909cad136189bf23eddf8b16e0fcb430ade2262556bbd12db2bca5",
+    "scripts/derive_running_left_from_running_right.py": "ae42859720220fe8a407fc0dfff06e8344e535c6c8019220b1f63db7714baa77",
+    "scripts/despill_chroma_edges.py": "dc93a5e752f4100e55010205462a8e7272bac451ee7e29b525abd6157a7fe309",
+    "scripts/extract_cardinal_anchors.py": "55434d06bc328b1879d98c821f2586963910f89926f4dcbe92682b25555a8cde",
+    "scripts/extract_strip_frames.py": "86301292945550c4b2c318815c9bfd97a1f9b3fa4e83aea7b31bcfa2ca20e1f2",
+    "scripts/inspect_frames.py": "9ef930151ae845a3c9eb3c10dfc8da95947535d18c72992cff5f65081af4c30a",
+    "scripts/make_contact_sheet.py": "51e2085b8acb172dcdd5fff9993bdee413f3851b714229ca095dc99cd551aa96",
+    "scripts/make_direction_blind_qa_sheet.py": "52f2a29251872449fed51c7744c3f9f503274ee288eb23efc29a2c568b0d52bd",
+    "scripts/make_direction_qa_sheet.py": "823e81e0aece24d1d6537889c9daaa2660208ff52604509b24fd5e24e7302acb",
+    "scripts/measure_direction_continuity.py": "e24b7065af82eab5638f1fcdeb627d497391a2f1e9ba19801827d1db3a6d8c2d",
+    "scripts/prepare_pet_run.py": "ca9809003e95248339db3c9fe0625e4e871732146bf06e19efc091191bd9da1f",
+    "scripts/render_animation_previews.py": "911e8813e1b79b7f9da44fae8a667c044818e8c71f41eaa4b280e91c78cde61e",
+    "scripts/validate_atlas.py": "ebbbc77cfbd27ef8476ac6fda716e864cf372a2ed4c2beb27ebdb2487e972194",
+    "scripts/validate_direction_blind_verdicts.py": "7871667432918e0ffcdbb9beaf88a01c0af4b9e2809c5000f7b533a9ddc6e13d"
+  }
+}

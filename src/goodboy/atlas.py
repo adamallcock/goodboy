@@ -7,14 +7,19 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 from .contracts import (
-    ATLAS_HEIGHT,
-    ATLAS_WIDTH,
+    ATLAS_COLUMNS,
     CELL_HEIGHT,
     CELL_WIDTH,
     ROW_FRAME_DURATIONS_MS,
     ROW_FRAME_COUNTS,
+    STANDARD_ATLAS_HEIGHT,
+    STANDARD_ATLAS_WIDTH,
     STATE_ORDER,
+    V2_NEUTRAL_LOOK_FRAME,
+    V2_STATE_ORDER,
+    detect_contract_from_dimensions,
 )
+from .imageutil import pixel_data
 from .raster import clear_transparent_rgb
 from .schemas import ValidationReport
 
@@ -57,7 +62,12 @@ def save_animated_webp(frames: list[Image.Image], output_path: Path, durations: 
 
 
 def compose_atlas(frames_root: Path, *, output_png: Path, output_webp: Path | None = None) -> None:
-    atlas = Image.new("RGBA", (ATLAS_WIDTH, ATLAS_HEIGHT), (0, 0, 0, 0))
+    """Compose the rows 0-8 intermediate atlas.
+
+    New packages append the v2 direction rows through ``goodboy.v2_backend``.
+    """
+
+    atlas = Image.new("RGBA", (STANDARD_ATLAS_WIDTH, STANDARD_ATLAS_HEIGHT), (0, 0, 0, 0))
     for row, state in enumerate(STATE_ORDER):
         for column in range(ROW_FRAME_COUNTS[state]):
             frame_path = frames_root / state / f"{column:02d}.png"
@@ -87,19 +97,23 @@ def validate_atlas(path: Path) -> ValidationReport:
         image = opened.convert("RGBA")
     errors: list[str] = []
     warnings: list[str] = []
-    if image.size != (ATLAS_WIDTH, ATLAS_HEIGHT):
-        errors.append(f"atlas size {image.size} != {(ATLAS_WIDTH, ATLAS_HEIGHT)}")
+    try:
+        contract = detect_contract_from_dimensions(image.width, image.height)
+    except ValueError as exc:
+        contract = None
+        errors.append(str(exc))
     transparent_rgb_residue = 0
-    for red, green, blue, alpha in image.getdata():
+    for red, green, blue, alpha in pixel_data(image):
         if alpha == 0 and (red or green or blue):
             transparent_rgb_residue += 1
     if transparent_rgb_residue:
         errors.append(f"{transparent_rgb_residue} transparent pixels have nonzero RGB")
 
     cells: list[dict[str, object]] = []
-    for row, state in enumerate(STATE_ORDER):
+    states = V2_STATE_ORDER if contract and contract.rows == 11 else STATE_ORDER
+    for row, state in enumerate(states):
         used_count = ROW_FRAME_COUNTS[state]
-        for column in range(8):
+        for column in range(ATLAS_COLUMNS):
             cell = image.crop(
                 (
                     column * CELL_WIDTH,
@@ -108,8 +122,12 @@ def validate_atlas(path: Path) -> ValidationReport:
                     (row + 1) * CELL_HEIGHT,
                 )
             )
-            nontransparent = sum(1 for *_, alpha in cell.getdata() if alpha)
-            used = column < used_count
+            nontransparent = sum(1 for *_, alpha in pixel_data(cell) if alpha)
+            used = column < used_count or bool(
+                contract
+                and contract.rows == 11
+                and (row, column) == V2_NEUTRAL_LOOK_FRAME
+            )
             if used and nontransparent == 0:
                 errors.append(f"{state} column {column} is empty")
             if not used and nontransparent != 0:
@@ -139,25 +157,35 @@ def validate_atlas(path: Path) -> ValidationReport:
 
 def make_contact_sheet(atlas_path: Path, output_path: Path) -> None:
     atlas = Image.open(atlas_path).convert("RGBA")
+    try:
+        contract = detect_contract_from_dimensions(atlas.width, atlas.height)
+    except ValueError:
+        contract = None
+    states = V2_STATE_ORDER if contract and contract.rows == 11 else STATE_ORDER
     cell_border = 2
     label_h = 20
-    sheet_w = ATLAS_WIDTH + cell_border * 9
-    sheet_h = ATLAS_HEIGHT + label_h * 9 + cell_border * 10
+    sheet_w = atlas.width + cell_border * (ATLAS_COLUMNS + 1)
+    sheet_h = atlas.height + label_h * len(states) + cell_border * (len(states) + 1)
     sheet = Image.new("RGB", (sheet_w, sheet_h), (255, 255, 255))
     draw = ImageDraw.Draw(sheet)
-    for row, state in enumerate(STATE_ORDER):
+    for row, state in enumerate(states):
         row_y = row * (CELL_HEIGHT + label_h + cell_border) + cell_border
         draw.rectangle((0, row_y, sheet_w, row_y + label_h), fill=(0, 0, 0))
         draw.text((6, row_y + 4), f"row {row} {state}", fill=(255, 255, 255))
         draw.text((sheet_w - 80, row_y + 4), f"{ROW_FRAME_COUNTS[state]} frames", fill=(255, 255, 255))
-        for column in range(8):
+        for column in range(ATLAS_COLUMNS):
             x = column * (CELL_WIDTH + cell_border) + cell_border
             y = row_y + label_h + cell_border
             cell = atlas.crop((column * CELL_WIDTH, row * CELL_HEIGHT, (column + 1) * CELL_WIDTH, (row + 1) * CELL_HEIGHT))
             bg = checkerboard((CELL_WIDTH, CELL_HEIGHT))
             bg.alpha_composite(cell)
             sheet.paste(bg.convert("RGB"), (x, y))
-            outline = (0, 120, 65) if column < ROW_FRAME_COUNTS[state] else (180, 0, 0)
+            used = column < ROW_FRAME_COUNTS[state] or bool(
+                contract
+                and contract.rows == 11
+                and (row, column) == V2_NEUTRAL_LOOK_FRAME
+            )
+            outline = (0, 120, 65) if used else (180, 0, 0)
             draw.rectangle((x, y, x + CELL_WIDTH - 1, y + CELL_HEIGHT - 1), outline=outline, width=2)
             draw.text((x + 4, y + 4), str(column), fill=(0, 0, 0))
     output_path.parent.mkdir(parents=True, exist_ok=True)

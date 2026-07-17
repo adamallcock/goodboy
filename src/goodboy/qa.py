@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import itertools
 import math
+from datetime import datetime, timezone
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw, ImageStat
+from PIL import Image, ImageChops, ImageDraw, ImageSequence, ImageStat
 
-from .contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, STATE_ORDER
+from .contracts import CELL_HEIGHT, CELL_WIDTH, ROW_FRAME_COUNTS, ROW_FRAME_DURATIONS_MS, STATE_ORDER
 from .jsonio import read_json
 from .jsonio import write_json
+from .imageutil import pixel_data
 from .schemas import QAPolicyDecision, QAReport, ValidationReport
 
 APPROVED_ROW_PROVENANCE = {"provider_generated", "user_supplied", "test_fixture"}
@@ -21,6 +23,9 @@ VERTICAL_DRIFT_THRESHOLDS = {
     "review": 8,
     "running": 10,
 }
+ANIMATION_REVIEW = "qa/animation-review.json"
+ANIMATION_CORRECTNESS = "qa/animation-correctness.json"
+ANIMATION_VERDICTS = {"pass", "warning", "fail"}
 
 
 def audit_frames(frames_root: Path) -> QAReport:
@@ -55,7 +60,7 @@ def audit_frames(frames_root: Path) -> QAReport:
         state_visible = 0
         max_components = 0
         hashes: dict[int, list[str]] = {}
-        for path, img in zip(files, imgs):
+        for path, img in zip(files, imgs, strict=True):
             bbox = img.getchannel("A").getbbox()
             hashes.setdefault(hash(img.tobytes()), []).append(path.name)
             components = count_alpha_components(img)
@@ -79,7 +84,7 @@ def audit_frames(frames_root: Path) -> QAReport:
                         },
                     }
                 )
-            for red, green, blue, alpha in img.getdata():
+            for red, green, blue, alpha in pixel_data(img):
                 if alpha:
                     state_visible += 1
                     if alpha < 230 and green > max(red, blue) + 8:
@@ -337,3 +342,139 @@ def make_centering_overlay(frames_root: Path, output_path: Path) -> None:
 
 def write_qa_report(path: Path, report: QAReport) -> None:
     write_json(path, report.to_dict())
+
+
+def record_animation_review(
+    project_dir: Path,
+    *,
+    run_id: str,
+    verdicts: list[dict[str, object]],
+    reviewed_by: str,
+) -> dict[str, object]:
+    """Record state-by-state semantic, temporal, and identity animation review."""
+
+    if not reviewed_by.strip():
+        raise ValueError("animation reviewer is required")
+    normalized: list[dict[str, object]] = []
+    seen: set[str] = set()
+    for item in verdicts:
+        if not isinstance(item, dict):
+            raise ValueError("every animation verdict must be an object")
+        state = str(item.get("state", "")).strip()
+        if state not in STATE_ORDER or state in seen:
+            raise ValueError(f"animation state must be expected and unique: `{state}`")
+        seen.add(state)
+        verdict = str(item.get("verdict", "")).strip()
+        if verdict not in ANIMATION_VERDICTS:
+            raise ValueError(f"animation verdict for `{state}` must be pass, warning, or fail")
+        evidence = {}
+        for key in ("state_semantics", "motion_continuity", "identity_consistency"):
+            text = str(item.get(key, "")).strip()
+            if not text:
+                raise ValueError(f"animation verdict for `{state}` requires `{key}` evidence")
+            evidence[key] = text
+        normalized.append({"state": state, "verdict": verdict, **evidence})
+    missing = [state for state in STATE_ORDER if state not in seen]
+    if missing:
+        raise ValueError(f"animation review is incomplete; missing: {', '.join(missing)}")
+    failures = [item["state"] for item in normalized if item["verdict"] == "fail"]
+    warnings = [item["state"] for item in normalized if item["verdict"] == "warning"]
+    review = {
+        "schema_version": "1.0",
+        "run_id": run_id,
+        "status": "failed" if failures else "approved",
+        "reviewed_by": reviewed_by.strip(),
+        "reviewed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "verdicts": sorted(normalized, key=lambda item: STATE_ORDER.index(str(item["state"]))),
+        "failed_states": failures,
+        "warning_states": warnings,
+    }
+    run_dir = project_dir / "runs" / run_id
+    if not run_dir.is_dir():
+        raise FileNotFoundError(f"missing run: {run_dir}")
+    write_json(run_dir / ANIMATION_REVIEW, review)
+    write_animation_correctness_report(run_dir)
+    return review
+
+
+def animation_is_approved(project_dir: Path, run_id: str) -> bool:
+    path = project_dir / "runs" / run_id / ANIMATION_REVIEW
+    return bool(path.is_file() and read_json(path).get("status") == "approved")
+
+
+def write_animation_correctness_report(run_dir: Path) -> dict[str, object]:
+    """Aggregate exact playback checks with the required structured visual review."""
+
+    qa_dir = run_dir / "qa"
+    duplicate_path = qa_dir / "duplicate-audit.json"
+    duplicate = read_json(duplicate_path) if duplicate_path.is_file() else {}
+    rows: list[dict[str, object]] = []
+    technical_failures: list[str] = []
+    for state in STATE_ORDER:
+        preview_path = qa_dir / "previews" / f"{state}.gif"
+        expected_durations = list(ROW_FRAME_DURATIONS_MS[state])
+        frame_count = 0
+        durations: list[int] = []
+        if preview_path.is_file():
+            with Image.open(preview_path) as preview:
+                frame_count = int(getattr(preview, "n_frames", 1))
+                durations = [
+                    int(frame.info.get("duration", 0))
+                    for frame in ImageSequence.Iterator(preview)
+                ]
+        else:
+            technical_failures.append(f"missing animation preview for {state}")
+        temporal_contract_ok = (
+            frame_count == ROW_FRAME_COUNTS[state]
+            and durations == expected_durations
+        )
+        if preview_path.is_file() and not temporal_contract_ok:
+            technical_failures.append(
+                f"{state} preview timing/count mismatch: {frame_count} frames, durations {durations}"
+            )
+        state_audit = duplicate.get("states", {}).get(state, {}) if isinstance(duplicate, dict) else {}
+        rows.append(
+            {
+                "state": state,
+                "expected_frames": ROW_FRAME_COUNTS[state],
+                "preview_frames": frame_count,
+                "expected_durations_ms": expected_durations,
+                "preview_durations_ms": durations,
+                "temporal_contract_ok": temporal_contract_ok,
+                "preview": str(preview_path.relative_to(run_dir)) if preview_path.is_file() else None,
+                "automated_motion_signals": {
+                    "cx_range": state_audit.get("cx_range"),
+                    "cy_range": state_audit.get("cy_range"),
+                    "min_edge": state_audit.get("min_edge"),
+                    "extraction_method": state_audit.get("extraction_method"),
+                },
+            }
+        )
+    if isinstance(duplicate, dict):
+        technical_failures.extend(str(item) for item in duplicate.get("errors", []))
+    review_path = run_dir / ANIMATION_REVIEW
+    review = read_json(review_path) if review_path.is_file() else None
+    review_approved = bool(review and review.get("status") == "approved")
+    report = {
+        "schema_version": "1.0",
+        "run_id": run_dir.name,
+        "technical_ok": not technical_failures,
+        "review_complete": review is not None,
+        "review_approved": review_approved,
+        "ok": not technical_failures and review_approved,
+        "technical_failures": list(dict.fromkeys(technical_failures)),
+        "rows": rows,
+        "review": review,
+        "direction_evidence": {
+            "labeled_semantics": (qa_dir / "direction-semantics.json").is_file(),
+            "blind_validation": (qa_dir / "direction-blind-validation.json").is_file(),
+            "continuity": (qa_dir / "look-continuity.json").is_file(),
+        },
+        "policy": (
+            "Automated timing, duplication, edge, and drift checks cannot establish state meaning. "
+            "Approval requires explicit evidence for state semantics, motion continuity, and "
+            "cross-state identity in every standard row, plus the separate v2 direction gates."
+        ),
+    }
+    write_json(run_dir / ANIMATION_CORRECTNESS, report)
+    return report

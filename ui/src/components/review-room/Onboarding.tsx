@@ -32,7 +32,7 @@ const paths: Array<{
   {
     id: "demo",
     title: "Explore companion demo",
-    description: "Walk through a real completed pet example with sources, baselines, generated rows, QA, and approval.",
+    description: "Walk through a completed legacy pet example; real v2 projects add identity, direction, and repair gates.",
     icon: PlayCircle,
     cta: "Start demo"
   }
@@ -110,7 +110,12 @@ export function Onboarding() {
 }
 
 function CreateWithCodex() {
-  const prompt = "Use Goodboy to create a Codex pet from these source images. Plan baseline candidates first, then pause for my visual choice before generating animation rows.";
+  const [projectDir, setProjectDir] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [petId, setPetId] = useState("");
+  const [species, setSpecies] = useState("pet");
+  const createProject = useProjectStore((store) => store.createProject);
+  const prompt = "Use Goodboy v2 in My Pet mode. Build an evidence-linked identity from my source images, pause for identity confirmation, then generate a Codex v2 pet and require direction plus likeness review.";
   const copyPrompt = async () => {
     try {
       await navigator.clipboard.writeText(prompt);
@@ -128,7 +133,7 @@ function CreateWithCodex() {
       </div>
       <div className="onboarding-step">
         <CheckCircle2 size={15} />
-        <span>Codex creates the project, plans baselines, and stops for your choices.</span>
+        <span>Create the local v2 workspace here, then add source images in Review Room.</span>
       </div>
       <div className="onboarding-step">
         <CheckCircle2 size={15} />
@@ -138,10 +143,36 @@ function CreateWithCodex() {
         <Bot size={16} />
         <span>{prompt}</span>
       </div>
+      <div className="project-create-grid">
+        <label className="project-path-field">
+          <span>Project folder</span>
+          <input value={projectDir} onChange={(event) => setProjectDir(event.target.value)} placeholder="/absolute/path/to/my-pet" />
+        </label>
+        <label className="project-path-field">
+          <span>Display name</span>
+          <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Millie" />
+        </label>
+        <label className="project-path-field">
+          <span>Pet ID</span>
+          <input value={petId} onChange={(event) => setPetId(event.target.value)} placeholder="millie" />
+        </label>
+        <label className="project-path-field">
+          <span>Species or type</span>
+          <input value={species} onChange={(event) => setSpecies(event.target.value)} placeholder="dog" />
+        </label>
+      </div>
       <div className="toolbar-group onboarding-cta-row">
+        <Button
+          variant="primary"
+          disabled={!projectDir.trim() || !displayName.trim() || !petId.trim()}
+          onClick={() => void createProject(projectDir.trim(), petId.trim(), displayName.trim(), species.trim() || "pet")}
+        >
+          Create v2 project
+          <ArrowRight size={14} />
+        </Button>
         <Button variant="primary" onClick={copyPrompt}>
           <Clipboard size={14} />
-          Copy Codex prompt
+          Copy agent prompt
         </Button>
         <Button variant="default" onClick={() => toast.info("Attach source images in Codex, then paste the copied prompt.")}>
           What next?
@@ -161,7 +192,7 @@ function DemoPreview({ onStart }: { onStart: () => void }) {
       </div>
       <div className="demo-preview-copy">
         <h4>Companion demo</h4>
-        <p>Uses a completed pet package as the walkthrough example. No files are installed or changed.</p>
+        <p>Uses a completed legacy v1 package to demonstrate backward-compatible review. No files are installed or changed.</p>
         <Button variant="primary" onClick={onStart}>
           Start demo walkthrough
           <Images size={14} />

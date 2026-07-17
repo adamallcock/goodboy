@@ -39,15 +39,27 @@ class ProjectState(TypedDict):
     project_id: str
     project_dir: str
     manifest: dict[str, Any]
+    animation_contract: dict[str, Any]
     gate: WorkflowGate
     artifacts: list[ArtifactRef]
     sources: list[dict[str, Any]]
+    reference_coverage: dict[str, Any] | None
+    identity_profile: dict[str, Any] | None
+    identity_pack: dict[str, Any] | None
     candidates: list[dict[str, Any]]
     selected_candidate: dict[str, Any] | None
     character_card: dict[str, Any] | None
     style_sheet: dict[str, Any] | None
     active_run_id: str | None
+    jobs: list[dict[str, Any]]
+    job_graph: dict[str, Any] | None
+    events: list[dict[str, Any]]
     qa: dict[str, Any] | None
+    likeness: dict[str, Any] | None
+    animation_review: dict[str, Any] | None
+    animation_correctness: dict[str, Any] | None
+    direction_review: dict[str, Any] | None
+    direction_blind: dict[str, Any] | None
     approvals: list[dict[str, Any]]
     exports: list[ArtifactRef]
     validation: dict[str, Any]

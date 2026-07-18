@@ -25,7 +25,7 @@ to operate a different runtime version.
 For a released version:
 
 ```bash
-codex plugin marketplace add adamallcock/goodboy --ref v0.2.0
+codex plugin marketplace add adamallcock/goodboy --ref v0.2.1
 codex plugin add goodboy@goodboy
 ```
 
@@ -52,7 +52,7 @@ node "<plugin-root>/scripts/goodboy-runtime.mjs" check
 
 | State | Exit | Meaning | Allowed next action |
 | --- | ---: | --- | --- |
-| `ready` | 0 | Exact `goodboy 0.2.0` found | Run the requested workflow |
+| `ready` | 0 | Exact `goodboy 0.2.1` found | Run the requested workflow |
 | `missing` | 10 | No runtime found | Explain and ask to install |
 | `mismatch` | 11 | Another Goodboy version found | Explain and ask to replace or update |
 | `invalid` | 12 | Executable failed or version was unreadable | Diagnose; do not run it |
@@ -62,14 +62,14 @@ node "<plugin-root>/scripts/goodboy-runtime.mjs" check
 | `post_install_failed` | 23 | Install returned success but exact runtime was not verified | Stop; never claim success |
 
 When installation is needed, Codex must tell the user the found and expected
-versions and the exact package `goodboy-codex[ui]==0.2.0`. Only after direct
+versions and the exact package `goodboy-codex[ui]==0.2.1`. Only after direct
 approval may it run:
 
 ```bash
 node "<plugin-root>/scripts/goodboy-runtime.mjs" install --user-approved
 ```
 
-The runner invokes `uv tool install "goodboy-codex[ui]==0.2.0"` without a shell
+The runner invokes `uv tool install "goodboy-codex[ui]==0.2.1"` without a shell
 and without `--force`, rechecks the executable from uv's tool bin, and reports
 ready only after `goodboy --version` returns the exact plugin version. The agent
 then continues the original request; the user does not repeat it.
@@ -101,7 +101,7 @@ exact version verification preserve both usability and control.
 ## Sharing Goodboy
 
 Send another user the two released-install commands above or link them to the
-repository README. Pinning `--ref v0.2.0` makes their plugin instructions and
+repository README. Pinning `--ref v0.2.1` makes their plugin instructions and
 runtime contract reproducible. To update, add or upgrade the marketplace at a
 new release tag and update the plugin. To roll back, point the marketplace at a
 prior tag; on next use, Goodboy reports the runtime mismatch and asks before
@@ -114,29 +114,51 @@ distribution are the public delivery units.
 ## Maintainer Release Order
 
 The Git plugin must never point at a runtime version that is unavailable from
-the package registry. npm publication is delegated to the dedicated
-`.github/workflows/publish-npm.yml` workflow through npm trusted publishing;
-there is no long-lived `NPM_TOKEN` or `NODE_AUTH_TOKEN` secret. Release in this
-order:
+the package registry. PyPI and npm publication are delegated to dedicated
+GitHub Actions workflows through trusted publishing; there are no long-lived
+registry publication tokens. Release in this order:
 
 1. synchronize `pyproject.toml`, `src/goodboy/__init__.py`, the plugin manifest,
    `plugins/goodboy/runtime.json`, the npm package, skill instructions, and docs;
 2. run Python, plugin-runtime, npm-launcher, UI, skill, build, and clean-install
    verification;
-3. publish `goodboy-codex[ui]==<version>` to PyPI and verify a clean uv tool
-   install from the public registry;
-4. create and push the signed or annotated Git tag `v<version>` from the exact
+3. manually dispatch `.github/workflows/publish-pypi.yml` from `main` with the
+   exact version and `publish=false`, and require its validation-only run to
+   pass;
+4. dispatch it again with `publish=true`, then verify
+   `goodboy-codex[ui]==<version>` and a clean uv tool install from the public
+   registry;
+5. create and push the signed or annotated Git tag `v<version>` from the exact
    commit on `main`; the tag starts the npm workflow;
-5. wait for the npm workflow to publish the matching
+6. wait for the npm workflow to publish the matching
    `@adamallcock/goodboy@<version>`, then verify its `latest` dist-tag and
    downloaded tarball before creating the GitHub release;
-6. create the GitHub release for the already-published tag;
-7. from a clean Codex home, add `adamallcock/goodboy --ref v<version>`, install
+7. create the GitHub release for the already-published tag;
+8. from a clean Codex home, add `adamallcock/goodboy --ref v<version>`, install
    `goodboy@goodboy`, and exercise first-use check plus one safe CLI command;
-8. only then announce the release commands.
+9. only then announce the release commands.
 
 The marketplace name is `goodboy`, the plugin name is `goodboy`, and the public
 selector is therefore `goodboy@goodboy`.
+
+## PyPI Trusted Publishing
+
+The PyPI project `goodboy-codex` trusts exactly this GitHub Actions identity:
+
+- owner and repository: `adamallcock/goodboy`;
+- workflow filename: `publish-pypi.yml`;
+- GitHub environment: `pypi`.
+
+The workflow can only be dispatched manually. Its build job verifies the
+requested stable version against `pyproject.toml`, requires the exact current
+commit of `main`, refuses an already-used PyPI version, runs the complete Python
+suite and both skill validators, builds the wheel and source archive, and runs
+Twine checks. That job cannot request an OIDC token.
+
+Only a second, `publish=true` job enters the `pypi` environment, downloads the
+validated artifact, and receives `id-token: write` for the official PyPA publish
+action. The `pypi` environment accepts only `main`. Do not add `PYPI_TOKEN`,
+`TWINE_PASSWORD`, or another PyPI publication credential to GitHub.
 
 ## npm Trusted Publishing
 
@@ -159,6 +181,10 @@ The publish job uses a GitHub-hosted runner and grants only `contents: read` and
 `id-token: write`. npm derives a short-lived credential from that OIDC identity
 and publishes provenance automatically. Do not add an npm publication token to
 the repository or environment.
+
+An active repository ruleset targets `refs/tags/v*` and blocks deletion and all
+updates. It permits the first creation of a release tag but makes the plugin ref
+immutable afterwards.
 
 ## Verification Commands
 
@@ -184,3 +210,4 @@ can substitute for.
 - [uv tool documentation](https://docs.astral.sh/uv/concepts/tools/)
 - [uv CLI reference](https://docs.astral.sh/uv/reference/cli/#uv-tool)
 - [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
+- [PyPI trusted publishing](https://docs.pypi.org/trusted-publishers/using-a-publisher/)

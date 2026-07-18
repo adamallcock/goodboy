@@ -53,7 +53,7 @@ class DistributionContractTests(unittest.TestCase):
         standalone = (ROOT / "codex-skill/goodboy/SKILL.md").read_bytes()
         plugin_skill = (ROOT / "plugins/goodboy/skills/goodboy/SKILL.md").read_bytes()
         self.assertEqual(standalone, plugin_skill)
-        self.assertIn(b"goodboy-codex[ui]==0.2.0", standalone)
+        self.assertIn(b"goodboy-codex[ui]==0.2.1", standalone)
 
     def test_marketplace_is_publicly_named_and_points_at_the_plugin(self) -> None:
         marketplace = json_file(".agents/plugins/marketplace.json")
@@ -77,6 +77,28 @@ class DistributionContractTests(unittest.TestCase):
         self.assertIn("npm publish --access public", workflow)
         self.assertNotIn("NPM_TOKEN", workflow)
         self.assertNotIn("NODE_AUTH_TOKEN", workflow)
+
+    def test_pypi_trusted_publish_workflow_is_narrow_and_tokenless(self) -> None:
+        workflow = (ROOT / ".github/workflows/publish-pypi.yml").read_text(encoding="utf-8")
+
+        self.assertIn("  workflow_dispatch:", workflow)
+        self.assertIn("      version:", workflow)
+        self.assertIn("      publish:", workflow)
+        self.assertIn('test "${GITHUB_REF}" = "refs/heads/main"', workflow)
+        self.assertIn('test "$(git rev-parse origin/main)" = "${GITHUB_SHA}"', workflow)
+        self.assertIn("https://pypi.org/pypi/goodboy-codex/", workflow)
+        self.assertIn("python -m unittest discover -s tests -v", workflow)
+        self.assertIn("python scripts/validate_skills.py", workflow)
+        self.assertIn("python -m build", workflow)
+        self.assertIn("python -m twine check dist/*", workflow)
+        self.assertIn("actions/upload-artifact@v6", workflow)
+        self.assertIn("actions/download-artifact@v6", workflow)
+        self.assertIn("    environment: pypi", workflow)
+        self.assertIn("      id-token: write", workflow)
+        self.assertIn("pypa/gh-action-pypi-publish@release/v1", workflow)
+        self.assertNotIn("PYPI_TOKEN", workflow)
+        self.assertNotIn("TWINE_PASSWORD", workflow)
+        self.assertNotIn("password:", workflow)
 
 
 if __name__ == "__main__":

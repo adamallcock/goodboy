@@ -1,0 +1,120 @@
+name: Publish PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact Goodboy version to validate or publish
+        required: true
+        type: string
+      publish:
+        description: Publish the validated distributions to PyPI
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: pypi-publish-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Validate and build Python distributions
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Verify release source and registry state
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import tomllib
+          from pathlib import Path
+
+          requested = os.environ["RELEASE_VERSION"]
+          if re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", requested) is None:
+              raise SystemExit(f"release version must be a stable X.Y.Z version: {requested!r}")
+          configured = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          if requested != configured:
+              raise SystemExit(
+                  f"requested version {requested!r} does not match pyproject.toml {configured!r}"
+              )
+          PY
+          test "${GITHUB_REF}" = "refs/heads/main"
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          test "$(git rev-parse origin/main)" = "${GITHUB_SHA}"
+          STATUS="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            "https://pypi.org/pypi/goodboy-codex/${RELEASE_VERSION}/json")"
+          case "${STATUS}" in
+            404) ;;
+            200)
+              echo "goodboy-codex ${RELEASE_VERSION} is already published" >&2
+              exit 1
+              ;;
+            *)
+              echo "unexpected PyPI response ${STATUS}; refusing to publish" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Install build and test dependencies
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m pip install -e ".[ui,dev]"
+
+      - name: Run Python test suite
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate Codex skills
+        run: |
+          python scripts/validate_skills.py \
+            codex-skill/goodboy \
+            plugins/goodboy/skills/goodboy
+          cmp codex-skill/goodboy/SKILL.md plugins/goodboy/skills/goodboy/SKILL.md
+
+      - name: Build and inspect distributions
+        run: |
+          python -m build
+          python -m twine check dist/*
+
+      - name: Upload validated distributions
+        uses: actions/upload-artifact@v6
+        with:
+          name: goodboy-codex-${{ inputs.version }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish PyPI
+    needs: build
+    if: ${{ inputs.publish }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download validated distributions
+        uses: actions/download-artifact@v6
+        with:
+          name: goodboy-codex-${{ inputs.version }}
+          path: dist
+
+      - name: Publish with PyPI trusted publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

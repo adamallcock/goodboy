@@ -43,7 +43,7 @@ directly, so a newly installed runtime does not require a shell restart.
 
 - If status is `missing` or `mismatch`, tell the user the expected version,
   the discovered version if any, and the exact package
-  `goodboy-codex[ui]==0.2.0`. Ask for explicit permission to install it with
+  `goodboy-codex[ui]==0.2.1`. Ask for explicit permission to install it with
   uv. A mismatch prompt must say that the existing Goodboy runtime will be
   replaced or updated.
 - Only after the user approves that installation or replacement, run:
@@ -70,11 +70,11 @@ If there is no plugin root and runner, perform the equivalent read-only check:
 goodboy --version
 ```
 
-Require `goodboy 0.2.0`. If it is missing or mismatched, use the same explicit
+Require `goodboy 0.2.1`. If it is missing or mismatched, use the same explicit
 approval wording. Only after approval, install the exact isolated runtime:
 
 ```bash
-uv tool install "goodboy-codex[ui]==0.2.0"
+uv tool install "goodboy-codex[ui]==0.2.1"
 ```
 
 Recheck the version and continue. Do not silently fall back to an unversioned

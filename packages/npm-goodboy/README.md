@@ -11,7 +11,7 @@ This npm package is the standalone Node launcher. It intentionally does not
 auto-install Python dependencies. Install its exact runtime first:
 
 ```bash
-uv tool install "goodboy-codex[ui]==0.2.0"
+uv tool install "goodboy-codex[ui]==0.2.1"
 ```
 
 Then run:

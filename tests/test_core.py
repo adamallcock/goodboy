@@ -83,7 +83,7 @@ class GoodboyCoreTests(unittest.TestCase):
             loaded = load_project(root)
             self.assertEqual(project.id, loaded.id)
             self.assertEqual(loaded.display_name, "Test Pet")
-            self.assertEqual(loaded.goodboy_version, "0.2.0")
+            self.assertEqual(loaded.goodboy_version, "0.2.1")
             self.assertTrue((root / "sources" / "originals").is_dir())
             self.assertTrue((root / "runs").is_dir())
 
@@ -1340,7 +1340,7 @@ class GoodboyCoreTests(unittest.TestCase):
         plugin_root = Path("plugins/goodboy")
         manifest = read_json(plugin_root / ".codex-plugin" / "plugin.json")
         self.assertEqual(manifest["name"], "goodboy")
-        self.assertEqual(manifest["version"], "0.2.0")
+        self.assertEqual(manifest["version"], "0.2.1")
         self.assertEqual(manifest["skills"], "./skills/")
         self.assertEqual(manifest["interface"]["displayName"], "Goodboy")
         self.assertIn("source-faithful Codex pet", " ".join(manifest["interface"]["defaultPrompt"]))

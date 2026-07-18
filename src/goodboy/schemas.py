@@ -19,8 +19,8 @@ class PetProject:
     id: str
     display_name: str
     species: str = "pet"
-    goodboy_version: str = "0.2.0"
-    workspace_version: str = "0.2.0"
+    goodboy_version: str = "0.2.1"
+    workspace_version: str = "0.2.1"
     workspace_schema_version: str = "0.2"
     created_at: str = field(default_factory=utc_now)
     updated_at: str = field(default_factory=utc_now)

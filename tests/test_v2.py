@@ -422,7 +422,7 @@ class GoodboyV2Tests(unittest.TestCase):
             )
             receipt = write_likeness_receipt(project_dir, run_id="run")
             self.assertTrue(receipt["automated_metrics_are_advisory"])
-            self.assertEqual(receipt["goodboy_version"], "0.2.0")
+            self.assertEqual(receipt["goodboy_version"], "0.2.1")
             self.assertEqual(receipt["baseline_decision"]["id"], "baseline-002")
             self.assertEqual(receipt["final_visual_approval"]["decision"], "approved")
             self.assertEqual(len(receipt["repairs"]), 1)
@@ -453,7 +453,7 @@ class GoodboyV2Tests(unittest.TestCase):
 
             loaded = load_project(project_dir)
 
-            self.assertEqual(loaded.goodboy_version, "0.2.0")
+            self.assertEqual(loaded.goodboy_version, "0.2.1")
             self.assertEqual(loaded.contract_id, "codex-pet-v1")
             self.assertEqual(loaded.output_contract["rows"], 9)
             self.assertEqual(

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 - 2026-07-17
+
+### Trusted release pipeline
+
+- Add a tokenless PyPI trusted-publishing workflow with exact-version, exact-`main`-commit, unused-version, full-test, skill-validation, build, and Twine gates.
+- Keep PyPI publication ahead of the existing tag-triggered npm trusted-publishing workflow so the Codex plugin never points at an unavailable Python runtime.
+- Synchronize the Python distribution, Codex plugin, npm launcher, Review Room UI, workspace manifests, skills, tests, and public install instructions at `0.2.1`.
+- Document the GitHub environment and immutable `v*` tag protections used by the release path.
+- Make the Playwright test-server port configurable so local release validation cannot silently reuse an unrelated app on port 5173.
+
 ## 0.2.0 - 2026-07-16
 
 ### Codex pet v2

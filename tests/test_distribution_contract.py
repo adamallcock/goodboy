@@ -63,6 +63,21 @@ class DistributionContractTests(unittest.TestCase):
         self.assertEqual(entry["name"], "goodboy")
         self.assertEqual(entry["source"]["path"], "./plugins/goodboy")
 
+    def test_npm_trusted_publish_workflow_is_narrow_and_tokenless(self) -> None:
+        workflow = (ROOT / ".github/workflows/publish-npm.yml").read_text(encoding="utf-8")
+
+        self.assertIn('      - "v*"', workflow)
+        self.assertIn("  workflow_dispatch:", workflow)
+        self.assertIn("    environment: npm", workflow)
+        self.assertIn("      id-token: write", workflow)
+        self.assertIn("git merge-base --is-ancestor", workflow)
+        self.assertIn("https://pypi.org/pypi/goodboy-codex/", workflow)
+        self.assertIn("node --test tests/launcher.test.mjs", workflow)
+        self.assertIn("npm pack --dry-run --json", workflow)
+        self.assertIn("npm publish --access public", workflow)
+        self.assertNotIn("NPM_TOKEN", workflow)
+        self.assertNotIn("NODE_AUTH_TOKEN", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()

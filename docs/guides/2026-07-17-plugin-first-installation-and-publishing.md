@@ -114,7 +114,10 @@ distribution are the public delivery units.
 ## Maintainer Release Order
 
 The Git plugin must never point at a runtime version that is unavailable from
-the package registry. Release in this order:
+the package registry. npm publication is delegated to the dedicated
+`.github/workflows/publish-npm.yml` workflow through npm trusted publishing;
+there is no long-lived `NPM_TOKEN` or `NODE_AUTH_TOKEN` secret. Release in this
+order:
 
 1. synchronize `pyproject.toml`, `src/goodboy/__init__.py`, the plugin manifest,
    `plugins/goodboy/runtime.json`, the npm package, skill instructions, and docs;
@@ -122,14 +125,40 @@ the package registry. Release in this order:
    verification;
 3. publish `goodboy-codex[ui]==<version>` to PyPI and verify a clean uv tool
    install from the public registry;
-4. publish the matching `@adamallcock/goodboy` npm launcher if it changed;
-5. create the signed or annotated Git tag `v<version>` and GitHub release;
-6. from a clean Codex home, add `adamallcock/goodboy --ref v<version>`, install
+4. create and push the signed or annotated Git tag `v<version>` from the exact
+   commit on `main`; the tag starts the npm workflow;
+5. wait for the npm workflow to publish the matching
+   `@adamallcock/goodboy@<version>`, then verify its `latest` dist-tag and
+   downloaded tarball before creating the GitHub release;
+6. create the GitHub release for the already-published tag;
+7. from a clean Codex home, add `adamallcock/goodboy --ref v<version>`, install
    `goodboy@goodboy`, and exercise first-use check plus one safe CLI command;
-7. only then announce the release commands.
+8. only then announce the release commands.
 
 The marketplace name is `goodboy`, the plugin name is `goodboy`, and the public
 selector is therefore `goodboy@goodboy`.
+
+## npm Trusted Publishing
+
+The npm package `@adamallcock/goodboy` trusts exactly this GitHub Actions
+identity:
+
+- owner and repository: `adamallcock/goodboy`;
+- workflow filename: `publish-npm.yml`;
+- GitHub environment: `npm`;
+- allowed npm action: `npm publish` only.
+
+The workflow is publish-capable only for `v*` tag events. Before requesting an
+OIDC token, it verifies that the tag equals the npm package version, the tagged
+commit is on `main`, the matching PyPI runtime is already public, the npm
+version is still unused, the launcher tests pass, and the package contents are
+inspectable. The `npm` environment accepts only matching `v*` tags. A manual
+workflow dispatch runs validation but deliberately skips publication.
+
+The publish job uses a GitHub-hosted runner and grants only `contents: read` and
+`id-token: write`. npm derives a short-lived credential from that OIDC identity
+and publishes provenance automatically. Do not add an npm publication token to
+the repository or environment.
 
 ## Verification Commands
 
@@ -154,3 +183,4 @@ can substitute for.
 
 - [uv tool documentation](https://docs.astral.sh/uv/concepts/tools/)
 - [uv CLI reference](https://docs.astral.sh/uv/reference/cli/#uv-tool)
+- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)

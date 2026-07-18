@@ -42,11 +42,11 @@ test("help recommends the plugin-first path and pinned standalone runtime", () =
   const result = invoke(["--help"]);
   assert.equal(result.status, 0);
   assert.match(result.stdout, /install the Goodboy plugin/u);
-  assert.match(result.stdout, /goodboy-codex\[ui\]==0\.2\.0/u);
+  assert.match(result.stdout, /goodboy-codex\[ui\]==0\.2\.1/u);
 });
 
 test("launcher discovers and executes the exact uv-managed runtime", { skip: SKIP_ON_WINDOWS }, () => {
-  const { root, log, uv } = fixture("0.2.0");
+  const { root, log, uv } = fixture("0.2.1");
   try {
     const result = invoke(["doctor", "/tmp/pet"], {
       GOODBOY_UV_COMMAND: uv,
@@ -71,7 +71,7 @@ test("launcher refuses a runtime version mismatch", { skip: SKIP_ON_WINDOWS }, (
       GOODBOY_PYTHON: join(root, "missing-python")
     });
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /found Goodboy 0\.1\.2; launcher requires 0\.2\.0/u);
+    assert.match(result.stderr, /found Goodboy 0\.1\.2; launcher requires 0\.2\.1/u);
     assert.equal(readFileSync(log, "utf8").trim(), "--version");
   } finally {
     rmSync(root, { recursive: true, force: true });

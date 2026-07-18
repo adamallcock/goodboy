@@ -78,16 +78,16 @@ Goodboy owns identity, provider consent and routing, job orchestration, recovery
 Install the released Git marketplace, then add Goodboy from that marketplace:
 
 ```bash
-codex plugin marketplace add adamallcock/goodboy --ref v0.2.0
+codex plugin marketplace add adamallcock/goodboy --ref v0.2.1
 codex plugin add goodboy@goodboy
 ```
 
 That is the user-facing starting point. You do **not** need to run
 `uv tool install` first. On the first Goodboy task, the plugin checks for the
-exact matching Python runtime. If `goodboy-codex[ui]==0.2.0` is absent or a
+exact matching Python runtime. If `goodboy-codex[ui]==0.2.1` is absent or a
 different version is installed, Codex explains what it found and asks before
 installing or replacing anything. After approval, the plugin runs the pinned
-uv install, verifies `goodboy 0.2.0`, and continues the original task.
+uv install, verifies `goodboy 0.2.1`, and continues the original task.
 
 The plugin never treats “make me a pet” or plugin installation as software
 installation consent. Its `check` and `run` paths cannot install packages, and
@@ -114,14 +114,14 @@ rollback procedure.
 For direct CLI use outside Codex, install the same isolated runtime explicitly:
 
 ```bash
-uv tool install "goodboy-codex[ui]==0.2.0"
+uv tool install "goodboy-codex[ui]==0.2.1"
 goodboy --version
 ```
 
 PyPI and virtual-environment installs remain supported:
 
 ```bash
-python3 -m pip install "goodboy-codex[ui]==0.2.0"
+python3 -m pip install "goodboy-codex[ui]==0.2.1"
 goodboy --help
 ```
 
@@ -143,7 +143,7 @@ The npm package is a standalone launcher for Node users. It discovers an exact
 uv-managed runtime but, like the plugin, never installs one silently:
 
 ```bash
-uv tool install "goodboy-codex[ui]==0.2.0"
+uv tool install "goodboy-codex[ui]==0.2.1"
 npx @adamallcock/goodboy --help
 ```
 
@@ -474,7 +474,7 @@ Release packages:
 
 ```bash
 python -m build
-python -m zipfile -l dist/goodboy_codex-0.2.0-py3-none-any.whl
+python -m zipfile -l dist/goodboy_codex-0.2.1-py3-none-any.whl
 ```
 
 The implementation plan and current scope are recorded in [Goodboy V2

@@ -51,13 +51,13 @@ function baseEnv(root) {
 test("check accepts an exact installed runtime", { skip: SKIP_ON_WINDOWS }, () => {
   const root = tempRoot();
   try {
-    writeExecutable(join(root, "goodboy"), goodboyScript("0.2.0"));
+    writeExecutable(join(root, "goodboy"), goodboyScript("0.2.1"));
     const result = invoke(["check", "--json"], baseEnv(root));
     assert.equal(result.status, 0, result.stderr);
     const status = parseStatus(result.stdout);
     assert.equal(status.status, "ready");
-    assert.equal(status.found_version, "0.2.0");
-    assert.equal(status.package_spec, "goodboy-codex[ui]==0.2.0");
+    assert.equal(status.found_version, "0.2.1");
+    assert.equal(status.package_spec, "goodboy-codex[ui]==0.2.1");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -83,7 +83,7 @@ test("check rejects a mismatched runtime", { skip: SKIP_ON_WINDOWS }, () => {
     const status = parseStatus(result.stdout);
     assert.equal(status.status, "mismatch");
     assert.equal(status.found_version, "0.1.2");
-    assert.equal(status.expected_version, "0.2.0");
+    assert.equal(status.expected_version, "0.2.1");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -131,7 +131,7 @@ test("approved install uses the exact pinned spec and verifies the result", { sk
   const uvLog = join(root, "uv.log");
   const ready = join(root, "goodboy-ready");
   try {
-    writeExecutable(ready, goodboyScript("0.2.0"));
+    writeExecutable(ready, goodboyScript("0.2.1"));
     writeExecutable(
       join(root, "uv"),
       `if [ "$1" = "--version" ]; then\n  printf 'uv 1.0.0\\n'\nelif [ "$1" = "tool" ] && [ "$2" = "dir" ]; then\n  printf '%s\\n' "${root}"\nelif [ "$1" = "tool" ] && [ "$2" = "install" ]; then\n  printf '%s\\n' "$*" > "${uvLog}"\n  /bin/cp "${ready}" "${join(root, "goodboy")}"\n  /bin/chmod 755 "${join(root, "goodboy")}"\nelse\n  exit 2\nfi`
@@ -139,11 +139,11 @@ test("approved install uses the exact pinned spec and verifies the result", { sk
     const result = invoke(["install", "--user-approved"], baseEnv(root));
     assert.equal(result.status, 0, result.stderr);
     assert.equal(parseStatus(result.stdout).status, "ready");
-    assert.equal(readFileSync(uvLog, "utf8").trim(), "tool install goodboy-codex[ui]==0.2.0");
+    assert.equal(readFileSync(uvLog, "utf8").trim(), "tool install goodboy-codex[ui]==0.2.1");
 
     const run = invoke(["run", "--", "--version"], baseEnv(root));
     assert.equal(run.status, 0, run.stderr);
-    assert.match(run.stdout, /goodboy 0\.2\.0/u);
+    assert.match(run.stdout, /goodboy 0\.2\.1/u);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -154,14 +154,14 @@ test("approved install replaces a mismatched uv-managed runtime", { skip: SKIP_O
   const ready = join(root, "goodboy-ready");
   try {
     writeExecutable(join(root, "goodboy"), goodboyScript("0.1.2"));
-    writeExecutable(ready, goodboyScript("0.2.0"));
+    writeExecutable(ready, goodboyScript("0.2.1"));
     writeExecutable(
       join(root, "uv"),
       `if [ "$1" = "--version" ]; then\n  printf 'uv 1.0.0\\n'\nelif [ "$1" = "tool" ] && [ "$2" = "dir" ]; then\n  printf '%s\\n' "${root}"\nelif [ "$1" = "tool" ] && [ "$2" = "install" ]; then\n  /bin/cp "${ready}" "${join(root, "goodboy")}"\n  /bin/chmod 755 "${join(root, "goodboy")}"\nelse\n  exit 2\nfi`
     );
     const result = invoke(["install", "--user-approved"], baseEnv(root));
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(parseStatus(result.stdout).found_version, "0.2.0");
+    assert.equal(parseStatus(result.stdout).found_version, "0.2.1");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

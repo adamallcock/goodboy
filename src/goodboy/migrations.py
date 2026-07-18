@@ -15,7 +15,7 @@ from .jsonio import read_json, write_json
 from .schemas import GenerationJob, PetProject, utc_now
 
 
-CURRENT_WORKSPACE_VERSION = "0.2.0"
+CURRENT_WORKSPACE_VERSION = "0.2.1"
 CURRENT_WORKSPACE_SCHEMA_VERSION = "0.2"
 
 

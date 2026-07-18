@@ -5,7 +5,7 @@ import { existsSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 const RUNTIME_SPEC = `goodboy-codex[ui]==${VERSION}`;
 const args = process.argv.slice(2);
 const launcherPath = realpathSync(fileURLToPath(import.meta.url));

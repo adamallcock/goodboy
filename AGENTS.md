@@ -1,5 +1,9 @@
 # Goodboy Agent Instructions
 
+## Public Repo Boundary
+
+- This is a public project. Keep this file contributor-safe: no private pet photos, generated private identities, provider credentials, local package paths, or unpublished customer/user details.
+
 ## Default Workflow
 
 - Treat Goodboy as a pipeline product, not as a one-off pet build.
@@ -27,3 +31,10 @@ python -m unittest discover -s tests -v
   `npm run check:package`, `npm run typecheck`, and `npm run test:e2e` so the
   compiled loopback Review Room under `src/goodboy/web/static/` stays current.
 - Keep user-facing docs aligned with the current happy path: `start`, `advance`, provider generation, generated-output map import, visual approval, and install.
+
+## Definition Of Done
+
+- Pipeline changes are covered by tests or a reproducible local smoke.
+- Public docs match the actual CLI and skill behavior.
+- Private artifacts remain ignored and uncommitted.
+- Any provider/image-generation blocker is reported as a real gate, not worked around with hand-made output.

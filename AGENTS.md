@@ -26,7 +26,13 @@
 python -m unittest discover -s tests -v
 ```
 
-- Validate the Codex skill after editing `codex-skill/goodboy/SKILL.md`.
+- `codex-skill/goodboy/SKILL.md` and `plugins/goodboy/skills/goodboy/SKILL.md` must stay byte-identical. Edit both together, then validate:
+
+```bash
+python scripts/validate_skills.py codex-skill/goodboy plugins/goodboy/skills/goodboy
+```
+
+- CI and `tests/test_distribution_contract.py` enforce that parity, so a one-sided edit fails the build.
 - For UI release changes, run `cd ui && npm run build:package`,
   `npm run check:package`, `npm run typecheck`, and `npm run test:e2e` so the
   compiled loopback Review Room under `src/goodboy/web/static/` stays current.
